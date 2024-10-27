@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: OnePay-Backend
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/onepay?useSSL=false
+    username: ${DB_USERNAME:onepay}
+    password: ${DB_PASSWORD:onepay}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    database: postgresql
+
+logging:
+  level:
+    org.hibernate.type.descriptor.sql: trace
+
+server:
+  port: 8086
