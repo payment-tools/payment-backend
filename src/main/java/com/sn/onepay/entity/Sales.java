@@ -10,7 +10,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 
 @Entity
 @Data
@@ -31,11 +30,9 @@ public class Sales {
     @Column(name = "Name", nullable = false)
     String name;
 
-    @Column(name = "Type")
+    @Column(name = "Type", nullable = false)
     @Enumerated(EnumType.STRING)
-    @ElementCollection(fetch = FetchType.EAGER)
-    @JoinTable(name = "SalesType", joinColumns = @JoinColumn(name = "SalesId"))
-    Collection<Modules> type;
+    Modules type;
 
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)

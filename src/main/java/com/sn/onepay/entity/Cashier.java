@@ -28,19 +28,19 @@ public class Cashier {
     @Column(name = "Ref")
     String ref;
 
-    @Column(name = "Firstname", nullable = false)
+    @Column(name = "Firstname")
     String firstname;
 
-    @Column(name = "Lastname", nullable = false)
+    @Column(name = "Lastname")
     String lastname;
 
     @Column(name = "Username", nullable = false)
     String username;
 
-    @Column(name = "Email", nullable = false)
+    @Column(name = "Email", nullable = false, unique = true)
     String email;
 
-    @Column(name = "PhoneNumber")
+    @Column(name = "PhoneNumber", unique = true)
     String phoneNumber;
 
     @Column(name = "Role", nullable = false)
