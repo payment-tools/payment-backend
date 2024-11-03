@@ -8,6 +8,10 @@ spring:
     username: ${DB_USERNAME:onepay}
     password: ${DB_PASSWORD:onepay}
 
+  liquibase:
+    change-log: classpath:db.changelog-master.xml
+    enabled: true
+
   jpa:
     hibernate:
       ddl-auto: update

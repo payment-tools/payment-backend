@@ -1,0 +1,126 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no" ?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="1.0.0" author="mouhamed">
+
+        <!--<createTable tableName="jpa_sequences">
+            <column name="seq_key" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column defaultValueComputed="NULL::numeric" name="seq_value" type="numeric(20)"/>
+        </createTable>
+
+        <createTable tableName="bills">
+
+            <column name="billsid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="partnershipid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_bills_partnership" references="partnership(partnershipid)"/>
+            </column>
+
+            <column name="startdate" type="TIMESTAMP(6) WITHOUT TIMEZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="enddate" type="TIMESTAMP(6) WITHOUT TIMEZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="totalamount" type="double">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="billstatus" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+
+        <createTable tableName="cashier">
+
+            <column name="cashierid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="">
+            <column name="id" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>-->
+
+    </changeSet>
+
+
+
+</databaseChangeLog>
