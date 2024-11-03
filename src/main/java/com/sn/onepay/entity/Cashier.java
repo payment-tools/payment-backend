@@ -34,10 +34,10 @@ public class Cashier {
     @Column(name = "Lastname")
     String lastname;
 
-    @Column(name = "Username", nullable = false)
+    @Column(name = "Username", unique = true, nullable = false)
     String username;
 
-    @Column(name = "Email", nullable = false, unique = true)
+    @Column(name = "Email", unique = true)
     String email;
 
     @Column(name = "PhoneNumber", unique = true)

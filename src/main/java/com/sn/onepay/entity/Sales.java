@@ -34,6 +34,9 @@ public class Sales {
     @Enumerated(EnumType.STRING)
     Modules type;
 
+    @Column(name = "Address")
+    String address;
+
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)
     LocalDateTime creationDate;

@@ -24,8 +24,10 @@ public record EnterpriseDTO(
         Long maxQuota,
 
         @Schema(name = "actualQuota", description = "Actual quota of users by enterprise")
-        @NotNull(message = "Enterprise actual quota can not be null")
         Long actualQuota,
+
+        @Schema(name = "address", description = "Address of the enterprise")
+        String address,
 
         @Schema(name = "enrolledModules", description = "List of modules enrolled by the enterprise")
         Collection<Modules> enrolledModules,

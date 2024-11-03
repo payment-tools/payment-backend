@@ -2,7 +2,18 @@ package com.sn.onepay.entity;
 
 
 import com.sn.onepay.enumeration.BillStatus;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,13 +39,14 @@ public class Bills {
     @Column(name = "Ref")
     String ref;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PartnershipId")
     Partnership partnership;
 
-    @Column(name = "StartDate")
+    @Column(name = "StartDate", nullable = false)
     LocalDateTime startDate;
 
-    @Column(name = "EndDate")
+    @Column(name = "EndDate", nullable = false)
     LocalDateTime endDate;
 
     @Column(name = "TotalAmount", nullable = false)
