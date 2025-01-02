@@ -1,6 +1,7 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
+import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.PaymentDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
 import com.sn.onepay.entity.Payment;
@@ -11,6 +12,7 @@ import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PaymentMapper;
 import com.sn.onepay.repository.PaymentRepository;
 import com.sn.onepay.services.EnterpriseConfigurationService;
+import com.sn.onepay.services.PartnershipService;
 import com.sn.onepay.services.PaymentService;
 import com.sn.onepay.services.SalesConfigurationsService;
 import jakarta.transaction.Transactional;
@@ -21,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -33,21 +37,27 @@ public class PaymentServiceImpl implements PaymentService {
     final PaymentMapper paymentMapper;
     final EnterpriseConfigurationService enterpriseConfigurationService;
     final SalesConfigurationsService salesConfigurationsService;
+    final PartnershipService partnershipService;
 
     @Override
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
         Payment savedPayment = new Payment();
 
-        Long clientId = paymentDTO.client().getId();
-        Modules module = paymentDTO.cashier().getSales().getType();
+        Long clientId = paymentDTO.client().id();
+        Modules module = paymentDTO.cashier().sales().type();
 
         /*Get sales configuration*/
-        SalesConfigurationsDTO salesConfigurations = salesConfigurationsService.getSalesConfigurationsBySalesId(paymentDTO.partnership().sales().id());
+        SalesConfigurationsDTO salesConfigurations = salesConfigurationsService.getSalesConfigurationsBySalesId(paymentDTO.cashier().sales().id());
 
         /* Get enterprise max amount configuration*/
-        EnterpriseConfigurationDTO enterpriseConfiguration = enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(paymentDTO.partnership().enterprise().id());
+        EnterpriseConfigurationDTO enterpriseConfiguration = enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(paymentDTO.client().enterprise().id());
 
-        if(paymentDTO.partnership().status().equals(StateStatus.ACTIVE) && (salesConfigurations.maxAmount() >= paymentDTO.amount() && salesConfigurations.minAmount() <= paymentDTO.amount())) {
+        /*Check if partnership exist*/
+        PartnershipDTO partnership = partnershipService.getPartnershipsBySalesIdAndEnterpriseId(paymentDTO.cashier().sales().id(), paymentDTO.client().enterprise().id());
+        if (Objects.isNull(partnership))
+            throw new ObjectValidationException("Paiement non autorisé");
+
+        if(partnership.status().equals(StateStatus.ACTIVE) && (salesConfigurations.maxAmount() >= paymentDTO.amount() && salesConfigurations.minAmount() <= paymentDTO.amount())) {
             switch (module) {
                 case RESTAURATION -> {
                     if (paymentDTO.amount() + getSumOfAllPaymentsByClientIdAndModule(clientId, module) > enterpriseConfiguration.maxAmountRestauration()) {

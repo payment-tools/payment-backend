@@ -65,4 +65,9 @@ public class PartnershipServiceImpl implements PartnershipService {
     public Page<PartnershipDTO> getPartnershipsByFilter(PartnershipDTO partnershipDTO, Pageable pageable) {
         return null;
     }
+
+    @Override
+    public PartnershipDTO getPartnershipsBySalesIdAndEnterpriseId(Long salesId, Long enterpriseId) {
+            return partnershipMapper.asDTO(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(salesId, enterpriseId));
+    }
 }

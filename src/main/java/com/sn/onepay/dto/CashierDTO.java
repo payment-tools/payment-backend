@@ -1,6 +1,5 @@
 package com.sn.onepay.dto;
 
-import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,7 +38,7 @@ public record CashierDTO(
         Roles role,
 
         @Schema(name = "sales", description = "Sales of the cashier")
-        Sales sales,
+        SalesDTO sales,
 
         @Schema(name = "status", description = "Status of the cashier")
         StateStatus status,
