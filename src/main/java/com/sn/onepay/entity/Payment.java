@@ -1,5 +1,6 @@
 package com.sn.onepay.entity;
 
+import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.enumeration.StateStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +57,10 @@ public class Payment {
     @Column(name = "Status", nullable = false)
     @Enumerated(EnumType.STRING)
     StateStatus status;
+
+    @Column(name = "Module", nullable = false)
+    @Enumerated(EnumType.STRING)
+    Modules module;
 
     @Column(name = "PaymentDate", nullable = false)
     LocalDateTime paymentDate;

@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RestController
@@ -67,6 +69,13 @@ public class PaymentController {
     @ResponseStatus(HttpStatus.OK)
     public Page<PaymentDTO> getPaymentByFilters() {
         return null;
+    }
+
+    @GetMapping("/{clientId}")
+    @ResponseStatus(HttpStatus.OK)
+    public double getAllPayments(@Parameter(description = "Client id to get sum", required = true) @PathVariable(name = "clientId") Long clientId) {
+        //return paymentService.getSumOfAllPaymentsByClientId(clientId);
+        return 0d;
     }
 
     @Operation(summary = "Delete a payment by id", description = "This endpoint is for deleting payment by id")

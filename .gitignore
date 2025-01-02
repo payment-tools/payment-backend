@@ -26,3 +26,9 @@ replay_pid*
 target
 
 .idea
+*.iml
+*.ipr
+*.iws
+.idea/misc.xml
+.idea/modules.xml
+.vscode/

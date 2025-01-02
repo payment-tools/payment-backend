@@ -62,7 +62,12 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     }
 
     @Override
-    public Page<SalesConfigurationsDTO> getSalesConfigurationssByFilter(SalesConfigurationsDTO salesConfigurationsDTO, Pageable pageable) {
+    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilter(SalesConfigurationsDTO salesConfigurationsDTO, Pageable pageable) {
         return null;
+    }
+
+    @Override
+    public SalesConfigurationsDTO getSalesConfigurationsBySalesId(Long salesId) {
+        return salesConfigurationsRepository.getSalesConfigurationsBySalesId(salesId) ;
     }
 }

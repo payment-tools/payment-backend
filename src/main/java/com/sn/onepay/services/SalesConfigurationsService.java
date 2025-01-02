@@ -12,5 +12,7 @@ public interface SalesConfigurationsService {
 
     void deleteSalesConfigurations(Long salesConfigurationsId);
 
-    Page<SalesConfigurationsDTO> getSalesConfigurationssByFilter(SalesConfigurationsDTO salesConfigurationsDTO, Pageable pageable);
+    Page<SalesConfigurationsDTO> getSalesConfigurationsByFilter(SalesConfigurationsDTO salesConfigurationsDTO, Pageable pageable);
+
+    SalesConfigurationsDTO getSalesConfigurationsBySalesId(Long salesId);
 }

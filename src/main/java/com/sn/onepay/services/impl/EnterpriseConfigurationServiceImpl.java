@@ -66,4 +66,10 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilter(EnterpriseConfigurationDTO enterpriseConfigurationDTO, Pageable pageable) {
         return null;
     }
+
+    @Override
+    public EnterpriseConfigurationDTO getEnterpriseConfigurationByEnterpriseId(Long enterpriseId) {
+        return enterpriseConfigurationMapper.asDTO(enterpriseConfigurationRepository.getEnterpriseConfigurationByEnterpriseId(enterpriseId));
+    }
+
 }

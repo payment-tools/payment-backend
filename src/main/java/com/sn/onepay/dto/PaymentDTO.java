@@ -2,7 +2,7 @@ package com.sn.onepay.dto;
 
 import com.sn.onepay.entity.Cashier;
 import com.sn.onepay.entity.Client;
-import com.sn.onepay.entity.Partnership;
+import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -27,7 +27,7 @@ public record PaymentDTO(
 
         @Schema(name = "partnership", description = "Partnership's payment")
         @NotNull(message = "Partnership can not be null")
-        Partnership partnership,
+        PartnershipDTO partnership,
 
         @Schema(name = "amount", description = "Amount of the payment")
         @NotNull(message = "Amount can not be null")
@@ -36,6 +36,10 @@ public record PaymentDTO(
         @Schema(name = "status", description = "Status of the payment")
         @NotNull(message = "Payment status can not be null")
         StateStatus status,
+
+        @Schema(name = "module", description = "Module of the payment")
+        @NotNull(message = "Payment module can not be null")
+        Modules module,
 
         @Schema(name = "paymentDate", description = "Date of the payment made")
         LocalDateTime paymentDate,
