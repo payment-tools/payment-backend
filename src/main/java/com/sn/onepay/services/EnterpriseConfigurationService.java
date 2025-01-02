@@ -13,4 +13,6 @@ public interface EnterpriseConfigurationService {
     void deleteEnterpriseConfiguration(Long enterpriseConfigurationId);
 
     Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilter(EnterpriseConfigurationDTO enterpriseConfigurationDTO, Pageable pageable);
+
+    EnterpriseConfigurationDTO getEnterpriseConfigurationByEnterpriseId(Long enterpriseId);
 }

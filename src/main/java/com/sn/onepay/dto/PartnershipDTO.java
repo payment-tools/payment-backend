@@ -1,7 +1,5 @@
 package com.sn.onepay.dto;
 
-import com.sn.onepay.entity.Enterprise;
-import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -18,11 +16,11 @@ public record PartnershipDTO(
 
         @Schema(name = "sales", description = "Sales of the partnership")
         @NotNull(message = "Sales can not be null")
-        Sales sales,
+        SalesDTO sales,
 
         @Schema(name = "enterprise", description = "Enterprise of the partnership")
         @NotNull(message = "Enterprise can not be null")
-        Enterprise enterprise,
+        EnterpriseDTO enterprise,
 
         @Schema(name = "status", description = "Status of the partnership")
         @NotNull(message = "Status can not be null")

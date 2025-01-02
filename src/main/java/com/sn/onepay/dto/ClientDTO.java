@@ -38,7 +38,7 @@ public record ClientDTO(
         @Schema(name = "role", description = "Client Role")
         Roles role,
 
-        @Schema(name = "sales", description = "Enterprise of the Client")
+        @Schema(name = "enterprise", description = "Enterprise of the Client")
         Enterprise enterprise,
 
         @Schema(name = "status", description = "Status of the Client")

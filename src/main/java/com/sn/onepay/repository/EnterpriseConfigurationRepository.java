@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EnterpriseConfigurationRepository extends JpaRepository<EnterpriseConfiguration, Long>, QuerydslPredicateExecutor<EnterpriseConfiguration> {
+    EnterpriseConfiguration getEnterpriseConfigurationByEnterpriseId(Long enterpriseId);
 }
