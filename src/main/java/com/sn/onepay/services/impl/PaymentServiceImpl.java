@@ -47,7 +47,7 @@ public class PaymentServiceImpl implements PaymentService {
         /* Get enterprise max amount configuration*/
         EnterpriseConfigurationDTO enterpriseConfiguration = enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(paymentDTO.partnership().enterprise().id());
 
-        if(salesConfigurations.maxAmount() >= paymentDTO.amount() && salesConfigurations.minAmount() <= paymentDTO.amount()) {
+        if(paymentDTO.partnership().status().equals(StateStatus.ACTIVE) && (salesConfigurations.maxAmount() >= paymentDTO.amount() && salesConfigurations.minAmount() <= paymentDTO.amount())) {
             switch (module) {
                 case RESTAURATION -> {
                     if (paymentDTO.amount() + getSumOfAllPaymentsByClientIdAndModule(clientId, module) > enterpriseConfiguration.maxAmountRestauration()) {
