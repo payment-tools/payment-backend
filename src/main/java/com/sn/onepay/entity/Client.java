@@ -34,13 +34,13 @@ public class Client {
     @Column(name = "Lastname", nullable = false)
     String lastname;
 
-    @Column(name = "Username", nullable = false)
+    @Column(name = "Username", unique = true, nullable = false)
     String username;
 
-    @Column(name = "Email", nullable = false)
+    @Column(name = "Email", unique = true, nullable = false)
     String email;
 
-    @Column(name = "PhoneNumber")
+    @Column(name = "PhoneNumber", unique = true)
     String phoneNumber;
 
     @Column(name = "Role", nullable = false)

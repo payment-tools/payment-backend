@@ -1,0 +1,393 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no" ?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="1.0.0" author="mouhamed">
+
+        <createTable tableName="jpa_sequence">
+            <column name="seq_key" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column defaultValueComputed="NULL::numeric" name="seq_value" type="numeric(20)"/>
+        </createTable>
+
+        <createTable tableName="sales">
+            <column name="salesid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="address" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+
+        <createTable tableName="enterprise">
+            <column name="enterpriseid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="address" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="maxquota" type="numeric(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="actualquota" type="numeric(20)"/>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+        <createTable tableName="cashier">
+
+            <column name="cashierid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="firstname" type="varchar(255)"/>
+
+            <column name="lastname" type="varchar(255)"/>
+
+            <column name="username" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="email" type="varchar(100)">
+                <constraints unique="true"/>
+            </column>
+
+            <column name="phonenumber" type="varchar(100)">
+                <constraints unique="true"/>
+            </column>
+
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="salesid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_cashier_sales" references="sales(salesid)"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+
+        <createTable tableName="client">
+            <column name="clientid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="firstname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lastname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="username" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="email" type="varchar(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+
+            <column name="phonenumber" type="varchar(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="enterpriseid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_client_enterprise" references="enterprise(enterpriseid)"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+        <createTable tableName="enrolledmodules">
+            <column name="enterpriseid" type="numeric(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enrolledmodules" type="varchar(50)"/>
+        </createTable>
+
+        <createTable tableName="enterpriseconfiguration">
+            <column name="enterpriseconfigurationid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="enterpriseid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_enterpriseconfiguration_enterprise" references="enterprise(enterpriseid)"/>
+            </column>
+
+            <column name="maxamountrestauration" type="double"/>
+
+            <column name="maxamountgasstation" type="double"/>
+
+            <column name="maxamountmarket" type="double"/>
+
+            <column name="maxamounttelephony" type="double"/>
+
+            <column name="enterprisepercentage" type="numeric(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="employeepercentage" type="numeric(20)">
+                <constraints nullable="false"/>
+            </column>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+        <createTable tableName="enterpriseprofile">
+            <column name="enterpriseprofileid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="enterpriseid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_enterpriseprofile_enterprise" references="enterprise(enterpriseid)"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="firstname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lastname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="username" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="email" type="varchar(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+
+            <column name="phonenumber" type="varchar(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+        <createTable tableName="partnership">
+            <column name="partnershipid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="enterpriseid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_partnership_enterprise" references="enterprise(enterpriseid)"/>
+            </column>
+
+            <column name="salesid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_partnership_sales" references="sales(salesid)"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+        <createTable tableName="payment">
+            <column name="paymentid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="clientid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_payment_client" references="client(clientid)"/>
+            </column>
+
+            <column name="cashierid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_payment_cashier" references="cashier(cashierid)"/>
+            </column>
+
+            <column name="partnershipid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_payment_partnership" references="partnership(partnershipid)"/>
+            </column>
+
+            <column name="amount" type="double">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="paymentdate" type="TIMESTAMP(6) WITHOUT TIMEZONE">
+                <constraints nullable="false"/>
+            </column>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+        <createTable tableName="salesconfigurations">
+            <column name="salesconfigurationsid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="salesid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_salesconfigurations_sales" references="sales(salesid)"/>
+            </column>
+
+            <column name="maxamount" type="double"/>
+
+            <column name="minamount" type="double"/>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+
+        <createTable tableName="salesprofile">
+            <column name="salesprofileid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="firstname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="lastname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="username" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="email" type="varchar(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+
+            <column name="phonenumber" type="varchar(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="salesid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_salesprofile_sales" references="sales(salesid)"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+
+        <createTable tableName="bills">
+
+            <column name="billsid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="partnershipid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_bills_partnership"
+                             references="partnership(partnershipid)"/>
+            </column>
+
+            <column name="startdate" type="TIMESTAMP(6) WITHOUT TIMEZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="enddate" type="TIMESTAMP(6) WITHOUT TIMEZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="totalamount" type="double">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="billstatus" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,7 +1,18 @@
 package com.sn.onepay.entity;
 
 import com.sn.onepay.enumeration.StateStatus;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,13 +38,16 @@ public class Payment {
     @Column(name = "Ref")
     String ref;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ClientId")
     Client client;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CashierId")
     Cashier cashier;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PartnershipId")
     Partnership partnership;
 
     @Column(name = "Amount", nullable = false)
@@ -43,8 +57,8 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     StateStatus status;
 
-    @Column(name = "Date", nullable = false)
-    LocalDateTime date;
+    @Column(name = "PaymentDate", nullable = false)
+    LocalDateTime paymentDate;
 
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)

@@ -16,6 +16,9 @@ public record SalesDTO(
         @Schema(name = "name", description = "Sales name")
         String name,
 
+        @Schema(name = "address", description = "Address of the enterprise")
+        String address,
+
         @Schema(name = "type", description = "Type of sales")
         Modules type,
 

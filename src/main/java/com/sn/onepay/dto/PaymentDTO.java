@@ -37,8 +37,8 @@ public record PaymentDTO(
         @NotNull(message = "Payment status can not be null")
         StateStatus status,
 
-        @Schema(name = "date", description = "Date of the payment made")
-        LocalDateTime date,
+        @Schema(name = "paymentDate", description = "Date of the payment made")
+        LocalDateTime paymentDate,
 
         @Schema(name = "creationDate", description = "Payment date of creation")
         LocalDateTime creationDate,

@@ -34,13 +34,13 @@ public class EnterpriseProfile {
     @Column(name = "Lastname", nullable = false)
     String lastname;
 
-    @Column(name = "Username", nullable = false)
+    @Column(name = "Username", nullable = false, unique = true)
     String username;
 
-    @Column(name = "Email", nullable = false)
+    @Column(name = "Email", nullable = false, unique = true)
     String email;
 
-    @Column(name = "PhoneNumber")
+    @Column(name = "PhoneNumber", nullable = false, unique = true)
     String phoneNumber;
 
     @Column(name = "Role", nullable = false)

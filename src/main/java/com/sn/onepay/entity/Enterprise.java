@@ -44,16 +44,19 @@ public class Enterprise {
     @Column(name = "Name", nullable = false)
     String name;
 
-    @Column(name = "MaxQuota")
+    @Column(name = "MaxQuota", nullable = false)
     Long maxQuota;
 
     @Column(name = "ActualQuota")
     Long actualQuota;
 
+    @Column(name = "Address")
+    String address;
+
     @Column(name = "EnrolledModules")
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER)
-    @JoinTable(name = "EnterpriseEnrolledModules", joinColumns = @JoinColumn(name = "EnterpriseId"))
+    @JoinTable(name = "EnrolledModules", joinColumns = @JoinColumn(name = "EnterpriseId"))
     Collection<Modules> enrolledModules;
 
     @CreatedDate
