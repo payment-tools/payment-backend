@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PartnershipRepository extends JpaRepository<Partnership, Long>, QuerydslPredicateExecutor<Partnership> {
+    Partnership findPartnershipBySalesIdAndEnterpriseId(Long salesId, Long enterpriseId);
 }

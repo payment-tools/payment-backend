@@ -13,5 +13,6 @@ public interface PartnershipService {
     void deletePartnership(Long partnershipId);
 
     Page<PartnershipDTO> getPartnershipsByFilter(PartnershipDTO partnershipDTO, Pageable pageable);
-    
+
+    PartnershipDTO getPartnershipsBySalesIdAndEnterpriseId(Long salesId, Long enterpriseId);
 }

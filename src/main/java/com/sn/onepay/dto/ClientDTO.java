@@ -1,6 +1,5 @@
 package com.sn.onepay.dto;
 
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,7 +38,7 @@ public record ClientDTO(
         Roles role,
 
         @Schema(name = "enterprise", description = "Enterprise of the Client")
-        Enterprise enterprise,
+        EnterpriseDTO enterprise,
 
         @Schema(name = "status", description = "Status of the Client")
         StateStatus status,

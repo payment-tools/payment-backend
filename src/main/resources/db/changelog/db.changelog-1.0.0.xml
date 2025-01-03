@@ -398,4 +398,7 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="1.0.0-drop-partnership-in-payment" author="mouhamed">
+        <dropColumn tableName="payment" columnName="partnershipid"/>
+    </changeSet>
 </databaseChangeLog>

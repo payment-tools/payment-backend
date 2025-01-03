@@ -47,10 +47,6 @@ public class Payment {
     @JoinColumn(name = "CashierId")
     Cashier cashier;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PartnershipId")
-    Partnership partnership;
-
     @Column(name = "Amount", nullable = false)
     Double amount;
 

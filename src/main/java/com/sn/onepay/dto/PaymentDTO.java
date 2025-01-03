@@ -1,7 +1,5 @@
 package com.sn.onepay.dto;
 
-import com.sn.onepay.entity.Cashier;
-import com.sn.onepay.entity.Client;
 import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,16 +16,12 @@ public record PaymentDTO(
         String ref,
 
         @Schema(name = "client", description = "Client who made the payment")
-                @NotNull(message = "Client can not be null")
-        Client client,
+        @NotNull(message = "Client can not be null")
+        ClientDTO client,
 
         @Schema(name = "cashier", description = "Cashier who receive the payment")
         @NotNull(message = "Cashier can not be null")
-        Cashier cashier,
-
-        @Schema(name = "partnership", description = "Partnership's payment")
-        @NotNull(message = "Partnership can not be null")
-        PartnershipDTO partnership,
+        CashierDTO cashier,
 
         @Schema(name = "amount", description = "Amount of the payment")
         @NotNull(message = "Amount can not be null")
