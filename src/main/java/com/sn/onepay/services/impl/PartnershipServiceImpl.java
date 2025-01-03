@@ -1,6 +1,8 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.PartnershipDTO;
+import com.sn.onepay.exceptions.ObjectValidationException;
+import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PartnershipMapper;
 import com.sn.onepay.repository.PartnershipRepository;
@@ -13,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -28,12 +32,23 @@ public class PartnershipServiceImpl implements PartnershipService {
     @Override
     public PartnershipDTO createPartnership(PartnershipDTO partnershipDTO) {
 
-        var savedPartnership = partnershipRepository.save(partnershipMapper.asEntity(partnershipDTO));
+        /*Check if partnership already exist*/
+        if(Objects.nonNull(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(partnershipDTO.sales().id(), partnershipDTO.enterprise().id())))
+            throw new ResourceAlreadyExistException("Partnership", partnershipDTO);
 
-        log.info("Created Partnership: {}", savedPartnership);
-        log.trace("Created Partnership with id: {}", savedPartnership.getId());
+        /*Check if partnership is allowed*/
+        if(partnershipDTO.enterprise().enrolledModules().contains(partnershipDTO.sales().type())){
 
-        return partnershipMapper.asDTO(savedPartnership);
+            var savedPartnership = partnershipRepository.save(partnershipMapper.asEntity(partnershipDTO));
+
+            log.info("Created Partnership: {}", savedPartnership);
+            log.trace("Created Partnership with id: {}", savedPartnership.getId());
+
+            return partnershipMapper.asDTO(savedPartnership);
+        }
+        else
+            throw new ObjectValidationException("Création de partenariat non autorisée");
+
     }
 
     @Override
