@@ -1,6 +1,12 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EnterpriseProfileDTO;
+import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.entity.EnterpriseProfile;
+import com.sn.onepay.entity.QEnterpriseProfile;
+import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseProfileMapper;
 import com.sn.onepay.repository.EnterpriseProfileRepository;
@@ -13,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -62,7 +70,49 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     }
 
     @Override
-    public Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilter(EnterpriseProfileDTO enterpriseProfileDTO, Pageable pageable) {
-        return null;
+    public Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QEnterpriseProfile enterpriseProfile = QEnterpriseProfile.enterpriseProfile;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(enterpriseProfile.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(enterpriseProfile.ref.containsIgnoreCase(ref));
+        }
+        if (firstname != null && !firstname.isEmpty()) {
+            builder.and(enterpriseProfile.firstname.containsIgnoreCase(firstname));
+        }
+        if (lastname != null && !lastname.isEmpty()) {
+            builder.and(enterpriseProfile.lastname.containsIgnoreCase(lastname));
+        }
+        if (username != null && !username.isEmpty()) {
+            builder.and(enterpriseProfile.username.containsIgnoreCase(username));
+        }
+        if (email != null && !email.isEmpty()) {
+            builder.and(enterpriseProfile.email.containsIgnoreCase(email));
+        }
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            builder.and(enterpriseProfile.phoneNumber.containsIgnoreCase(phoneNumber));
+        }
+        if (role != null) {
+            builder.and(enterpriseProfile.role.eq(role));
+        }
+        if (enterprise != null) {
+            builder.and(enterpriseProfile.enterprise.eq(enterprise));
+        }
+        if (status != null) {
+            builder.and(enterpriseProfile.status.eq(status));
+        }
+        if (creationDate != null) {
+            builder.and(enterpriseProfile.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(enterpriseProfile.modificationDate.loe(modificationDate));
+        }
+
+        Page<EnterpriseProfile> result = enterpriseProfileRepository.findAll(builder, pageable);
+        return result.map(enterpriseProfileMapper::asDTO);
     }
 }

@@ -1,6 +1,7 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.services.EnterpriseConfigurationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,8 +24,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -67,8 +73,20 @@ public class EnterpriseConfigurationController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationByFilters() {
-        return null;
+    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationByFilters(
+            @Parameter(description = "") @RequestParam(required = false) Long id,
+            @Parameter(description = "") @RequestParam(required = false) Enterprise enterprise,
+            @Parameter(description = "") @RequestParam(required = false) Double maxAmountRestauration,
+            @Parameter(description = "") @RequestParam(required = false) Double maxAmountMarket,
+            @Parameter(description = "") @RequestParam(required = false) Double maxAmountGasStation,
+            @Parameter(description = "") @RequestParam(required = false) Double maxAmountTelephony,
+            @Parameter(description = "") @RequestParam(required = false) Integer enterprisePercentage,
+            @Parameter(description = "") @RequestParam(required = false) Integer employeePercentage,
+            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+            Pageable pageable
+    ) {
+        return enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(id, enterprise, maxAmountRestauration, maxAmountMarket, maxAmountGasStation, maxAmountTelephony, enterprisePercentage, employeePercentage, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a enterprise Configuration by id", description = "This endpoint is for deleting enterprise Configuration by id")

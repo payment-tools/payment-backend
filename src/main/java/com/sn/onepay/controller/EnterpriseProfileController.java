@@ -1,6 +1,9 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.EnterpriseProfileDTO;
+import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.EnterpriseProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,8 +26,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -67,8 +75,22 @@ public class EnterpriseProfileController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<EnterpriseProfileDTO> getEnterpriseProfileByFilters() {
-        return null;
+    public Page<EnterpriseProfileDTO> getEnterpriseProfileByFilters(
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String ref,
+            @RequestParam(required = false) String firstname,
+            @RequestParam(required = false) String lastname,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phoneNumber,
+            @RequestParam(required = false) Roles role,
+            @RequestParam(required = false) Enterprise enterprise,
+            @RequestParam(required = false) StateStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+            Pageable pageable
+    ) {
+        return enterpriseProfileService.getEnterpriseProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterprise, status, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a enterprise Profile by id", description = "This endpoint is for deleting enterprise Profile by id")

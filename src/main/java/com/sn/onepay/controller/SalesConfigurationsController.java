@@ -1,6 +1,7 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.SalesConfigurationsDTO;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.services.SalesConfigurationsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,8 +24,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -59,7 +65,7 @@ public class SalesConfigurationsController {
         return salesConfigurationsService.updateSalesConfigurations(salesConfigurations, salesConfigurationsId);
     }
 
-    @Operation(summary = "Get sales Configurations by filter", description = "This endpoint is for getting sales Configurations by filter")
+    @Operation(summary = "Get sales Configurations by filters", description = "This endpoint is for getting sales Configurations by filters")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),
             @ApiResponse(responseCode = "400", description = "Incorrect request"),
@@ -67,8 +73,12 @@ public class SalesConfigurationsController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters() {
-        return null;
+    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(@RequestParam(required = false) Long id,
+                                                                        @RequestParam(required = false) Sales sales,
+                                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+                                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+                                                                        Pageable pageable) {
+        return salesConfigurationsService.getSalesConfigurationsByFilters(id, sales, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a sales Configurations by id", description = "This endpoint is for deleting sales Configurations by id")

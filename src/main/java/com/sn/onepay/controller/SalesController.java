@@ -1,6 +1,7 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.SalesDTO;
+import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.services.SalesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,8 +24,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -59,7 +65,7 @@ public class SalesController {
         return salesService.updateSales(sales, salesId);
     }
 
-    @Operation(summary = "Get sales by filter", description = "This endpoint is for getting sales by filter")
+    @Operation(summary = "Get sales by filters", description = "This endpoint is for getting sales by filter")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),
             @ApiResponse(responseCode = "400", description = "Incorrect request"),
@@ -67,8 +73,15 @@ public class SalesController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<SalesDTO> getSalesByFilters() {
-        return null;
+    public Page<SalesDTO> getSalesByFilters(@Parameter(description = "") @RequestParam(required = false) Long id,
+                                            @Parameter(description = "") @RequestParam(required = false) String ref,
+                                            @Parameter(description = "") @RequestParam(required = false) String name,
+                                            @Parameter(description = "") @RequestParam(required = false) Modules type,
+                                            @Parameter(description = "") @RequestParam(required = false) String address,
+                                            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+                                            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+                                            Pageable pageable) {
+        return salesService.getSalesByFilters(id, ref, name, type, address, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a sales by id", description = "This endpoint is for deleting sales by id")

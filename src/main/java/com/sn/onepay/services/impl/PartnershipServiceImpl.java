@@ -1,6 +1,12 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.PartnershipDTO;
+import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.entity.Partnership;
+import com.sn.onepay.entity.QPartnership;
+import com.sn.onepay.entity.Sales;
+import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
@@ -16,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -77,8 +84,36 @@ public class PartnershipServiceImpl implements PartnershipService {
     }
 
     @Override
-    public Page<PartnershipDTO> getPartnershipsByFilter(PartnershipDTO partnershipDTO, Pageable pageable) {
-        return null;
+    public Page<PartnershipDTO> getPartnershipsByFilters(Long id, String ref, Sales sales, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QPartnership partnership = QPartnership.partnership;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(partnership.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(partnership.ref.containsIgnoreCase(ref));
+        }
+        if (sales != null) {
+            builder.and(partnership.sales.eq(sales));
+        }
+        if (enterprise != null) {
+            builder.and(partnership.enterprise.eq(enterprise));
+        }
+        if (status != null) {
+            builder.and(partnership.status.eq(status));
+        }
+        if (creationDate != null) {
+            builder.and(partnership.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(partnership.modificationDate.loe(modificationDate));
+        }
+
+        Page<Partnership> result = partnershipRepository.findAll(builder, pageable);
+
+        return result.map(partnershipMapper::asDTO);
     }
 
     @Override

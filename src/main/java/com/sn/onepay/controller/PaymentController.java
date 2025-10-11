@@ -1,6 +1,10 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.PaymentDTO;
+import com.sn.onepay.entity.Cashier;
+import com.sn.onepay.entity.Client;
+import com.sn.onepay.enumeration.Modules;
+import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,9 +26,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -67,8 +75,18 @@ public class PaymentController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<PaymentDTO> getPaymentByFilters() {
-        return null;
+    public Page<PaymentDTO> getPaymentByFilters(@Parameter(description = "") @RequestParam(required = false) Long id,
+                                                @Parameter(description = "") @RequestParam(required = false) String ref,
+                                                @Parameter(description = "") @RequestParam(required = false) Client client,
+                                                @Parameter(description = "") @RequestParam(required = false) Cashier cashier,
+                                                @Parameter(description = "") @RequestParam(required = false) Double amount,
+                                                @Parameter(description = "") @RequestParam(required = false) StateStatus status,
+                                                @Parameter(description = "") @RequestParam(required = false) Modules module,
+                                                @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime paymentDate,
+                                                @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+                                                @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+                                                Pageable pageable) {
+        return paymentService.getPaymentByFilters(id, ref, client, cashier, amount, status, module, paymentDate, creationDate, modificationDate, pageable);
     }
 
     @GetMapping("/{clientId}")
