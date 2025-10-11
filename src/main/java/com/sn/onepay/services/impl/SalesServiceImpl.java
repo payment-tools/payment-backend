@@ -1,7 +1,10 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.SalesDTO;
-import com.sn.onepay.exceptions.ResourceAlreadyExistException;
+import com.sn.onepay.entity.QSales;
+import com.sn.onepay.entity.Sales;
+import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesMapper;
 import com.sn.onepay.repository.SalesRepository;
@@ -14,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -63,7 +69,35 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Page<SalesDTO> getSalesByFilter(SalesDTO salesDTO, Pageable pageable) {
-        return null;
+    public Page<SalesDTO> getSalesByFilters(Long id, String ref, String name, Modules type, String address, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QSales sales = QSales.sales;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if(!Objects.isNull(id)) {
+            builder.and(sales.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(sales.ref.containsIgnoreCase(ref));
+        }
+        if (name != null && !name.isEmpty()) {
+            builder.and(sales.name.containsIgnoreCase(name));
+        }
+        if (type != null) {
+            builder.and(sales.type.eq(type));
+        }
+        if (address != null && !address.isEmpty()) {
+            builder.and(sales.address.containsIgnoreCase(address));
+        }
+        if (creationDate != null) {
+            builder.and(sales.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(sales.modificationDate.loe(modificationDate));
+        }
+
+        Page<Sales> result = salesRepository.findAll(builder, pageable);
+
+        return result.map(salesMapper::asDTO);
     }
 }

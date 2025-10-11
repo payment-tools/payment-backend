@@ -1,7 +1,10 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
-import com.sn.onepay.exceptions.ResourceAlreadyExistException;
+import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.entity.EnterpriseConfiguration;
+import com.sn.onepay.entity.QEnterpriseConfiguration;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseConfigurationMapper;
 import com.sn.onepay.repository.EnterpriseConfigurationRepository;
@@ -14,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -63,8 +68,44 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     }
 
     @Override
-    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilter(EnterpriseConfigurationDTO enterpriseConfigurationDTO, Pageable pageable) {
-        return null;
+    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Enterprise enterprise, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, int enterprisePercentage, int employeePercentage, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QEnterpriseConfiguration enterpriseConfiguration = QEnterpriseConfiguration.enterpriseConfiguration;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(enterpriseConfiguration.id.eq(id));
+        }
+        if (enterprise != null) {
+            builder.and(enterpriseConfiguration.enterprise.eq(enterprise));
+        }
+        if (maxAmountRestauration != null) {
+            builder.and(enterpriseConfiguration.maxAmountRestauration.eq(maxAmountRestauration));
+        }
+        if (maxAmountMarket != null) {
+            builder.and(enterpriseConfiguration.maxAmountMarket.eq(maxAmountMarket));
+        }
+        if (maxAmountGasStation != null) {
+            builder.and(enterpriseConfiguration.maxAmountGasStation.eq(maxAmountGasStation));
+        }
+        if (maxAmountTelephony != null) {
+            builder.and(enterpriseConfiguration.maxAmountTelephony.eq(maxAmountTelephony));
+        }
+        if (enterprisePercentage != 0) {
+            builder.and(enterpriseConfiguration.enterprisePercentage.eq(enterprisePercentage));
+        }
+        if (employeePercentage != 0) {
+            builder.and(enterpriseConfiguration.employeePercentage.eq(employeePercentage));
+        }
+        if (creationDate != null) {
+            builder.and(enterpriseConfiguration.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(enterpriseConfiguration.modificationDate.loe(modificationDate));
+        }
+
+        Page<EnterpriseConfiguration> result = enterpriseConfigurationRepository.findAll(builder, pageable);
+        return result.map(enterpriseConfigurationMapper::asDTO);
     }
 
     @Override

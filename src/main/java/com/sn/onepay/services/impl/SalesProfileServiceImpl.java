@@ -1,6 +1,12 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.SalesProfileDTO;
+import com.sn.onepay.entity.QSalesProfile;
+import com.sn.onepay.entity.Sales;
+import com.sn.onepay.entity.SalesProfile;
+import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
@@ -13,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -61,7 +69,49 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     }
 
     @Override
-    public Page<SalesProfileDTO> getSalesProfilesByFilter(SalesProfileDTO salesProfileDTO, Pageable pageable) {
-        return null;
+    public Page<SalesProfileDTO> getSalesProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Sales sale, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QSalesProfile salesProfile = QSalesProfile.salesProfile;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(salesProfile.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(salesProfile.ref.containsIgnoreCase(ref));
+        }
+        if (firstname != null && !firstname.isEmpty()) {
+            builder.and(salesProfile.firstname.containsIgnoreCase(firstname));
+        }
+        if (lastname != null && !lastname.isEmpty()) {
+            builder.and(salesProfile.lastname.containsIgnoreCase(lastname));
+        }
+        if (username != null && !username.isEmpty()) {
+            builder.and(salesProfile.username.containsIgnoreCase(username));
+        }
+        if (email != null && !email.isEmpty()) {
+            builder.and(salesProfile.email.containsIgnoreCase(email));
+        }
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            builder.and(salesProfile.phoneNumber.containsIgnoreCase(phoneNumber));
+        }
+        if (role != null) {
+            builder.and(salesProfile.role.eq(role));
+        }
+        if (sale != null) {
+            builder.and(salesProfile.sales.eq(sale));
+        }
+        if (status != null) {
+            builder.and(salesProfile.status.eq(status));
+        }
+        if (creationDate != null) {
+            builder.and(salesProfile.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(salesProfile.modificationDate.loe(modificationDate));
+        }
+
+        Page<SalesProfile> result = salesProfileRepository.findAll(builder, pageable);
+        return result.map(salesProfileMapper::asDTO);
     }
 }

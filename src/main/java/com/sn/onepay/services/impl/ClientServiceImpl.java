@@ -1,7 +1,12 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.ClientDTO;
-import com.sn.onepay.exceptions.ResourceAlreadyExistException;
+import com.sn.onepay.entity.Client;
+import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.entity.QClient;
+import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
@@ -14,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -63,7 +70,50 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Page<ClientDTO> getClientsByFilter(ClientDTO clientDTO, Pageable pageable) {
-        return null;
+    public Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QClient client = QClient.client;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(client.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(client.ref.containsIgnoreCase(ref));
+        }
+        if (firstname != null && !firstname.isEmpty()) {
+            builder.and(client.firstname.containsIgnoreCase(firstname));
+        }
+        if (lastname != null && !lastname.isEmpty()) {
+            builder.and(client.lastname.containsIgnoreCase(lastname));
+        }
+        if (username != null && !username.isEmpty()) {
+            builder.and(client.username.containsIgnoreCase(username));
+        }
+        if (email != null && !email.isEmpty()) {
+            builder.and(client.email.containsIgnoreCase(email));
+        }
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            builder.and(client.phoneNumber.containsIgnoreCase(phoneNumber));
+        }
+        if (role != null) {
+            builder.and(client.role.eq(role));
+        }
+        if (enterprise != null) {
+            builder.and(client.enterprise.eq(enterprise));
+        }
+        if (status != null) {
+            builder.and(client.status.eq(status));
+        }
+        if (creationDate != null) {
+            builder.and(client.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(client.modificationDate.loe(modificationDate));
+        }
+
+        Page<Client> result = clientRepository.findAll(builder, pageable);
+
+        return result.map(clientMapper::asDTO);
     }
 }

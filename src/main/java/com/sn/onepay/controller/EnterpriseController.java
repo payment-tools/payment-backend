@@ -1,7 +1,7 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.EnterpriseDTO;
-import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.mapper.EnterpriseMapper;
 import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.services.EnterpriseService;
@@ -14,6 +14,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,10 +26,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -37,8 +41,8 @@ import java.util.List;
 public class EnterpriseController {
 
     final EnterpriseService enterpriseService;
-    private final EnterpriseRepository enterpriseRepository;
-    private final EnterpriseMapper enterpriseMapper;
+    final EnterpriseRepository enterpriseRepository;
+    final EnterpriseMapper enterpriseMapper;
 
     @Operation(summary = "Create a new enterprise", description = "This endpoint is for creating a new enterprise")
     @ApiResponses(value = {
@@ -73,9 +77,19 @@ public class EnterpriseController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<Enterprise> getEnterpriseByFilters() {
-        //TODO
-        return  enterpriseRepository.findAll();
+    public Page<EnterpriseDTO> getEnterpriseByFilters(
+            @Parameter(description = "") @RequestParam(required = false) Long id,
+            @Parameter(description = "") @RequestParam(required = false) String ref,
+            @Parameter(description = "") @RequestParam(required = false) String name,
+            @Parameter(description = "") @RequestParam(required = false) Long maxQuota,
+            @Parameter(description = "") @RequestParam(required = false) Long actualQuota,
+            @Parameter(description = "") @RequestParam(required = false) String address,
+            @Parameter(description = "") @RequestParam(required = false) Modules enrolledModules,
+            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+            Pageable pageable
+    ) {
+        return enterpriseService.getEnterprisesByFilters(id, ref, name, maxQuota, actualQuota, address, enrolledModules, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a enterprise by id", description = "This endpoint is for deleting enterprise by id")

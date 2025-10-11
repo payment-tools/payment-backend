@@ -1,10 +1,14 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
 import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.PaymentDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
+import com.sn.onepay.entity.Cashier;
+import com.sn.onepay.entity.Client;
 import com.sn.onepay.entity.Payment;
+import com.sn.onepay.entity.QPayment;
 import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
@@ -24,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -135,7 +140,44 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Page<PaymentDTO> getPaymentsByFilter(PaymentDTO paymentDTO, Pageable pageable) {
-        return null;
+    public Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Client client, Cashier cashier, Double amount, StateStatus status, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QPayment payment = QPayment.payment;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(payment.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(payment.ref.containsIgnoreCase(ref));
+        }
+        if (client != null) {
+            builder.and(payment.client.eq(client));
+        }
+        if (cashier != null) {
+            builder.and(payment.cashier.eq(cashier));
+        }
+        if (amount != null) {
+            builder.and(payment.amount.eq(amount));
+        }
+        if (status != null) {
+            builder.and(payment.status.eq(status));
+        }
+        if (module != null) {
+            builder.and(payment.module.eq(module));
+        }
+        if (paymentDate != null) {
+            builder.and(payment.paymentDate.eq(paymentDate));
+        }
+        if (creationDate != null) {
+            builder.and(payment.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(payment.modificationDate.loe(modificationDate));
+        }
+
+        Page<Payment> result = paymentRepository.findAll(builder, pageable);
+
+        return result.map(paymentMapper::asDTO);
     }
 }

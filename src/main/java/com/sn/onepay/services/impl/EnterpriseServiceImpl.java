@@ -1,7 +1,10 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EnterpriseDTO;
-import com.sn.onepay.exceptions.ResourceAlreadyExistException;
+import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.entity.QEnterprise;
+import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseMapper;
 import com.sn.onepay.repository.EnterpriseRepository;
@@ -14,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Service
 @Slf4j
@@ -64,7 +70,41 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     }
 
     @Override
-    public Page<EnterpriseDTO> getEnterprisesByFilter(EnterpriseDTO enterpriseDTO, Pageable pageable) {
-        return null;
+    public Page<EnterpriseDTO> getEnterprisesByFilters(Long id, String ref, String name, Long maxQuota, Long actualQuota, String address, Modules enrolledModules, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QEnterprise enterprise = QEnterprise.enterprise;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(enterprise.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(enterprise.ref.containsIgnoreCase(ref));
+        }
+        if (name != null && !name.isEmpty()) {
+            builder.and(enterprise.name.containsIgnoreCase(name));
+        }
+        if (maxQuota != null) {
+            builder.and(enterprise.maxQuota.eq(maxQuota));
+        }
+        if (actualQuota != null) {
+            builder.and(enterprise.actualQuota.eq(actualQuota));
+        }
+        if (address != null && !address.isEmpty()) {
+            builder.and(enterprise.address.containsIgnoreCase(address));
+        }
+        if (enrolledModules != null) {
+            // On vérifie si le module de l'entreprise est dans la collection
+            builder.and(enterprise.enrolledModules.contains(enrolledModules));
+        }
+        if (creationDate != null) {
+            builder.and(enterprise.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(enterprise.modificationDate.loe(modificationDate));
+        }
+
+        Page<Enterprise> result = enterpriseRepository.findAll(builder, pageable);
+        return result.map(enterpriseMapper::asDTO);
     }
 }

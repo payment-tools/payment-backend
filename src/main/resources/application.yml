@@ -7,9 +7,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/onepay?useSSL=false
-    username: ${DB_USERNAME:onepay}
-    password: ${DB_PASSWORD:onepay}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/onepay}
+    username: ${SPRING_DATASOURCE_USERNAME:onepay}
+    password: ${SPRING_DATASOURCE_PASSWORD:onepay}
 
   liquibase:
     change-log: classpath:db.changelog-master.xml
@@ -17,7 +17,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true

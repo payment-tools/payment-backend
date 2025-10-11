@@ -28,26 +28,26 @@ import java.time.LocalDateTime;
 public class SalesConfigurations {
 
     @Id
-    @Column(name = "SalesConfigurationsId", unique = true, nullable = false)
+    @Column(name = "salesConfigurationsId", unique = true, nullable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SalesConfigurationsGen")
     Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "SalesId")
+    @JoinColumn(name = "salesId")
     Sales sales;
 
-    @Column(name = "MinAmount")
+    @Column(name = "minAmount")
     Double minAmount;
 
-    @Column(name = "MaxAmount")
+    @Column(name = "maxAmount")
     Double maxAmount;
 
     @CreatedDate
-    @Column(name = "CreationDate", updatable = false)
+    @Column(name = "creationDate", updatable = false)
     LocalDateTime creationDate;
 
     @LastModifiedDate
-    @Column(name = "ModificationDate", insertable = false)
+    @Column(name = "modificationDate", insertable = false)
     LocalDateTime modificationDate;
 
 }

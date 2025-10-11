@@ -1,6 +1,10 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
+import com.sn.onepay.entity.QSalesConfigurations;
+import com.sn.onepay.entity.Sales;
+import com.sn.onepay.entity.SalesConfigurations;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesConfigurationsMapper;
 import com.sn.onepay.repository.SalesConfigurationsRepository;
@@ -13,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -62,8 +68,27 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     }
 
     @Override
-    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilter(SalesConfigurationsDTO salesConfigurationsDTO, Pageable pageable) {
-        return null;
+    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Sales sales, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QSalesConfigurations configurations = QSalesConfigurations.salesConfigurations;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(configurations.id.eq(id));
+        }
+        if (sales != null) {
+            builder.and(configurations.sales.eq(sales));
+        }
+        if (creationDate != null) {
+            builder.and(configurations.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(configurations.modificationDate.loe(modificationDate));
+        }
+
+        Page<SalesConfigurations> result = salesConfigurationsRepository.findAll(builder, pageable);
+
+        return result.map(salesConfigurationsMapper::asDTO);
     }
 
     @Override

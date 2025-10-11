@@ -307,7 +307,8 @@
 
             <column name="minamount" type="double"/>
 
-                        <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
 
         </createTable>
 
@@ -396,9 +397,18 @@
                 <constraints nullable="false"/>
             </column>
         </addColumn>
+
     </changeSet>
 
     <changeSet id="1.0.0-drop-partnership-in-payment" author="mouhamed">
         <dropColumn tableName="payment" columnName="partnershipid"/>
+    </changeSet>
+
+    <changeSet id="1.0.0-drop-insert" author="mouha">
+        <sqlFile path="../data/insert-data.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="true"
+                 stripComments="true"
+                 encoding="UTF-8"/>
     </changeSet>
 </databaseChangeLog>
