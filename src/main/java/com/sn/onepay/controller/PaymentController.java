@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -89,11 +88,16 @@ public class PaymentController {
         return paymentService.getPaymentByFilters(id, ref, client, cashier, amount, status, module, paymentDate, creationDate, modificationDate, pageable);
     }
 
-    @GetMapping("/{clientId}")
+    @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Client not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/sum/{clientId}")
     @ResponseStatus(HttpStatus.OK)
-    public double getAllPayments(@Parameter(description = "Client id to get sum", required = true) @PathVariable(name = "clientId") Long clientId) {
-        //return paymentService.getSumOfAllPaymentsByClientId(clientId);
-        return 0d;
+    public double getSumOfPaymentsByClient(@Parameter(description = "Client id", required = true) @PathVariable(name = "clientId") Long clientId) {
+        return paymentService.getSumOfAllPaymentsByClientId(clientId);
     }
 
     @Operation(summary = "Delete a payment by id", description = "This endpoint is for deleting payment by id")
