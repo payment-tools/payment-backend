@@ -132,11 +132,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public double getSumOfAllPaymentsByClientIdAndModule(Long clientId, Modules module) {
-        if(paymentRepository.getAllPaymentsByClientId(clientId).isEmpty())
-            return 0;
+        Double sum = paymentRepository.findAllPaymentsByClientIdAndModule(clientId, module.name());
+        return sum != null ? sum : 0d;
+    }
 
-        return paymentRepository.findAllPaymentsByClientIdAndModule(clientId, module.name());
-
+    @Override
+    public double getSumOfAllPaymentsByClientId(Long clientId) {
+        Double sum = paymentRepository.findSumOfAllActivePaymentsByClientId(clientId);
+        return sum != null ? sum : 0d;
     }
 
     @Override

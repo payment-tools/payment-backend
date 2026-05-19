@@ -34,8 +34,10 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     @Override
     public EnterpriseDTO createEnterprise(EnterpriseDTO enterpriseDTO) {
 
-        // TODO set actual Quota and make verifcation
-        var savedEnterprise = enterpriseRepository.save(enterpriseMapper.asEntity(enterpriseDTO));
+        Enterprise enterprise = enterpriseMapper.asEntity(enterpriseDTO);
+        enterprise.setActualQuota(0L);
+
+        var savedEnterprise = enterpriseRepository.save(enterprise);
 
         log.info("Created new Enterprise: {}", savedEnterprise);
         log.trace("Created new Enterprise with id: {}", savedEnterprise.getId());

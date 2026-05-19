@@ -9,7 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface PaymentService {
 
@@ -20,6 +19,8 @@ public interface PaymentService {
     void deletePayment(Long paymentId);
 
     double getSumOfAllPaymentsByClientIdAndModule(Long clientId, Modules module);
+
+    double getSumOfAllPaymentsByClientId(Long clientId);
 
     Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Client client, Cashier cashier, Double amount, StateStatus status, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 }

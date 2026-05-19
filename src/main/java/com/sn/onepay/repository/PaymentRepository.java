@@ -12,8 +12,11 @@ import java.util.List;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long>, QuerydslPredicateExecutor<Payment> {
 
-    @Query(value = "SELECT SUM(p.amount) FROM Payment p WHERE p.clientId= :clientId AND p.module= :module AND p.status ='ACTIVE'", nativeQuery = true)
-    Double findAllPaymentsByClientIdAndModule(@Param ("clientId") Long clientId, @Param("module") String module);
+    @Query(value = "SELECT COALESCE(SUM(p.Amount), 0) FROM Payment p WHERE p.ClientId = :clientId AND p.Module = :module AND p.Status = 'ACTIVE'", nativeQuery = true)
+    Double findAllPaymentsByClientIdAndModule(@Param("clientId") Long clientId, @Param("module") String module);
+
+    @Query(value = "SELECT COALESCE(SUM(p.Amount), 0) FROM Payment p WHERE p.ClientId = :clientId AND p.Status = 'ACTIVE'", nativeQuery = true)
+    Double findSumOfAllActivePaymentsByClientId(@Param("clientId") Long clientId);
 
     List<Payment> getAllPaymentsByClientId(Long clientId);
 }
