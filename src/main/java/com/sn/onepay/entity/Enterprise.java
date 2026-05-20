@@ -5,6 +5,7 @@ import com.sn.onepay.enumeration.Modules;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -21,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -29,13 +31,14 @@ import java.util.Collection;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "Enterprise")
 @TableGenerator(name = "EnterpriseGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "EnterpriseId", allocationSize = 1)
 public class Enterprise {
 
     @Id
     @Column(name = "EnterpriseId", unique = true, nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EnterpriseGen")
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "EnterpriseGen")
     Long id;
 
     @Column(name = "Ref")

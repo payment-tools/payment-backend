@@ -4,6 +4,7 @@ package com.sn.onepay.entity;
 import com.sn.onepay.enumeration.BillStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -20,6 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -27,13 +29,14 @@ import java.time.LocalDateTime;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "Bills")
 @TableGenerator(name = "BillsGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "BillsId", allocationSize = 1)
 public class Bills {
 
     @Id
     @Column(name = "BillsId", unique = true, nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "BillsGen")
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "BillsGen")
     Long id;
 
     @Column(name = "Ref")

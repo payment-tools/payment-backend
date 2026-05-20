@@ -2,6 +2,7 @@ package com.sn.onepay.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,6 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -23,13 +25,14 @@ import java.time.LocalDateTime;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "EnterpriseConfiguration")
 @TableGenerator(name = "EnterpriseConfigurationGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "EnterpriseConfigurationId", allocationSize = 1)
 public class EnterpriseConfiguration {
 
     @Id
     @Column(name = "EnterpriseConfigurationId", unique = true, nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EnterpriseConfigurationGen")
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "EnterpriseConfigurationGen")
     Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

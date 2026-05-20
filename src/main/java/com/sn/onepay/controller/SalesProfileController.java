@@ -1,7 +1,6 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.SalesProfileDTO;
-import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.SalesProfileService;
@@ -75,20 +74,20 @@ public class SalesProfileController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<SalesProfileDTO> getSalesProfileByFilters(@Parameter(description = "") @RequestParam(required = false) Long id,
-                                                          @Parameter(description = "") @RequestParam(required = false) String ref,
-                                                          @Parameter(description = "") @RequestParam(required = false) String firstname,
-                                                          @Parameter(description = "") @RequestParam(required = false) String lastname,
-                                                          @Parameter(description = "") @RequestParam(required = false) String username,
-                                                          @Parameter(description = "") @RequestParam(required = false) String email,
-                                                          @Parameter(description = "") @RequestParam(required = false) String phoneNumber,
-                                                          @Parameter(description = "") @RequestParam(required = false) Roles role,
-                                                          @Parameter(description = "") @RequestParam(required = false) Sales sale,
-                                                          @Parameter(description = "") @RequestParam(required = false) StateStatus status,
-                                                          @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
-                                                          @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+    public Page<SalesProfileDTO> getSalesProfileByFilters(@Parameter(description = "Filter by sales profile ID") @RequestParam(required = false) Long id,
+                                                          @Parameter(description = "Filter by reference (partial match)") @RequestParam(required = false) String ref,
+                                                          @Parameter(description = "Filter by first name (partial match)") @RequestParam(required = false) String firstname,
+                                                          @Parameter(description = "Filter by last name (partial match)") @RequestParam(required = false) String lastname,
+                                                          @Parameter(description = "Filter by username (partial match)") @RequestParam(required = false) String username,
+                                                          @Parameter(description = "Filter by email (partial match)") @RequestParam(required = false) String email,
+                                                          @Parameter(description = "Filter by phone number (partial match)") @RequestParam(required = false) String phoneNumber,
+                                                          @Parameter(description = "Filter by role") @RequestParam(required = false) Roles role,
+                                                          @Parameter(description = "Filter by sales ID") @RequestParam(required = false) Long salesId,
+                                                          @Parameter(description = "Filter by status (ACTIVE or INACTIVE)") @RequestParam(required = false) StateStatus status,
+                                                          @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+                                                          @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                           Pageable pageable) {
-        return salesProfileService.getSalesProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, sale, status, creationDate, modificationDate, pageable);
+        return salesProfileService.getSalesProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, status, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a sales Profile by id", description = "This endpoint is for deleting sales Profile by id")

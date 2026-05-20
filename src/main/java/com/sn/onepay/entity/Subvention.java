@@ -24,31 +24,36 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-
 @Entity
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "Partnership")
-@TableGenerator(name = "PartnershipGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "PartnershipId", allocationSize = 1)
-public class Partnership {
+@Table(name = "Subvention")
+@TableGenerator(name = "SubventionGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "SubventionId", allocationSize = 1)
+public class Subvention {
 
     @Id
-    @Column(name = "PartnershipId", unique = true, nullable = false)
-    @GeneratedValue(strategy = GenerationType.TABLE, generator = "PartnershipGen")
+    @Column(name = "SubventionId", unique = true, nullable = false)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "SubventionGen")
     Long id;
 
     @Column(name = "Ref")
     String ref;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "SalesId")
-    Sales sales;
+    @Column(name = "EmployeePercent", nullable = false)
+    Double employeePercent;
+
+    @Column(name = "EmployerPercent", nullable = false)
+    Double employerPercent;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "EnterpriseId")
-    Enterprise enterprise;
+    @JoinColumn(name = "PartnershipId")
+    Partnership partnership;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EmployeeGroupId")
+    EmployeeGroup employeeGroup;
 
     @Column(name = "Status", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -61,5 +66,4 @@ public class Partnership {
     @LastModifiedDate
     @Column(name = "ModificationDate", insertable = false)
     LocalDateTime modificationDate;
-
 }

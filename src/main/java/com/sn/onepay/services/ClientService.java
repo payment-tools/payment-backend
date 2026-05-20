@@ -1,7 +1,6 @@
 package com.sn.onepay.services;
 
 import com.sn.onepay.dto.ClientDTO;
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.enumeration.StateStatus;
 import org.springframework.data.domain.Page;
@@ -17,5 +16,5 @@ public interface ClientService {
 
     void deleteClient(Long clientId);
 
-    Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 }

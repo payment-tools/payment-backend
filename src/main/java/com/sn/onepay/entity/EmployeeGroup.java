@@ -11,6 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
@@ -23,32 +25,39 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-
+import java.util.List;
 
 @Entity
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = {"clients", "enterprise"})
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "Partnership")
-@TableGenerator(name = "PartnershipGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "PartnershipId", allocationSize = 1)
-public class Partnership {
+@Table(name = "EmployeeGroup")
+@TableGenerator(name = "EmployeeGroupGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "EmployeeGroupId", allocationSize = 1)
+public class EmployeeGroup {
 
     @Id
-    @Column(name = "PartnershipId", unique = true, nullable = false)
-    @GeneratedValue(strategy = GenerationType.TABLE, generator = "PartnershipGen")
+    @Column(name = "EmployeeGroupId", unique = true, nullable = false)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "EmployeeGroupGen")
     Long id;
 
     @Column(name = "Ref")
     String ref;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "SalesId")
-    Sales sales;
+    @Column(name = "Name", nullable = false)
+    String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "EnterpriseId")
     Enterprise enterprise;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "EmployeeGroupClient",
+            joinColumns = @JoinColumn(name = "EmployeeGroupId"),
+            inverseJoinColumns = @JoinColumn(name = "ClientId")
+    )
+    List<Client> clients;
 
     @Column(name = "Status", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -61,5 +70,4 @@ public class Partnership {
     @LastModifiedDate
     @Column(name = "ModificationDate", insertable = false)
     LocalDateTime modificationDate;
-
 }

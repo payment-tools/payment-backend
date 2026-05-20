@@ -2,7 +2,6 @@ package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EnterpriseProfileDTO;
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.entity.QEnterpriseProfile;
 import com.sn.onepay.enumeration.Roles;
@@ -70,7 +69,7 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     }
 
     @Override
-    public Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QEnterpriseProfile enterpriseProfile = QEnterpriseProfile.enterpriseProfile;
         BooleanBuilder builder = new BooleanBuilder();
@@ -99,8 +98,8 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
         if (role != null) {
             builder.and(enterpriseProfile.role.eq(role));
         }
-        if (enterprise != null) {
-            builder.and(enterpriseProfile.enterprise.eq(enterprise));
+        if (enterpriseId != null) {
+            builder.and(enterpriseProfile.enterprise.id.eq(enterpriseId));
         }
         if (status != null) {
             builder.and(enterpriseProfile.status.eq(status));
