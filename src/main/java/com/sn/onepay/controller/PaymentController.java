@@ -1,8 +1,6 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.PaymentDTO;
-import com.sn.onepay.entity.Cashier;
-import com.sn.onepay.entity.Client;
 import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.PaymentService;
@@ -74,18 +72,18 @@ public class PaymentController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<PaymentDTO> getPaymentByFilters(@Parameter(description = "") @RequestParam(required = false) Long id,
-                                                @Parameter(description = "") @RequestParam(required = false) String ref,
-                                                @Parameter(description = "") @RequestParam(required = false) Client client,
-                                                @Parameter(description = "") @RequestParam(required = false) Cashier cashier,
-                                                @Parameter(description = "") @RequestParam(required = false) Double amount,
-                                                @Parameter(description = "") @RequestParam(required = false) StateStatus status,
-                                                @Parameter(description = "") @RequestParam(required = false) Modules module,
-                                                @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime paymentDate,
-                                                @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
-                                                @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+    public Page<PaymentDTO> getPaymentByFilters(@Parameter(description = "Filter by payment ID") @RequestParam(required = false) Long id,
+                                                @Parameter(description = "Filter by reference (partial match)") @RequestParam(required = false) String ref,
+                                                @Parameter(description = "Filter by client ID") @RequestParam(required = false) Long clientId,
+                                                @Parameter(description = "Filter by cashier ID") @RequestParam(required = false) Long cashierId,
+                                                @Parameter(description = "Filter by amount") @RequestParam(required = false) Double amount,
+                                                @Parameter(description = "Filter by status (ACTIVE or INACTIVE)") @RequestParam(required = false) StateStatus status,
+                                                @Parameter(description = "Filter by module") @RequestParam(required = false) Modules module,
+                                                @Parameter(description = "Filter by payment date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime paymentDate,
+                                                @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+                                                @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                 Pageable pageable) {
-        return paymentService.getPaymentByFilters(id, ref, client, cashier, amount, status, module, paymentDate, creationDate, modificationDate, pageable);
+        return paymentService.getPaymentByFilters(id, ref, clientId, cashierId, amount, status, module, paymentDate, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client")

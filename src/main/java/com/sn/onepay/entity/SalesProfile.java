@@ -4,6 +4,7 @@ import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.enumeration.StateStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -20,6 +21,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -27,14 +29,14 @@ import java.time.LocalDateTime;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "SalesProfile")
 @TableGenerator(name = "SalesProfileGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "SalesProfileId", allocationSize = 1)
-
 public class SalesProfile {
 
     @Id
     @Column(name = "SalesProfileId", unique = true, nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SalesProfileGen")
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "SalesProfileGen")
     Long id;
 
     @Column(name = "Ref")

@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -16,13 +17,14 @@ import java.time.LocalDateTime;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "EnterpriseProfile")
 @TableGenerator(name = "EnterpriseProfileGen", table = "JPA_SEQUENCE", pkColumnName = "SEQ_KEY", valueColumnName = "SEQ_VALUE", pkColumnValue = "EnterpriseProfileId", allocationSize = 1)
 public class EnterpriseProfile {
 
     @Id
     @Column(name = "EnterpriseProfileId", unique = true, nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EnterpriseProfileGen")
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "EnterpriseProfileGen")
     Long id;
 
     @Column(name = "Ref")

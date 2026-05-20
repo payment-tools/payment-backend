@@ -5,8 +5,6 @@ import com.sn.onepay.dto.EnterpriseConfigurationDTO;
 import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.PaymentDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
-import com.sn.onepay.entity.Cashier;
-import com.sn.onepay.entity.Client;
 import com.sn.onepay.entity.Payment;
 import com.sn.onepay.entity.QPayment;
 import com.sn.onepay.enumeration.Modules;
@@ -143,7 +141,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Client client, Cashier cashier, Double amount, StateStatus status, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Long clientId, Long cashierId, Double amount, StateStatus status, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QPayment payment = QPayment.payment;
         BooleanBuilder builder = new BooleanBuilder();
@@ -154,11 +152,11 @@ public class PaymentServiceImpl implements PaymentService {
         if (ref != null && !ref.isEmpty()) {
             builder.and(payment.ref.containsIgnoreCase(ref));
         }
-        if (client != null) {
-            builder.and(payment.client.eq(client));
+        if (clientId != null) {
+            builder.and(payment.client.id.eq(clientId));
         }
-        if (cashier != null) {
-            builder.and(payment.cashier.eq(cashier));
+        if (cashierId != null) {
+            builder.and(payment.cashier.id.eq(cashierId));
         }
         if (amount != null) {
             builder.and(payment.amount.eq(amount));

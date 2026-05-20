@@ -3,7 +3,6 @@ package com.sn.onepay.services.impl;
 import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.ClientDTO;
 import com.sn.onepay.entity.Client;
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.QClient;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.enumeration.StateStatus;
@@ -70,7 +69,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QClient client = QClient.client;
         BooleanBuilder builder = new BooleanBuilder();
@@ -99,8 +98,8 @@ public class ClientServiceImpl implements ClientService {
         if (role != null) {
             builder.and(client.role.eq(role));
         }
-        if (enterprise != null) {
-            builder.and(client.enterprise.eq(enterprise));
+        if (enterpriseId != null) {
+            builder.and(client.enterprise.id.eq(enterpriseId));
         }
         if (status != null) {
             builder.and(client.status.eq(status));

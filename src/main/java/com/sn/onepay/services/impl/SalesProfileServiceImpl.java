@@ -3,7 +3,6 @@ package com.sn.onepay.services.impl;
 import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.SalesProfileDTO;
 import com.sn.onepay.entity.QSalesProfile;
-import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.enumeration.StateStatus;
@@ -69,7 +68,7 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     }
 
     @Override
-    public Page<SalesProfileDTO> getSalesProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Sales sale, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<SalesProfileDTO> getSalesProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long salesId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QSalesProfile salesProfile = QSalesProfile.salesProfile;
         BooleanBuilder builder = new BooleanBuilder();
@@ -98,8 +97,8 @@ public class SalesProfileServiceImpl implements SalesProfileService {
         if (role != null) {
             builder.and(salesProfile.role.eq(role));
         }
-        if (sale != null) {
-            builder.and(salesProfile.sales.eq(sale));
+        if (salesId != null) {
+            builder.and(salesProfile.sales.id.eq(salesId));
         }
         if (status != null) {
             builder.and(salesProfile.status.eq(status));

@@ -404,6 +404,77 @@
         <dropColumn tableName="payment" columnName="partnershipid"/>
     </changeSet>
 
+    <changeSet id="1.0.0-add-employee-group-and-subvention" author="mouhamed">
+
+        <createTable tableName="employeegroup">
+            <column name="employeegroupid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="enterpriseid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_employeegroup_enterprise" references="enterprise(enterpriseid)"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+
+        <createTable tableName="employeegroupclient">
+            <column name="employeegroupid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_egc_employeegroup" references="employeegroup(employeegroupid)"/>
+            </column>
+            <column name="clientid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_egc_client" references="client(clientid)"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="subvention">
+            <column name="subventionid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)"/>
+
+            <column name="employeepercent" type="double">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="employerpercent" type="double">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="partnershipid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_subvention_partnership" references="partnership(partnershipid)"/>
+            </column>
+
+            <column name="employeegroupid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_subvention_employeegroup" references="employeegroup(employeegroupid)"/>
+            </column>
+
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="1.0.0-add-pk-employeegroupclient" author="mouhamed">
+        <addPrimaryKey tableName="employeegroupclient" columnNames="employeegroupid,clientid" constraintName="pk_employeegroupclient"/>
+    </changeSet>
+
     <changeSet id="1.0.0-drop-insert" author="mouha">
         <sqlFile path="../data/insert-data.sql"
                  relativeToChangelogFile="true"
