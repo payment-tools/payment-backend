@@ -68,7 +68,7 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     }
 
     @Override
-    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Enterprise enterprise, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, int enterprisePercentage, int employeePercentage, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Enterprise enterprise, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QEnterpriseConfiguration enterpriseConfiguration = QEnterpriseConfiguration.enterpriseConfiguration;
         BooleanBuilder builder = new BooleanBuilder();
@@ -91,10 +91,10 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
         if (maxAmountTelephony != null) {
             builder.and(enterpriseConfiguration.maxAmountTelephony.eq(maxAmountTelephony));
         }
-        if (enterprisePercentage != 0) {
+        if (enterprisePercentage != null) {
             builder.and(enterpriseConfiguration.enterprisePercentage.eq(enterprisePercentage));
         }
-        if (employeePercentage != 0) {
+        if (employeePercentage != null) {
             builder.and(enterpriseConfiguration.employeePercentage.eq(employeePercentage));
         }
         if (creationDate != null) {
