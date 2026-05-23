@@ -4,7 +4,6 @@ import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.SubventionDTO;
 import com.sn.onepay.entity.QSubvention;
 import com.sn.onepay.entity.Subvention;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SubventionMapper;
@@ -38,11 +37,13 @@ public class SubventionServiceImpl implements SubventionService {
             throw new ObjectValidationException("La somme des pourcentages employé et employeur doit être égale à 100");
         }
 
-        if (subventionDTO.partnership() == null || !StateStatus.ACTIVE.equals(subventionDTO.partnership().status())) {
+        if (subventionDTO.partnership() == null || !Boolean.TRUE.equals(subventionDTO.partnership().active())) {
             throw new ObjectValidationException("Un partenariat actif est requis pour créer une subvention");
         }
 
-        var savedSubvention = subventionRepository.save(subventionMapper.asEntity(subventionDTO));
+        Subvention subvention = subventionMapper.asEntity(subventionDTO);
+        subvention.setActive(true);
+        var savedSubvention = subventionRepository.save(subvention);
 
         log.info("Created new Subvention: {}", savedSubvention);
         log.trace("Created new Subvention with id: {}", savedSubvention.getId());
@@ -58,7 +59,7 @@ public class SubventionServiceImpl implements SubventionService {
 
         if (subventionDTO.employeePercent() != null) existing.setEmployeePercent(subventionDTO.employeePercent());
         if (subventionDTO.employerPercent() != null) existing.setEmployerPercent(subventionDTO.employerPercent());
-        if (subventionDTO.status() != null) existing.setStatus(subventionDTO.status());
+        if (subventionDTO.active() != null) existing.setActive(subventionDTO.active());
 
         var updated = subventionRepository.saveAndFlush(existing);
 
@@ -72,8 +73,7 @@ public class SubventionServiceImpl implements SubventionService {
     public void deleteSubvention(Long subventionId) {
 
         Subvention subvention = subventionRepository.findById(subventionId).orElseThrow(() -> new ResourceNotFoundException("Subvention", "ID", subventionId));
-        subvention.setStatus(StateStatus.INACTIVE);
-
+        subvention.setActive(false);
         subventionRepository.saveAndFlush(subvention);
 
         log.info("Deleted Subvention: {}", subventionId);
@@ -81,7 +81,7 @@ public class SubventionServiceImpl implements SubventionService {
     }
 
     @Override
-    public Page<SubventionDTO> getSubventionsByFilters(Long id, String ref, Double employeePercent, Double employerPercent, Long partnershipId, Long employeeGroupId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<SubventionDTO> getSubventionsByFilters(Long id, String ref, Double employeePercent, Double employerPercent, Long partnershipId, Long employeeGroupId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QSubvention subvention = QSubvention.subvention;
         BooleanBuilder builder = new BooleanBuilder();
@@ -104,8 +104,8 @@ public class SubventionServiceImpl implements SubventionService {
         if (employeeGroupId != null) {
             builder.and(subvention.employeeGroup.id.eq(employeeGroupId));
         }
-        if (status != null) {
-            builder.and(subvention.status.eq(status));
+        if (active != null) {
+            builder.and(subvention.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(subvention.creationDate.goe(creationDate));

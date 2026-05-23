@@ -1,7 +1,7 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.CashierDTO;
-import com.sn.onepay.exceptions.ResourceAlreadyExistException;
+import com.sn.onepay.entity.Cashier;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.CashierMapper;
 import com.sn.onepay.repository.CashierRepository;
@@ -28,7 +28,9 @@ public class CashierServiceImpl implements CashierService {
     @Override
     public CashierDTO createCashier(CashierDTO cashierDTO) {
 
-        var savedCashier = cashierRepository.save(cashierMapper.asEntity(cashierDTO));
+        Cashier cashier = cashierMapper.asEntity(cashierDTO);
+        cashier.setActive(true);
+        var savedCashier = cashierRepository.save(cashier);
 
         log.info("Created new cashier: {}", savedCashier);
         log.trace("Saved new cashier with id: {}", savedCashier.getId());
@@ -52,9 +54,9 @@ public class CashierServiceImpl implements CashierService {
     @Override
     public void deleteCashier(Long cashierId) {
 
-        cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
-
-        cashierRepository.deleteById(cashierId);
+        Cashier cashier = cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
+        cashier.setActive(false);
+        cashierRepository.saveAndFlush(cashier);
 
         log.info("Deleted cashier: {}", cashierId);
         log.trace("Deleted cashier with id: {}", cashierId);

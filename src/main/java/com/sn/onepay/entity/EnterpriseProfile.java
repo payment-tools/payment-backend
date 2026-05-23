@@ -1,7 +1,6 @@
 package com.sn.onepay.entity;
 
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -53,9 +52,8 @@ public class EnterpriseProfile {
     @JoinColumn(name = "EnterpriseId")
     Enterprise enterprise;
 
-    @Column(name = "Status", nullable = false)
-    @Enumerated(EnumType.STRING)
-    StateStatus status;
+    @Column(name = "Active", nullable = false)
+    boolean active;
 
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)

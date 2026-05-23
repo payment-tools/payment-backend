@@ -1,9 +1,6 @@
 package com.sn.onepay.services;
 
 import com.sn.onepay.dto.PartnershipDTO;
-import com.sn.onepay.entity.Enterprise;
-import com.sn.onepay.entity.Sales;
-import com.sn.onepay.enumeration.StateStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,7 +15,7 @@ public interface PartnershipService {
     void deletePartnership(Long partnershipId);
 
 
-    Page<PartnershipDTO> getPartnershipsByFilters(Long id, String ref, Sales sales, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<PartnershipDTO> getPartnershipsByFilters(Long id, String ref, Long salesId, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     PartnershipDTO getPartnershipsBySalesIdAndEnterpriseId(Long salesId, Long enterpriseId);
 }

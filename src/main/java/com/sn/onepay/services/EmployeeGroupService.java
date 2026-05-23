@@ -1,7 +1,6 @@
 package com.sn.onepay.services;
 
 import com.sn.onepay.dto.EmployeeGroupDTO;
-import com.sn.onepay.enumeration.StateStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,5 +14,5 @@ public interface EmployeeGroupService {
 
     void deleteEmployeeGroup(Long employeeGroupId);
 
-    Page<EmployeeGroupDTO> getEmployeeGroupsByFilters(Long id, String ref, String name, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<EmployeeGroupDTO> getEmployeeGroupsByFilters(Long id, String ref, String name, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 }

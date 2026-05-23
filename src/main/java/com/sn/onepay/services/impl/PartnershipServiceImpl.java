@@ -2,11 +2,8 @@ package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.PartnershipDTO;
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.QPartnership;
-import com.sn.onepay.entity.Sales;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
@@ -46,7 +43,9 @@ public class PartnershipServiceImpl implements PartnershipService {
         /*Check if partnership is allowed*/
         if(partnershipDTO.enterprise().enrolledModules().contains(partnershipDTO.sales().type())){
 
-            var savedPartnership = partnershipRepository.save(partnershipMapper.asEntity(partnershipDTO));
+            Partnership partnership = partnershipMapper.asEntity(partnershipDTO);
+            partnership.setActive(true);
+            var savedPartnership = partnershipRepository.save(partnership);
 
             log.info("Created Partnership: {}", savedPartnership);
             log.trace("Created Partnership with id: {}", savedPartnership.getId());
@@ -74,9 +73,9 @@ public class PartnershipServiceImpl implements PartnershipService {
     @Override
     public void deletePartnership(Long partnershipId) {
 
-        partnershipRepository.findById(partnershipId).orElseThrow( () -> new ResourceNotFoundException("Partnership", "ID", partnershipId));
-
-        partnershipRepository.deleteById(partnershipId);
+        Partnership partnership = partnershipRepository.findById(partnershipId).orElseThrow( () -> new ResourceNotFoundException("Partnership", "ID", partnershipId));
+        partnership.setActive(false);
+        partnershipRepository.saveAndFlush(partnership);
 
         log.info("Deleted Partnership with id: {}", partnershipId);
         log.trace("Deleted Partnership with id: {}", partnershipId);
@@ -84,7 +83,7 @@ public class PartnershipServiceImpl implements PartnershipService {
     }
 
     @Override
-    public Page<PartnershipDTO> getPartnershipsByFilters(Long id, String ref, Sales sales, Enterprise enterprise, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<PartnershipDTO> getPartnershipsByFilters(Long id, String ref, Long salesId, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QPartnership partnership = QPartnership.partnership;
         BooleanBuilder builder = new BooleanBuilder();
@@ -95,14 +94,14 @@ public class PartnershipServiceImpl implements PartnershipService {
         if (ref != null && !ref.isEmpty()) {
             builder.and(partnership.ref.containsIgnoreCase(ref));
         }
-        if (sales != null) {
-            builder.and(partnership.sales.eq(sales));
+        if (salesId != null) {
+            builder.and(partnership.sales.id.eq(salesId));
         }
-        if (enterprise != null) {
-            builder.and(partnership.enterprise.eq(enterprise));
+        if (enterpriseId != null) {
+            builder.and(partnership.enterprise.id.eq(enterpriseId));
         }
-        if (status != null) {
-            builder.and(partnership.status.eq(status));
+        if (active != null) {
+            builder.and(partnership.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(partnership.creationDate.goe(creationDate));

@@ -1,6 +1,5 @@
 package com.sn.onepay.dto;
 
-import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -26,8 +25,8 @@ public record EmployeeGroupDTO(
         @Schema(name = "clients", description = "List of clients (employees) in this group")
         List<ClientDTO> clients,
 
-        @Schema(name = "status", description = "Status of the EmployeeGroup")
-        StateStatus status,
+        @Schema(name = "active", description = "Whether the EmployeeGroup is active")
+        Boolean active,
 
         @Schema(name = "creationDate", description = "EmployeeGroup date of creation")
         LocalDateTime creationDate,

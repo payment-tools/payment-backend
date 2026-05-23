@@ -475,6 +475,66 @@
         <addPrimaryKey tableName="employeegroupclient" columnNames="employeegroupid,clientid" constraintName="pk_employeegroupclient"/>
     </changeSet>
 
+    <changeSet id="1.0.0-migrate-status-to-active" author="mouhamed">
+
+        <addColumn tableName="client">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE client SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="client" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="client" columnName="status"/>
+
+        <addColumn tableName="cashier">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE cashier SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="cashier" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="cashier" columnName="status"/>
+
+        <addColumn tableName="enterpriseprofile">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE enterpriseprofile SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="enterpriseprofile" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="enterpriseprofile" columnName="status"/>
+
+        <addColumn tableName="salesprofile">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE salesprofile SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="salesprofile" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="salesprofile" columnName="status"/>
+
+        <addColumn tableName="partnership">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE partnership SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="partnership" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="partnership" columnName="status"/>
+
+        <addColumn tableName="payment">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE payment SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="payment" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="payment" columnName="status"/>
+
+        <addColumn tableName="employeegroup">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE employeegroup SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="employeegroup" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="employeegroup" columnName="status"/>
+
+        <addColumn tableName="subvention">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql>UPDATE subvention SET active = (status = 'ACTIVE')</sql>
+        <addNotNullConstraint tableName="subvention" columnName="active" columnDataType="BOOLEAN"/>
+        <dropColumn tableName="subvention" columnName="status"/>
+
+    </changeSet>
+
     <changeSet id="1.0.0-drop-insert" author="mouha">
         <sqlFile path="../data/insert-data.sql"
                  relativeToChangelogFile="true"

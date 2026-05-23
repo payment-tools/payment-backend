@@ -3,7 +3,6 @@ package com.sn.onepay.services.impl;
 import com.sn.onepay.dto.SalesProfileDTO;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
@@ -45,11 +44,13 @@ class SalesProfileServiceImplTest {
         var resultDTO = mock(SalesProfileDTO.class);
 
         when(salesProfileMapper.asEntity(dto)).thenReturn(entity);
-        when(salesProfileRepository.save(entity)).thenReturn(saved);
+        when(salesProfileRepository.save(any(SalesProfile.class))).thenReturn(saved);
         when(salesProfileMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = salesProfileService.createSalesProfile(dto);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(entity.isActive()).isTrue();
     }
 
     @Test
@@ -85,13 +86,15 @@ class SalesProfileServiceImplTest {
     }
 
     @Test
-    void deleteSalesProfile_deletesWhenFound() {
-        when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(new SalesProfile()));
-        doNothing().when(salesProfileRepository).deleteById(1L);
+    void deleteSalesProfile_setsActiveToFalse() {
+        var profile = new SalesProfile();
+        when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(profile));
+        when(salesProfileRepository.saveAndFlush(profile)).thenReturn(profile);
 
         salesProfileService.deleteSalesProfile(1L);
 
-        verify(salesProfileRepository).deleteById(1L);
+        assertThat(profile.isActive()).isFalse();
+        verify(salesProfileRepository).saveAndFlush(profile);
     }
 
     @Test
@@ -116,7 +119,7 @@ class SalesProfileServiceImplTest {
 
         Page<SalesProfileDTO> result = salesProfileService.getSalesProfilesByFilters(
                 1L, "REF", "John", "Doe", "jdoe", "jdoe@mail.com", "770000000",
-                Roles.SALES_ADMIN, 2L, StateStatus.ACTIVE,
+                Roles.SALES_ADMIN, 2L, true,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);

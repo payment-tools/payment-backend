@@ -1,7 +1,6 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.SubventionDTO;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.SubventionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -78,11 +77,11 @@ public class SubventionController {
             @Parameter(description = "Filter by employer percentage") @RequestParam(required = false) Double employerPercent,
             @Parameter(description = "Filter by partnership ID") @RequestParam(required = false) Long partnershipId,
             @Parameter(description = "Filter by employee group ID") @RequestParam(required = false) Long employeeGroupId,
-            @Parameter(description = "Filter by status (ACTIVE or INACTIVE)") @RequestParam(required = false) StateStatus status,
+            @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
             @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
             @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
             Pageable pageable) {
-        return subventionService.getSubventionsByFilters(id, ref, employeePercent, employerPercent, partnershipId, employeeGroupId, status, creationDate, modificationDate, pageable);
+        return subventionService.getSubventionsByFilters(id, ref, employeePercent, employerPercent, partnershipId, employeeGroupId, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a subvention by id", description = "This endpoint is for deleting a subvention by id")

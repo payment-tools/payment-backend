@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,11 +39,13 @@ class CashierServiceImplTest {
         var resultDTO = mock(CashierDTO.class);
 
         when(cashierMapper.asEntity(dto)).thenReturn(entity);
-        when(cashierRepository.save(entity)).thenReturn(saved);
+        when(cashierRepository.save(any(Cashier.class))).thenReturn(saved);
         when(cashierMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = cashierService.createCashier(dto);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(entity.isActive()).isTrue();
     }
 
     @Test
@@ -78,13 +81,15 @@ class CashierServiceImplTest {
     }
 
     @Test
-    void deleteCashier_deletesWhenFound() {
-        when(cashierRepository.findById(1L)).thenReturn(Optional.of(new Cashier()));
-        doNothing().when(cashierRepository).deleteById(1L);
+    void deleteCashier_setsActiveToFalse() {
+        var cashier = new Cashier();
+        when(cashierRepository.findById(1L)).thenReturn(Optional.of(cashier));
+        when(cashierRepository.saveAndFlush(cashier)).thenReturn(cashier);
 
         cashierService.deleteCashier(1L);
 
-        verify(cashierRepository).deleteById(1L);
+        assertThat(cashier.isActive()).isFalse();
+        verify(cashierRepository).saveAndFlush(cashier);
     }
 
     @Test

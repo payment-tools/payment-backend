@@ -2,7 +2,6 @@ package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.EmployeeGroupDTO;
 import com.sn.onepay.entity.EmployeeGroup;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EmployeeGroupMapper;
 import com.sn.onepay.repository.EmployeeGroupRepository;
@@ -44,11 +43,13 @@ class EmployeeGroupServiceImplTest {
         var resultDTO = mock(EmployeeGroupDTO.class);
 
         when(employeeGroupMapper.asEntity(dto)).thenReturn(entity);
-        when(employeeGroupRepository.save(entity)).thenReturn(saved);
+        when(employeeGroupRepository.save(any(EmployeeGroup.class))).thenReturn(saved);
         when(employeeGroupMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = employeeGroupService.createEmployeeGroup(dto);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(entity.isActive()).isTrue();
     }
 
     @Test
@@ -63,10 +64,11 @@ class EmployeeGroupServiceImplTest {
     void updateEmployeeGroup_modifiesFieldsAndSaves() {
         var dto = mock(EmployeeGroupDTO.class);
         when(dto.name()).thenReturn("New Name");
-        when(dto.status()).thenReturn(StateStatus.INACTIVE);
+        when(dto.active()).thenReturn(false);
 
         var existing = new EmployeeGroup();
         existing.setName("Old Name");
+        existing.setActive(true);
 
         var updated = new EmployeeGroup();
         var resultDTO = mock(EmployeeGroupDTO.class);
@@ -78,19 +80,19 @@ class EmployeeGroupServiceImplTest {
         var result = employeeGroupService.updateEmployeeGroup(dto, 1L);
 
         assertThat(existing.getName()).isEqualTo("New Name");
-        assertThat(existing.getStatus()).isEqualTo(StateStatus.INACTIVE);
+        assertThat(existing.isActive()).isFalse();
         assertThat(result).isEqualTo(resultDTO);
     }
 
     @Test
-    void updateEmployeeGroup_withNullStatus_doesNotChangeStatus() {
+    void updateEmployeeGroup_withNullActive_doesNotChangeActive() {
         var dto = mock(EmployeeGroupDTO.class);
         when(dto.name()).thenReturn("Updated Name");
-        when(dto.status()).thenReturn(null);
+        when(dto.active()).thenReturn(null);
 
         var existing = new EmployeeGroup();
         existing.setName("Old Name");
-        existing.setStatus(StateStatus.ACTIVE);
+        existing.setActive(true);
 
         var updated = new EmployeeGroup();
         var resultDTO = mock(EmployeeGroupDTO.class);
@@ -101,7 +103,7 @@ class EmployeeGroupServiceImplTest {
 
         employeeGroupService.updateEmployeeGroup(dto, 1L);
 
-        assertThat(existing.getStatus()).isEqualTo(StateStatus.ACTIVE);
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test
@@ -113,14 +115,14 @@ class EmployeeGroupServiceImplTest {
     }
 
     @Test
-    void deleteEmployeeGroup_setsStatusToInactive() {
+    void deleteEmployeeGroup_setsActiveToFalse() {
         var group = new EmployeeGroup();
         when(employeeGroupRepository.findById(1L)).thenReturn(Optional.of(group));
         when(employeeGroupRepository.saveAndFlush(group)).thenReturn(group);
 
         employeeGroupService.deleteEmployeeGroup(1L);
 
-        assertThat(group.getStatus()).isEqualTo(StateStatus.INACTIVE);
+        assertThat(group.isActive()).isFalse();
         verify(employeeGroupRepository).saveAndFlush(group);
     }
 
@@ -145,7 +147,7 @@ class EmployeeGroupServiceImplTest {
         when(employeeGroupMapper.asDTO(any(EmployeeGroup.class))).thenReturn(mock(EmployeeGroupDTO.class));
 
         Page<EmployeeGroupDTO> result = employeeGroupService.getEmployeeGroupsByFilters(
-                1L, "REF", "RH Group", 2L, StateStatus.ACTIVE,
+                1L, "REF", "RH Group", 2L, true,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);

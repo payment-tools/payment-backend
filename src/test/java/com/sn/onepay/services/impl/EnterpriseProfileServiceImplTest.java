@@ -3,7 +3,6 @@ package com.sn.onepay.services.impl;
 import com.sn.onepay.dto.EnterpriseProfileDTO;
 import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseProfileMapper;
 import com.sn.onepay.repository.EnterpriseProfileRepository;
@@ -45,11 +44,13 @@ class EnterpriseProfileServiceImplTest {
         var resultDTO = mock(EnterpriseProfileDTO.class);
 
         when(enterpriseProfileMapper.asEntity(dto)).thenReturn(entity);
-        when(enterpriseProfileRepository.save(entity)).thenReturn(saved);
+        when(enterpriseProfileRepository.save(any(EnterpriseProfile.class))).thenReturn(saved);
         when(enterpriseProfileMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = enterpriseProfileService.createEnterpriseProfile(dto);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(entity.isActive()).isTrue();
     }
 
     @Test
@@ -85,13 +86,15 @@ class EnterpriseProfileServiceImplTest {
     }
 
     @Test
-    void deleteEnterpriseProfile_deletesWhenFound() {
-        when(enterpriseProfileRepository.findById(1L)).thenReturn(Optional.of(new EnterpriseProfile()));
-        doNothing().when(enterpriseProfileRepository).deleteById(1L);
+    void deleteEnterpriseProfile_setsActiveToFalse() {
+        var profile = new EnterpriseProfile();
+        when(enterpriseProfileRepository.findById(1L)).thenReturn(Optional.of(profile));
+        when(enterpriseProfileRepository.saveAndFlush(profile)).thenReturn(profile);
 
         enterpriseProfileService.deleteEnterpriseProfile(1L);
 
-        verify(enterpriseProfileRepository).deleteById(1L);
+        assertThat(profile.isActive()).isFalse();
+        verify(enterpriseProfileRepository).saveAndFlush(profile);
     }
 
     @Test
@@ -116,7 +119,7 @@ class EnterpriseProfileServiceImplTest {
 
         Page<EnterpriseProfileDTO> result = enterpriseProfileService.getEnterpriseProfilesByFilters(
                 1L, "REF", "John", "Doe", "jdoe", "jdoe@mail.com", "770000000",
-                Roles.ENTERPRISE_ADMIN, 2L, StateStatus.ACTIVE,
+                Roles.ENTERPRISE_ADMIN, 2L, true,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);

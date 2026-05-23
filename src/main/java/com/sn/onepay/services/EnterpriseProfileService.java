@@ -2,7 +2,6 @@ package com.sn.onepay.services;
 
 import com.sn.onepay.dto.EnterpriseProfileDTO;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,5 +15,5 @@ public interface EnterpriseProfileService {
 
     void deleteEnterpriseProfile(Long enterpriseProfileId);
 
-    Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 }

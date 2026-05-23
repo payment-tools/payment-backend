@@ -3,7 +3,6 @@ package com.sn.onepay.services.impl;
 import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.SubventionDTO;
 import com.sn.onepay.entity.Subvention;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SubventionMapper;
@@ -69,7 +68,7 @@ class SubventionServiceImplTest {
     @Test
     void createSubvention_throwsWhenPartnershipNotActive() {
         var partnership = mock(PartnershipDTO.class);
-        when(partnership.status()).thenReturn(StateStatus.INACTIVE);
+        when(partnership.active()).thenReturn(false);
 
         var dto = buildDTO(60.0, 40.0, partnership);
 
@@ -81,7 +80,7 @@ class SubventionServiceImplTest {
     @Test
     void createSubvention_happyPath() {
         var partnership = mock(PartnershipDTO.class);
-        when(partnership.status()).thenReturn(StateStatus.ACTIVE);
+        when(partnership.active()).thenReturn(true);
 
         var dto = buildDTO(60.0, 40.0, partnership);
         var entity = new Subvention();
@@ -89,11 +88,13 @@ class SubventionServiceImplTest {
         var resultDTO = mock(SubventionDTO.class);
 
         when(subventionMapper.asEntity(dto)).thenReturn(entity);
-        when(subventionRepository.save(entity)).thenReturn(saved);
+        when(subventionRepository.save(any(Subvention.class))).thenReturn(saved);
         when(subventionMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = subventionService.createSubvention(dto);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(entity.isActive()).isTrue();
     }
 
     @Test
@@ -109,9 +110,10 @@ class SubventionServiceImplTest {
         var dto = mock(SubventionDTO.class);
         when(dto.employeePercent()).thenReturn(70.0);
         when(dto.employerPercent()).thenReturn(30.0);
-        when(dto.status()).thenReturn(StateStatus.INACTIVE);
+        when(dto.active()).thenReturn(false);
 
         var existing = new Subvention();
+        existing.setActive(true);
         var updated = new Subvention();
         var resultDTO = mock(SubventionDTO.class);
 
@@ -123,7 +125,7 @@ class SubventionServiceImplTest {
 
         assertThat(existing.getEmployeePercent()).isEqualTo(70.0);
         assertThat(existing.getEmployerPercent()).isEqualTo(30.0);
-        assertThat(existing.getStatus()).isEqualTo(StateStatus.INACTIVE);
+        assertThat(existing.isActive()).isFalse();
         assertThat(result).isEqualTo(resultDTO);
     }
 
@@ -132,12 +134,12 @@ class SubventionServiceImplTest {
         var dto = mock(SubventionDTO.class);
         when(dto.employeePercent()).thenReturn(null);
         when(dto.employerPercent()).thenReturn(null);
-        when(dto.status()).thenReturn(null);
+        when(dto.active()).thenReturn(null);
 
         var existing = new Subvention();
         existing.setEmployeePercent(60.0);
         existing.setEmployerPercent(40.0);
-        existing.setStatus(StateStatus.ACTIVE);
+        existing.setActive(true);
 
         var updated = new Subvention();
         var resultDTO = mock(SubventionDTO.class);
@@ -150,7 +152,7 @@ class SubventionServiceImplTest {
 
         assertThat(existing.getEmployeePercent()).isEqualTo(60.0);
         assertThat(existing.getEmployerPercent()).isEqualTo(40.0);
-        assertThat(existing.getStatus()).isEqualTo(StateStatus.ACTIVE);
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test
@@ -162,14 +164,14 @@ class SubventionServiceImplTest {
     }
 
     @Test
-    void deleteSubvention_setsStatusToInactive() {
+    void deleteSubvention_setsActiveToFalse() {
         var subvention = new Subvention();
         when(subventionRepository.findById(1L)).thenReturn(Optional.of(subvention));
         when(subventionRepository.saveAndFlush(subvention)).thenReturn(subvention);
 
         subventionService.deleteSubvention(1L);
 
-        assertThat(subvention.getStatus()).isEqualTo(StateStatus.INACTIVE);
+        assertThat(subvention.isActive()).isFalse();
         verify(subventionRepository).saveAndFlush(subvention);
     }
 
@@ -194,7 +196,7 @@ class SubventionServiceImplTest {
         when(subventionMapper.asDTO(any(Subvention.class))).thenReturn(mock(SubventionDTO.class));
 
         Page<SubventionDTO> result = subventionService.getSubventionsByFilters(
-                1L, "REF", 60.0, 40.0, 2L, 3L, StateStatus.ACTIVE,
+                1L, "REF", 60.0, 40.0, 2L, 3L, true,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);

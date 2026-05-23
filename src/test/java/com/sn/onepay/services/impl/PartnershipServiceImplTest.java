@@ -5,7 +5,6 @@ import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.SalesDTO;
 import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.enumeration.Modules;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
@@ -45,7 +44,7 @@ class PartnershipServiceImplTest {
     PartnershipServiceImpl partnershipService;
 
     private PartnershipDTO buildPartnershipDTO(Long salesId, Modules salesType, Long enterpriseId,
-                                                List<Modules> enrolledModules, StateStatus status) {
+                                                List<Modules> enrolledModules) {
         var salesDTO = mock(SalesDTO.class);
         when(salesDTO.id()).thenReturn(salesId);
         when(salesDTO.type()).thenReturn(salesType);
@@ -57,13 +56,12 @@ class PartnershipServiceImplTest {
         var dto = mock(PartnershipDTO.class);
         when(dto.sales()).thenReturn(salesDTO);
         when(dto.enterprise()).thenReturn(enterpriseDTO);
-        if (status != null) when(dto.status()).thenReturn(status);
         return dto;
     }
 
     @Test
     void createPartnership_throwsWhenAlreadyExists() {
-        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.RESTAURATION), null);
+        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.RESTAURATION));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L))
                 .thenReturn(new Partnership());
 
@@ -73,7 +71,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_throwsWhenModuleNotAllowed() {
-        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.MARKET), null);
+        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.MARKET));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(null);
 
         assertThatThrownBy(() -> partnershipService.createPartnership(dto))
@@ -82,18 +80,20 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_happyPath() {
-        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.RESTAURATION), StateStatus.ACTIVE);
+        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.RESTAURATION));
         var entity = new Partnership();
         var saved = new Partnership();
         var resultDTO = mock(PartnershipDTO.class);
 
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(null);
         when(partnershipMapper.asEntity(dto)).thenReturn(entity);
-        when(partnershipRepository.save(entity)).thenReturn(saved);
+        when(partnershipRepository.save(any(Partnership.class))).thenReturn(saved);
         when(partnershipMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = partnershipService.createPartnership(dto);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(entity.isActive()).isTrue();
     }
 
     @Test
@@ -129,13 +129,15 @@ class PartnershipServiceImplTest {
     }
 
     @Test
-    void deletePartnership_deletesWhenFound() {
-        when(partnershipRepository.findById(1L)).thenReturn(Optional.of(new Partnership()));
-        doNothing().when(partnershipRepository).deleteById(1L);
+    void deletePartnership_setsActiveToFalse() {
+        var partnership = new Partnership();
+        when(partnershipRepository.findById(1L)).thenReturn(Optional.of(partnership));
+        when(partnershipRepository.saveAndFlush(partnership)).thenReturn(partnership);
 
         partnershipService.deletePartnership(1L);
 
-        verify(partnershipRepository).deleteById(1L);
+        assertThat(partnership.isActive()).isFalse();
+        verify(partnershipRepository).saveAndFlush(partnership);
     }
 
     @Test
@@ -159,8 +161,8 @@ class PartnershipServiceImplTest {
         when(partnershipMapper.asDTO(any(Partnership.class))).thenReturn(mock(PartnershipDTO.class));
 
         Page<PartnershipDTO> result = partnershipService.getPartnershipsByFilters(
-                1L, "REF", mock(com.sn.onepay.entity.Sales.class), mock(com.sn.onepay.entity.Enterprise.class),
-                StateStatus.ACTIVE, LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
+                1L, "REF", 1L, 2L, true,
+                LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }

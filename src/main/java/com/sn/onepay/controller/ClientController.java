@@ -2,7 +2,6 @@ package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.ClientDTO;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -82,12 +81,12 @@ public class ClientController {
             @Parameter(description = "Filter by phone number (partial match)") @RequestParam(required = false) String phoneNumber,
             @Parameter(description = "Filter by role") @RequestParam(required = false) Roles role,
             @Parameter(description = "Filter by enterprise ID") @RequestParam(required = false) Long enterpriseId,
-            @Parameter(description = "Filter by status (ACTIVE or INACTIVE)") @RequestParam(required = false) StateStatus status,
+            @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
             @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
             @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
             Pageable pageable
     ) {
-        return clientService.getClientsByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, status, creationDate, modificationDate, pageable);
+        return clientService.getClientsByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a client by id", description = "This endpoint is for deleting client by id")

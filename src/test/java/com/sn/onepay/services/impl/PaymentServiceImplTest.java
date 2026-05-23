@@ -10,7 +10,6 @@ import com.sn.onepay.dto.SalesConfigurationsDTO;
 import com.sn.onepay.dto.SalesDTO;
 import com.sn.onepay.entity.Payment;
 import com.sn.onepay.enumeration.Modules;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PaymentMapper;
@@ -101,7 +100,7 @@ class PaymentServiceImplTest {
 
     private PartnershipDTO buildActivePartnership() {
         var p = mock(PartnershipDTO.class);
-        when(p.status()).thenReturn(StateStatus.ACTIVE);
+        when(p.active()).thenReturn(true);
         return p;
     }
 
@@ -123,7 +122,7 @@ class PaymentServiceImplTest {
     void createPayment_throwsWhenPartnershipInactive() {
         var dto = buildPaymentDTO(Modules.RESTAURATION, 50.0);
         var inactivePartnership = mock(PartnershipDTO.class);
-        when(inactivePartnership.status()).thenReturn(StateStatus.INACTIVE);
+        when(inactivePartnership.active()).thenReturn(false);
         var salesConfig = buildSalesConfig(10.0, 100.0);
         var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
 
@@ -166,7 +165,7 @@ class PaymentServiceImplTest {
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
-        when(paymentRepository.save(entity)).thenReturn(saved);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = paymentService.createPayment(dto);
@@ -205,7 +204,7 @@ class PaymentServiceImplTest {
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "MARKET")).thenReturn(0.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
-        when(paymentRepository.save(entity)).thenReturn(saved);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = paymentService.createPayment(dto);
@@ -244,7 +243,7 @@ class PaymentServiceImplTest {
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "GAS_STATION")).thenReturn(0.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
-        when(paymentRepository.save(entity)).thenReturn(saved);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = paymentService.createPayment(dto);
@@ -283,7 +282,7 @@ class PaymentServiceImplTest {
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "TELEPHONY")).thenReturn(0.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
-        when(paymentRepository.save(entity)).thenReturn(saved);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = paymentService.createPayment(dto);
@@ -340,14 +339,14 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void deletePayment_setsStatusToInactive() {
+    void deletePayment_setsActiveToFalse() {
         var payment = new Payment();
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
         when(paymentRepository.saveAndFlush(payment)).thenReturn(payment);
 
         paymentService.deletePayment(1L);
 
-        assertThat(payment.getStatus()).isEqualTo(StateStatus.INACTIVE);
+        assertThat(payment.isActive()).isFalse();
         verify(paymentRepository).saveAndFlush(payment);
     }
 
@@ -404,7 +403,7 @@ class PaymentServiceImplTest {
         when(paymentMapper.asDTO(any(Payment.class))).thenReturn(mock(PaymentDTO.class));
 
         Page<PaymentDTO> result = paymentService.getPaymentByFilters(
-                1L, "REF", 1L, 2L, 50.0, StateStatus.ACTIVE, Modules.RESTAURATION,
+                1L, "REF", 1L, 2L, 50.0, true, Modules.RESTAURATION,
                 LocalDateTime.now(), LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);

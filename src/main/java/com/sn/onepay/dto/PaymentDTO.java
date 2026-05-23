@@ -1,7 +1,6 @@
 package com.sn.onepay.dto;
 
 import com.sn.onepay.enumeration.Modules;
-import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -27,9 +26,8 @@ public record PaymentDTO(
         @NotNull(message = "Amount can not be null")
         Double amount,
 
-        @Schema(name = "status", description = "Status of the payment")
-        @NotNull(message = "Payment status can not be null")
-        StateStatus status,
+        @Schema(name = "active", description = "Whether the payment is active")
+        Boolean active,
 
         @Schema(name = "module", description = "Module of the payment")
         @NotNull(message = "Payment module can not be null")

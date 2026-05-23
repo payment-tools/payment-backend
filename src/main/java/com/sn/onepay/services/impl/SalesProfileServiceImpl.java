@@ -5,7 +5,6 @@ import com.sn.onepay.dto.SalesProfileDTO;
 import com.sn.onepay.entity.QSalesProfile;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
@@ -34,7 +33,9 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     @Override
     public SalesProfileDTO createSalesProfile(SalesProfileDTO salesProfileDTO) {
 
-        var savedSalesProfile = salesProfileRepository.save(salesProfileMapper.asEntity(salesProfileDTO));
+        SalesProfile profile = salesProfileMapper.asEntity(salesProfileDTO);
+        profile.setActive(true);
+        var savedSalesProfile = salesProfileRepository.save(profile);
 
         log.info("Sales profile saved: {}", savedSalesProfile);
         log.trace("Sales profile saved with id: {}", savedSalesProfile.getId());
@@ -58,9 +59,9 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     @Override
     public void deleteSalesProfile(Long salesProfileId) {
 
-        salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
-
-        salesProfileRepository.deleteById(salesProfileId);
+        SalesProfile profile = salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
+        profile.setActive(false);
+        salesProfileRepository.saveAndFlush(profile);
 
         log.info("Sales profile deleted with id: {}", salesProfileId);
         log.trace("Sales profile deleted with id: {}", salesProfileId);
@@ -68,7 +69,7 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     }
 
     @Override
-    public Page<SalesProfileDTO> getSalesProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long salesId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<SalesProfileDTO> getSalesProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long salesId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QSalesProfile salesProfile = QSalesProfile.salesProfile;
         BooleanBuilder builder = new BooleanBuilder();
@@ -100,8 +101,8 @@ public class SalesProfileServiceImpl implements SalesProfileService {
         if (salesId != null) {
             builder.and(salesProfile.sales.id.eq(salesId));
         }
-        if (status != null) {
-            builder.and(salesProfile.status.eq(status));
+        if (active != null) {
+            builder.and(salesProfile.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(salesProfile.creationDate.goe(creationDate));

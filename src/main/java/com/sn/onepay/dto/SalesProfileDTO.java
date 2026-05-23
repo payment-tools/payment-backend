@@ -2,7 +2,6 @@ package com.sn.onepay.dto;
 
 import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 
@@ -38,8 +37,8 @@ public record SalesProfileDTO(
         @Schema(name = "sales", description = "User's sales")
         Sales sales,
 
-        @Schema(name = "status", description = "User's status")
-        StateStatus status,
+        @Schema(name = "active", description = "Whether the profile is active")
+        Boolean active,
 
         @Schema(name = "creationDate", description = "Sales profile date of creation")
         LocalDateTime creationDate,

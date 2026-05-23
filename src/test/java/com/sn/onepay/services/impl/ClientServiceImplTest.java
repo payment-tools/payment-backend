@@ -3,7 +3,6 @@ package com.sn.onepay.services.impl;
 import com.sn.onepay.dto.ClientDTO;
 import com.sn.onepay.entity.Client;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
@@ -45,11 +44,13 @@ class ClientServiceImplTest {
         var resultDTO = mock(ClientDTO.class);
 
         when(clientMapper.asEntity(dto)).thenReturn(entity);
-        when(clientRepository.save(entity)).thenReturn(saved);
+        when(clientRepository.save(any(Client.class))).thenReturn(saved);
         when(clientMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = clientService.createClient(dto);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(entity.isActive()).isTrue();
     }
 
     @Test
@@ -85,13 +86,15 @@ class ClientServiceImplTest {
     }
 
     @Test
-    void deleteClient_deletesWhenFound() {
-        when(clientRepository.findById(1L)).thenReturn(Optional.of(new Client()));
-        doNothing().when(clientRepository).deleteById(1L);
+    void deleteClient_setsActiveToFalse() {
+        var client = new Client();
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(client));
+        when(clientRepository.saveAndFlush(client)).thenReturn(client);
 
         clientService.deleteClient(1L);
 
-        verify(clientRepository).deleteById(1L);
+        assertThat(client.isActive()).isFalse();
+        verify(clientRepository).saveAndFlush(client);
     }
 
     @Test
@@ -116,7 +119,7 @@ class ClientServiceImplTest {
 
         Page<ClientDTO> result = clientService.getClientsByFilters(
                 1L, "REF", "John", "Doe", "jdoe", "jdoe@mail.com", "770000000",
-                Roles.CLIENT, 2L, StateStatus.ACTIVE,
+                Roles.CLIENT, 2L, true,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);

@@ -1,6 +1,5 @@
 package com.sn.onepay.entity;
 
-import com.sn.onepay.enumeration.StateStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -50,9 +49,8 @@ public class Partnership {
     @JoinColumn(name = "EnterpriseId")
     Enterprise enterprise;
 
-    @Column(name = "Status", nullable = false)
-    @Enumerated(EnumType.STRING)
-    StateStatus status;
+    @Column(name = "Active", nullable = false)
+    boolean active;
 
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)
