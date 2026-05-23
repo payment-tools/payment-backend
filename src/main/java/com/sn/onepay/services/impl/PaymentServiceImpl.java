@@ -8,7 +8,6 @@ import com.sn.onepay.dto.SalesConfigurationsDTO;
 import com.sn.onepay.entity.Payment;
 import com.sn.onepay.entity.QPayment;
 import com.sn.onepay.enumeration.Modules;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PaymentMapper;
@@ -60,34 +59,42 @@ public class PaymentServiceImpl implements PaymentService {
         if (Objects.isNull(partnership))
             throw new ObjectValidationException("Paiement non autorisé");
 
-        if(partnership.status().equals(StateStatus.ACTIVE) && (salesConfigurations.maxAmount() >= paymentDTO.amount() && salesConfigurations.minAmount() <= paymentDTO.amount())) {
+        if(Boolean.TRUE.equals(partnership.active()) && (salesConfigurations.maxAmount() >= paymentDTO.amount() && salesConfigurations.minAmount() <= paymentDTO.amount())) {
             switch (module) {
                 case RESTAURATION -> {
                     if (paymentDTO.amount() + getSumOfAllPaymentsByClientIdAndModule(clientId, module) > enterpriseConfiguration.maxAmountRestauration()) {
                         throw new ObjectValidationException("Montant dépassé");
                     } else {
                         savedPayment = paymentRepository.save(paymentMapper.asEntity(paymentDTO));
+                        savedPayment.setActive(true);
+                        savedPayment = paymentRepository.save(savedPayment);
                     }
                 }
                 case MARKET -> {
                     if (paymentDTO.amount() + getSumOfAllPaymentsByClientIdAndModule(clientId, module) > enterpriseConfiguration.maxAmountMarket()) {
                         throw new ObjectValidationException("Montant dépassé");
                     } else {
-                        savedPayment = paymentRepository.save(paymentMapper.asEntity(paymentDTO));
+                        savedPayment = paymentMapper.asEntity(paymentDTO);
+                        savedPayment.setActive(true);
+                        savedPayment = paymentRepository.save(savedPayment);
                     }
                 }
                 case GAS_STATION -> {
                     if (paymentDTO.amount() + getSumOfAllPaymentsByClientIdAndModule(clientId, module) > enterpriseConfiguration.maxAmountGasStation()) {
                         throw new ObjectValidationException("Montant dépassé");
                     } else {
-                        savedPayment = paymentRepository.save(paymentMapper.asEntity(paymentDTO));
+                        savedPayment = paymentMapper.asEntity(paymentDTO);
+                        savedPayment.setActive(true);
+                        savedPayment = paymentRepository.save(savedPayment);
                     }
                 }
                 case TELEPHONY -> {
                     if (paymentDTO.amount() + getSumOfAllPaymentsByClientIdAndModule(clientId, module) > enterpriseConfiguration.maxAmountTelephony()) {
                         throw new ObjectValidationException("Montant dépassé");
                     } else {
-                        savedPayment = paymentRepository.save(paymentMapper.asEntity(paymentDTO));
+                        savedPayment = paymentMapper.asEntity(paymentDTO);
+                        savedPayment.setActive(true);
+                        savedPayment = paymentRepository.save(savedPayment);
                     }
                 }
             }
@@ -119,8 +126,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         /*Implements logical deletion*/
         Payment payment = paymentRepository.findById(paymentId).orElseThrow(() ->  new ResourceNotFoundException("Payment", "ID", paymentId));
-        payment.setStatus(StateStatus.INACTIVE);
-
+        payment.setActive(false);
         paymentRepository.saveAndFlush(payment);
 
         log.info("Payment deleted: {}", paymentId);
@@ -141,7 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Long clientId, Long cashierId, Double amount, StateStatus status, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Long clientId, Long cashierId, Double amount, Boolean active, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QPayment payment = QPayment.payment;
         BooleanBuilder builder = new BooleanBuilder();
@@ -161,8 +167,8 @@ public class PaymentServiceImpl implements PaymentService {
         if (amount != null) {
             builder.and(payment.amount.eq(amount));
         }
-        if (status != null) {
-            builder.and(payment.status.eq(status));
+        if (active != null) {
+            builder.and(payment.active.eq(active));
         }
         if (module != null) {
             builder.and(payment.module.eq(module));

@@ -1,6 +1,5 @@
 package com.sn.onepay.dto;
 
-import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -30,8 +29,8 @@ public record SubventionDTO(
         @NotNull
         EmployeeGroupDTO employeeGroup,
 
-        @Schema(name = "status", description = "Status of the Subvention")
-        StateStatus status,
+        @Schema(name = "active", description = "Whether the Subvention is active")
+        Boolean active,
 
         @Schema(name = "creationDate", description = "Subvention date of creation")
         LocalDateTime creationDate,

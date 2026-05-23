@@ -4,7 +4,6 @@ import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EmployeeGroupDTO;
 import com.sn.onepay.entity.EmployeeGroup;
 import com.sn.onepay.entity.QEmployeeGroup;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EmployeeGroupMapper;
 import com.sn.onepay.repository.EmployeeGroupRepository;
@@ -33,7 +32,9 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
     @Override
     public EmployeeGroupDTO createEmployeeGroup(EmployeeGroupDTO employeeGroupDTO) {
 
-        var savedGroup = employeeGroupRepository.save(employeeGroupMapper.asEntity(employeeGroupDTO));
+        EmployeeGroup group = employeeGroupMapper.asEntity(employeeGroupDTO);
+        group.setActive(true);
+        var savedGroup = employeeGroupRepository.save(group);
 
         log.info("Created new EmployeeGroup: {}", savedGroup);
         log.trace("Created new EmployeeGroup with id: {}", savedGroup.getId());
@@ -48,7 +49,7 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
                 .orElseThrow(() -> new ResourceNotFoundException("EmployeeGroup", "ID", employeeGroupId));
 
         existing.setName(employeeGroupDTO.name());
-        if (employeeGroupDTO.status() != null) existing.setStatus(employeeGroupDTO.status());
+        if (employeeGroupDTO.active() != null) existing.setActive(employeeGroupDTO.active());
 
         var updated = employeeGroupRepository.saveAndFlush(existing);
 
@@ -62,8 +63,7 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
     public void deleteEmployeeGroup(Long employeeGroupId) {
 
         EmployeeGroup group = employeeGroupRepository.findById(employeeGroupId).orElseThrow(() -> new ResourceNotFoundException("EmployeeGroup", "ID", employeeGroupId));
-        group.setStatus(StateStatus.INACTIVE);
-
+        group.setActive(false);
         employeeGroupRepository.saveAndFlush(group);
 
         log.info("Deleted EmployeeGroup: {}", employeeGroupId);
@@ -71,7 +71,7 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
     }
 
     @Override
-    public Page<EmployeeGroupDTO> getEmployeeGroupsByFilters(Long id, String ref, String name, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<EmployeeGroupDTO> getEmployeeGroupsByFilters(Long id, String ref, String name, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QEmployeeGroup employeeGroup = QEmployeeGroup.employeeGroup;
         BooleanBuilder builder = new BooleanBuilder();
@@ -88,8 +88,8 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
         if (enterpriseId != null) {
             builder.and(employeeGroup.enterprise.id.eq(enterpriseId));
         }
-        if (status != null) {
-            builder.and(employeeGroup.status.eq(status));
+        if (active != null) {
+            builder.and(employeeGroup.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(employeeGroup.creationDate.goe(creationDate));

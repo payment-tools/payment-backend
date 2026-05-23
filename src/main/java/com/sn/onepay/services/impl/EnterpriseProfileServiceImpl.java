@@ -5,7 +5,6 @@ import com.sn.onepay.dto.EnterpriseProfileDTO;
 import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.entity.QEnterpriseProfile;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseProfileMapper;
 import com.sn.onepay.repository.EnterpriseProfileRepository;
@@ -34,7 +33,9 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     @Override
     public EnterpriseProfileDTO createEnterpriseProfile(EnterpriseProfileDTO enterpriseProfileDTO) {
 
-        var savedEnterpriseProfile = enterpriseProfileRepository.save(enterpriseProfileMapper.asEntity(enterpriseProfileDTO));
+        EnterpriseProfile profile = enterpriseProfileMapper.asEntity(enterpriseProfileDTO);
+        profile.setActive(true);
+        var savedEnterpriseProfile = enterpriseProfileRepository.save(profile);
 
         log.info("Created Enterprise Profile: {}", savedEnterpriseProfile);
         log.trace("Created Enterprise Profile with id: {}", savedEnterpriseProfile.getId());
@@ -58,18 +59,16 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     @Override
     public void deleteEnterpriseProfile(Long enterpriseProfileId) {
 
-        enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
-
-        enterpriseProfileRepository.deleteById(enterpriseProfileId);
+        EnterpriseProfile profile = enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
+        profile.setActive(false);
+        enterpriseProfileRepository.saveAndFlush(profile);
 
         log.info("Deleted Enterprise Profile: {}", enterpriseProfileId);
         log.trace("Deleted Enterprise Profile with id: {}", enterpriseProfileId);
-
-
     }
 
     @Override
-    public Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QEnterpriseProfile enterpriseProfile = QEnterpriseProfile.enterpriseProfile;
         BooleanBuilder builder = new BooleanBuilder();
@@ -101,8 +100,8 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
         if (enterpriseId != null) {
             builder.and(enterpriseProfile.enterprise.id.eq(enterpriseId));
         }
-        if (status != null) {
-            builder.and(enterpriseProfile.status.eq(status));
+        if (active != null) {
+            builder.and(enterpriseProfile.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(enterpriseProfile.creationDate.goe(creationDate));

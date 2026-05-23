@@ -2,7 +2,6 @@ package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.SalesProfileDTO;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.SalesProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -83,11 +82,11 @@ public class SalesProfileController {
                                                           @Parameter(description = "Filter by phone number (partial match)") @RequestParam(required = false) String phoneNumber,
                                                           @Parameter(description = "Filter by role") @RequestParam(required = false) Roles role,
                                                           @Parameter(description = "Filter by sales ID") @RequestParam(required = false) Long salesId,
-                                                          @Parameter(description = "Filter by status (ACTIVE or INACTIVE)") @RequestParam(required = false) StateStatus status,
+                                                          @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
                                                           @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
                                                           @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                           Pageable pageable) {
-        return salesProfileService.getSalesProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, status, creationDate, modificationDate, pageable);
+        return salesProfileService.getSalesProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a sales Profile by id", description = "This endpoint is for deleting sales Profile by id")

@@ -1,11 +1,8 @@
 package com.sn.onepay.entity;
 
-import com.sn.onepay.enumeration.StateStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -59,9 +56,8 @@ public class EmployeeGroup {
     )
     List<Client> clients;
 
-    @Column(name = "Status", nullable = false)
-    @Enumerated(EnumType.STRING)
-    StateStatus status;
+    @Column(name = "Active", nullable = false)
+    boolean active;
 
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)

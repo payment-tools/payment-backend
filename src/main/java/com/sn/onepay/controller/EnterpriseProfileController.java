@@ -2,7 +2,6 @@ package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.EnterpriseProfileDTO;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.EnterpriseProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -84,12 +83,12 @@ public class EnterpriseProfileController {
             @RequestParam(required = false) String phoneNumber,
             @RequestParam(required = false) Roles role,
             @RequestParam(required = false) Long enterpriseId,
-            @RequestParam(required = false) StateStatus status,
+            @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
             Pageable pageable
     ) {
-        return enterpriseProfileService.getEnterpriseProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, status, creationDate, modificationDate, pageable);
+        return enterpriseProfileService.getEnterpriseProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a enterprise Profile by id", description = "This endpoint is for deleting enterprise Profile by id")

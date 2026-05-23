@@ -1,9 +1,6 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.PartnershipDTO;
-import com.sn.onepay.entity.Enterprise;
-import com.sn.onepay.entity.Sales;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.PartnershipService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -76,16 +73,16 @@ public class PartnershipController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<PartnershipDTO> getPartnershipByFilters(
-            @Parameter(description = "") @RequestParam(required = false) Long id,
-            @Parameter(description = "") @RequestParam(required = false) String ref,
-            @Parameter(description = "") @RequestParam(required = false) Sales sales,
-            @Parameter(description = "") @RequestParam(required = false) Enterprise enterprise,
-            @Parameter(description = "") @RequestParam(required = false) StateStatus status,
-            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
-            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+            @Parameter(description = "Filter by partnership ID") @RequestParam(required = false) Long id,
+            @Parameter(description = "Filter by reference (partial match)") @RequestParam(required = false) String ref,
+            @Parameter(description = "Filter by sales ID") @RequestParam(required = false) Long salesId,
+            @Parameter(description = "Filter by enterprise ID") @RequestParam(required = false) Long enterpriseId,
+            @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
+            @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+            @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
             Pageable pageable
     ) {
-        return partnershipService.getPartnershipsByFilters(id, ref, sales, enterprise, status, creationDate, modificationDate, pageable);
+        return partnershipService.getPartnershipsByFilters(id, ref, salesId, enterpriseId, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a partnership by id", description = "This endpoint is for deleting partnership by id")

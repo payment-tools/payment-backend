@@ -5,7 +5,6 @@ import com.sn.onepay.dto.ClientDTO;
 import com.sn.onepay.entity.Client;
 import com.sn.onepay.entity.QClient;
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
@@ -34,7 +33,9 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public ClientDTO createClient(ClientDTO clientDTO) {
 
-        var savedClient = clientRepository.save(clientMapper.asEntity(clientDTO));
+        Client client = clientMapper.asEntity(clientDTO);
+        client.setActive(true);
+        var savedClient = clientRepository.save(client);
 
         log.info("Created new client: {}", savedClient);
         log.trace("Created new client with id: {}", savedClient.getId());
@@ -59,9 +60,9 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public void deleteClient(Long clientId) {
 
-        clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
-
-        clientRepository.deleteById(clientId);
+        Client client = clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
+        client.setActive(false);
+        clientRepository.saveAndFlush(client);
 
         log.info("Deleted client: {}", clientId);
         log.trace("Deleted client with id: {}", clientId);
@@ -69,7 +70,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, StateStatus status, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QClient client = QClient.client;
         BooleanBuilder builder = new BooleanBuilder();
@@ -101,8 +102,8 @@ public class ClientServiceImpl implements ClientService {
         if (enterpriseId != null) {
             builder.and(client.enterprise.id.eq(enterpriseId));
         }
-        if (status != null) {
-            builder.and(client.status.eq(status));
+        if (active != null) {
+            builder.and(client.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(client.creationDate.goe(creationDate));

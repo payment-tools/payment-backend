@@ -1,7 +1,6 @@
 package com.sn.onepay.entity;
 
 import com.sn.onepay.enumeration.Modules;
-import com.sn.onepay.enumeration.StateStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -53,9 +52,8 @@ public class Payment {
     @Column(name = "Amount", nullable = false)
     Double amount;
 
-    @Column(name = "Status", nullable = false)
-    @Enumerated(EnumType.STRING)
-    StateStatus status;
+    @Column(name = "Active", nullable = false)
+    boolean active;
 
     @Column(name = "Module", nullable = false)
     @Enumerated(EnumType.STRING)

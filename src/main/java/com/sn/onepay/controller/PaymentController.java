@@ -2,7 +2,6 @@ package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.PaymentDTO;
 import com.sn.onepay.enumeration.Modules;
-import com.sn.onepay.enumeration.StateStatus;
 import com.sn.onepay.services.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -77,13 +76,13 @@ public class PaymentController {
                                                 @Parameter(description = "Filter by client ID") @RequestParam(required = false) Long clientId,
                                                 @Parameter(description = "Filter by cashier ID") @RequestParam(required = false) Long cashierId,
                                                 @Parameter(description = "Filter by amount") @RequestParam(required = false) Double amount,
-                                                @Parameter(description = "Filter by status (ACTIVE or INACTIVE)") @RequestParam(required = false) StateStatus status,
+                                                @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
                                                 @Parameter(description = "Filter by module") @RequestParam(required = false) Modules module,
                                                 @Parameter(description = "Filter by payment date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime paymentDate,
                                                 @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
                                                 @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                 Pageable pageable) {
-        return paymentService.getPaymentByFilters(id, ref, clientId, cashierId, amount, status, module, paymentDate, creationDate, modificationDate, pageable);
+        return paymentService.getPaymentByFilters(id, ref, clientId, cashierId, amount, active, module, paymentDate, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client")

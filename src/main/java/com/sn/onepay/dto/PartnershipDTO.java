@@ -1,6 +1,5 @@
 package com.sn.onepay.dto;
 
-import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -22,9 +21,9 @@ public record PartnershipDTO(
         @NotNull(message = "Enterprise can not be null")
         EnterpriseDTO enterprise,
 
-        @Schema(name = "status", description = "Status of the partnership")
-        @NotNull(message = "Status can not be null")
-        StateStatus status,
+        @Schema(name = "active", description = "Whether the partnership is active")
+        @NotNull(message = "Active can not be null")
+        Boolean active,
 
         @Schema(name = "creationDate", description = "Partnership date of creation")
         LocalDateTime creationDate,

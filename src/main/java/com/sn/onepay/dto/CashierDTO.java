@@ -1,7 +1,6 @@
 package com.sn.onepay.dto;
 
 import com.sn.onepay.enumeration.Roles;
-import com.sn.onepay.enumeration.StateStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -40,8 +39,8 @@ public record CashierDTO(
         @Schema(name = "sales", description = "Sales of the cashier")
         SalesDTO sales,
 
-        @Schema(name = "status", description = "Status of the cashier")
-        StateStatus status,
+        @Schema(name = "active", description = "Whether the Cashier is active")
+        Boolean active,
 
         @Schema(name = "creationDate", description = "Cashier date of creation")
         LocalDateTime creationDate,
