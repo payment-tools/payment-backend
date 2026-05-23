@@ -475,14 +475,6 @@
         <addPrimaryKey tableName="employeegroupclient" columnNames="employeegroupid,clientid" constraintName="pk_employeegroupclient"/>
     </changeSet>
 
-    <changeSet id="1.0.0-drop-insert" author="mouha">
-        <sqlFile path="../data/insert-data.sql"
-                 relativeToChangelogFile="true"
-                 splitStatements="true"
-                 stripComments="true"
-                 encoding="UTF-8"/>
-    </changeSet>
-
     <changeSet id="1.0.0-migrate-status-to-active" author="mouhamed">
 
         <addColumn tableName="client">
@@ -541,5 +533,13 @@
         <addNotNullConstraint tableName="subvention" columnName="active" columnDataType="BOOLEAN"/>
         <dropColumn tableName="subvention" columnName="status"/>
 
+    </changeSet>
+
+    <changeSet id="1.0.0-drop-insert" author="mouha">
+        <sqlFile path="../data/insert-data.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="true"
+                 stripComments="true"
+                 encoding="UTF-8"/>
     </changeSet>
 </databaseChangeLog>
