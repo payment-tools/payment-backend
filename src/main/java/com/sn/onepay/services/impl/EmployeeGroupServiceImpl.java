@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -33,6 +34,7 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
     public EmployeeGroupDTO createEmployeeGroup(EmployeeGroupDTO employeeGroupDTO) {
 
         EmployeeGroup group = employeeGroupMapper.asEntity(employeeGroupDTO);
+        group.setRef(UUID.randomUUID().toString());
         group.setActive(true);
         var savedGroup = employeeGroupRepository.save(group);
 

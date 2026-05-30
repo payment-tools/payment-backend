@@ -95,6 +95,7 @@ class SubventionServiceImplTest {
 
         assertThat(result).isEqualTo(resultDTO);
         assertThat(entity.isActive()).isTrue();
+        assertThat(entity.getRef()).isNotNull();
     }
 
     @Test
