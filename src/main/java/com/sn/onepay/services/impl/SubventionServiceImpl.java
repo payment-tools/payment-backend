@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -42,6 +43,7 @@ public class SubventionServiceImpl implements SubventionService {
         }
 
         Subvention subvention = subventionMapper.asEntity(subventionDTO);
+        subvention.setRef(UUID.randomUUID().toString());
         subvention.setActive(true);
         var savedSubvention = subventionRepository.save(subvention);
 
