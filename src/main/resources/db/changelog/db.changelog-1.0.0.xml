@@ -553,4 +553,38 @@
         <dropColumn tableName="subvention" columnName="status"/>
 
     </changeSet>
+
+    <changeSet id="1.0.0-add-qrcode-client" author="mouhamed">
+
+        <createTable tableName="qrcodeclient">
+            <column name="qrcodeclientid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ref" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="clientid" type="numeric(20)">
+                <constraints nullable="false" foreignKeyName="fk_qrcodeclient_client" references="client(clientid)"/>
+            </column>
+
+            <column name="used" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+
+        <insert tableName="jpa_sequence">
+            <column name="seq_key" value="QRCodeClientId"/>
+            <column name="seq_value" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
 </databaseChangeLog>

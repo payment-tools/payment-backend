@@ -16,6 +16,7 @@ import com.sn.onepay.mapper.PaymentMapper;
 import com.sn.onepay.repository.PaymentRepository;
 import com.sn.onepay.services.EnterpriseConfigurationService;
 import com.sn.onepay.services.PartnershipService;
+import com.sn.onepay.services.QRCodeService;
 import com.sn.onepay.services.SalesConfigurationsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +56,9 @@ class PaymentServiceImplTest {
 
     @Mock
     PartnershipService partnershipService;
+
+    @Mock
+    QRCodeService qrCodeService;
 
     @InjectMocks
     PaymentServiceImpl paymentService;
@@ -138,6 +142,21 @@ class PaymentServiceImplTest {
     @Test
     void createPayment_throwsWhenAmountBelowMin() {
         var dto = buildPaymentDTO(Modules.RESTAURATION, 5.0);
+        var salesConfig = buildSalesConfig(10.0, 100.0);
+        var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
+        var activePartnership = buildActivePartnership();
+        when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
+        when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
+        when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
+
+        assertThatThrownBy(() -> paymentService.createPayment(dto))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("non autorisé");
+    }
+
+    @Test
+    void createPayment_throwsWhenAmountAboveMax() {
+        var dto = buildPaymentDTO(Modules.RESTAURATION, 150.0);
         var salesConfig = buildSalesConfig(10.0, 100.0);
         var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
         var activePartnership = buildActivePartnership();
@@ -307,6 +326,55 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    void createPayment_withQrCodeRef_consumesQrCode() {
+        var dto = buildPaymentDTO(Modules.RESTAURATION, 50.0);
+        when(dto.qrCodeRef()).thenReturn("qr-ref");
+        var entity = new Payment();
+        var saved = new Payment();
+        var resultDTO = mock(PaymentDTO.class);
+        var salesConfig = buildSalesConfig(10.0, 100.0);
+        var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
+        var activePartnership = buildActivePartnership();
+
+        when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
+        when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
+        when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentMapper.asEntity(dto)).thenReturn(entity);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
+        when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = paymentService.createPayment(dto);
+
+        assertThat(result).isEqualTo(resultDTO);
+        verify(qrCodeService).consumeClientQrCode("qr-ref", 3L);
+    }
+
+    @Test
+    void createPayment_withoutQrCodeRef_doesNotConsumeQrCode() {
+        var dto = buildPaymentDTO(Modules.RESTAURATION, 50.0);
+        when(dto.qrCodeRef()).thenReturn(null);
+        var entity = new Payment();
+        var saved = new Payment();
+        var resultDTO = mock(PaymentDTO.class);
+        var salesConfig = buildSalesConfig(10.0, 100.0);
+        var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
+        var activePartnership = buildActivePartnership();
+
+        when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
+        when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
+        when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentMapper.asEntity(dto)).thenReturn(entity);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
+        when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        paymentService.createPayment(dto);
+
+        verify(qrCodeService, never()).consumeClientQrCode(anyString(), anyLong());
+    }
+
+    @Test
     void updatePayment_throwsWhenNotFound() {
         when(paymentRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -391,6 +459,19 @@ class PaymentServiceImplTest {
 
         Page<PaymentDTO> result = paymentService.getPaymentByFilters(
                 null, null, null, null, null, null, null, null, null, null, Pageable.unpaged());
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getPaymentByFilters_withEmptyRef_returnsPage() {
+        var page = new PageImpl<>(List.of(new Payment()));
+        when(paymentRepository.findAll(any(com.querydsl.core.types.Predicate.class), any(Pageable.class)))
+                .thenReturn(page);
+        when(paymentMapper.asDTO(any(Payment.class))).thenReturn(mock(PaymentDTO.class));
+
+        Page<PaymentDTO> result = paymentService.getPaymentByFilters(
+                null, "", null, null, null, null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }

@@ -33,6 +33,9 @@ public record PaymentDTO(
         @NotNull(message = "Payment module can not be null")
         Modules module,
 
+        @Schema(name = "qrCodeRef", description = "Reference of the client QR code consumed by this payment (mode: cashier scans client)")
+        String qrCodeRef,
+
         @Schema(name = "paymentDate", description = "Date of the payment made")
         LocalDateTime paymentDate,
 

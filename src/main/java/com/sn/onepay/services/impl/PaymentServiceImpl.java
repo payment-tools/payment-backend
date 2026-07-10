@@ -15,6 +15,7 @@ import com.sn.onepay.repository.PaymentRepository;
 import com.sn.onepay.services.EnterpriseConfigurationService;
 import com.sn.onepay.services.PartnershipService;
 import com.sn.onepay.services.PaymentService;
+import com.sn.onepay.services.QRCodeService;
 import com.sn.onepay.services.SalesConfigurationsService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -40,6 +41,7 @@ public class PaymentServiceImpl implements PaymentService {
     final EnterpriseConfigurationService enterpriseConfigurationService;
     final SalesConfigurationsService salesConfigurationsService;
     final PartnershipService partnershipService;
+    final QRCodeService qrCodeService;
 
     @Override
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
@@ -60,6 +62,10 @@ public class PaymentServiceImpl implements PaymentService {
             throw new ObjectValidationException("Paiement non autorisé");
 
         if(Boolean.TRUE.equals(partnership.active()) && (salesConfigurations.maxAmount() >= paymentDTO.amount() && salesConfigurations.minAmount() <= paymentDTO.amount())) {
+            /*Consume the client QR code if the payment comes from a cashier scan (mode B)*/
+            if (Objects.nonNull(paymentDTO.qrCodeRef()))
+                qrCodeService.consumeClientQrCode(paymentDTO.qrCodeRef(), clientId);
+
             switch (module) {
                 case RESTAURATION -> {
                     if (paymentDTO.amount() + getSumOfAllPaymentsByClientIdAndModule(clientId, module) > enterpriseConfiguration.maxAmountRestauration()) {
