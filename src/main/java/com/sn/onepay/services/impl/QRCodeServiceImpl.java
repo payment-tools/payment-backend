@@ -2,10 +2,13 @@ package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.QRCodeCashierDTO;
 import com.sn.onepay.dto.QRCodeClientDTO;
+import com.sn.onepay.entity.QRCodeClient;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.repository.CashierRepository;
 import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EnterpriseConfigurationRepository;
+import com.sn.onepay.repository.QRCodeClientRepository;
 import com.sn.onepay.repository.SalesConfigurationsRepository;
 import com.sn.onepay.services.QRCodeService;
 import jakarta.transaction.Transactional;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -28,6 +32,7 @@ public class QRCodeServiceImpl implements QRCodeService {
     final SalesConfigurationsRepository salesConfigurationsRepository;
     final ClientRepository clientRepository;
     final EnterpriseConfigurationRepository enterpriseConfigurationRepository;
+    final QRCodeClientRepository qrCodeClientRepository;
 
     @Override
     public QRCodeCashierDTO getCashierQrCode(Long cashierId) {
@@ -47,6 +52,33 @@ public class QRCodeServiceImpl implements QRCodeService {
         if(Objects.isNull(configuration))
             throw new ResourceNotFoundException("Configuration", "configId", null);
 
-        return new QRCodeClientDTO(clientId, configuration.getMaxAmountRestauration(), configuration.getMaxAmountGasStation(), configuration.getMaxAmountTelephony(), configuration.getMaxAmountMarket());
+        var qrCode = new QRCodeClient();
+        qrCode.setRef(UUID.randomUUID().toString());
+        qrCode.setClient(client);
+        qrCode.setUsed(false);
+        qrCode.setActive(true);
+        qrCode = qrCodeClientRepository.save(qrCode);
+
+        log.info("QRCode client saved: {}", qrCode);
+        log.trace("QRCode client saved with id: {}", qrCode.getId());
+
+        return new QRCodeClientDTO(qrCode.getRef(), clientId, qrCode.isUsed(), configuration.getMaxAmountRestauration(), configuration.getMaxAmountGasStation(), configuration.getMaxAmountTelephony(), configuration.getMaxAmountMarket());
+    }
+
+    @Override
+    public void consumeClientQrCode(String qrCodeRef, Long clientId) {
+        var qrCode = qrCodeClientRepository.findByRef(qrCodeRef).orElseThrow(() -> new ResourceNotFoundException("QRCode client", "ref", qrCodeRef));
+
+        if (!qrCode.isActive() || !qrCode.getClient().getId().equals(clientId))
+            throw new ObjectValidationException("QR code invalide");
+
+        if (qrCode.isUsed())
+            throw new ObjectValidationException("QR code déjà utilisé");
+
+        qrCode.setUsed(true);
+        qrCodeClientRepository.saveAndFlush(qrCode);
+
+        log.info("QRCode client consumed: {}", qrCodeRef);
+        log.trace("QRCode client consumed with id: {}", qrCode.getId());
     }
 }

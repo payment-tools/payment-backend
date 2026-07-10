@@ -6,4 +6,5 @@ import com.sn.onepay.dto.QRCodeClientDTO;
 public interface QRCodeService {
     QRCodeCashierDTO getCashierQrCode(Long cashierId);
     QRCodeClientDTO getClientQrCode(Long clientId);
+    void consumeClientQrCode(String qrCodeRef, Long clientId);
 }

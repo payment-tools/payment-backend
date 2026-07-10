@@ -4,12 +4,15 @@ import com.sn.onepay.entity.Cashier;
 import com.sn.onepay.entity.Client;
 import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseConfiguration;
+import com.sn.onepay.entity.QRCodeClient;
 import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesConfigurations;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.repository.CashierRepository;
 import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EnterpriseConfigurationRepository;
+import com.sn.onepay.repository.QRCodeClientRepository;
 import com.sn.onepay.repository.SalesConfigurationsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +40,9 @@ class QRCodeServiceImplTest {
 
     @Mock
     EnterpriseConfigurationRepository enterpriseConfigurationRepository;
+
+    @Mock
+    QRCodeClientRepository qrCodeClientRepository;
 
     @InjectMocks
     QRCodeServiceImpl qrCodeService;
@@ -103,7 +109,7 @@ class QRCodeServiceImplTest {
     }
 
     @Test
-    void getClientQrCode_happyPath() {
+    void getClientQrCode_happyPath_persistsQrCode() {
         var client = mock(Client.class);
         var enterprise = mock(Enterprise.class);
         when(client.getEnterprise()).thenReturn(enterprise);
@@ -116,11 +122,82 @@ class QRCodeServiceImplTest {
         when(config.getMaxAmountMarket()).thenReturn(300.0);
         when(enterpriseConfigurationRepository.findByEnterprise(enterprise)).thenReturn(config);
 
+        when(qrCodeClientRepository.save(any(QRCodeClient.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
         var result = qrCodeService.getClientQrCode(1L);
 
         assertThat(result).isNotNull();
+        assertThat(result.ref()).isNotNull();
         assertThat(result.clientId()).isEqualTo(1L);
+        assertThat(result.used()).isFalse();
         assertThat(result.maxAmountRestauration()).isEqualTo(500.0);
         assertThat(result.maxAmountMarket()).isEqualTo(300.0);
+
+        verify(qrCodeClientRepository).save(any(QRCodeClient.class));
+    }
+
+    @Test
+    void consumeClientQrCode_throwsWhenRefNotFound() {
+        when(qrCodeClientRepository.findByRef("unknown")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> qrCodeService.consumeClientQrCode("unknown", 1L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void consumeClientQrCode_throwsWhenInactive() {
+        var qrCode = new QRCodeClient();
+        qrCode.setActive(false);
+        when(qrCodeClientRepository.findByRef("ref")).thenReturn(Optional.of(qrCode));
+
+        assertThatThrownBy(() -> qrCodeService.consumeClientQrCode("ref", 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("invalide");
+    }
+
+    @Test
+    void consumeClientQrCode_throwsWhenClientMismatch() {
+        var client = mock(Client.class);
+        when(client.getId()).thenReturn(2L);
+        var qrCode = new QRCodeClient();
+        qrCode.setActive(true);
+        qrCode.setClient(client);
+        when(qrCodeClientRepository.findByRef("ref")).thenReturn(Optional.of(qrCode));
+
+        assertThatThrownBy(() -> qrCodeService.consumeClientQrCode("ref", 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("invalide");
+    }
+
+    @Test
+    void consumeClientQrCode_throwsWhenAlreadyUsed() {
+        var client = mock(Client.class);
+        when(client.getId()).thenReturn(1L);
+        var qrCode = new QRCodeClient();
+        qrCode.setActive(true);
+        qrCode.setUsed(true);
+        qrCode.setClient(client);
+        when(qrCodeClientRepository.findByRef("ref")).thenReturn(Optional.of(qrCode));
+
+        assertThatThrownBy(() -> qrCodeService.consumeClientQrCode("ref", 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("déjà utilisé");
+    }
+
+    @Test
+    void consumeClientQrCode_marksAsUsed() {
+        var client = mock(Client.class);
+        when(client.getId()).thenReturn(1L);
+        var qrCode = new QRCodeClient();
+        qrCode.setActive(true);
+        qrCode.setUsed(false);
+        qrCode.setClient(client);
+        when(qrCodeClientRepository.findByRef("ref")).thenReturn(Optional.of(qrCode));
+        when(qrCodeClientRepository.saveAndFlush(qrCode)).thenReturn(qrCode);
+
+        qrCodeService.consumeClientQrCode("ref", 1L);
+
+        assertThat(qrCode.isUsed()).isTrue();
+        verify(qrCodeClientRepository).saveAndFlush(qrCode);
     }
 }
