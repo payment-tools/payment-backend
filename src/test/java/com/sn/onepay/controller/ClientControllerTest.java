@@ -38,7 +38,7 @@ class ClientControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/client")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"role\":\"CLIENT\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"status\":\"ACTIVE\"}"))
                 .andExpect(status().isCreated());
     }
 
@@ -48,7 +48,7 @@ class ClientControllerTest extends BaseControllerTest {
 
         mockMvc.perform(put("/v1/onepay/client/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"role\":\"CLIENT\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"status\":\"ACTIVE\"}"))
                 .andExpect(status().isOk());
     }
 

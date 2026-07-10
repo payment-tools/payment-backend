@@ -38,7 +38,7 @@ class PartnershipControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/partnership")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"status\":\"ACTIVE\"}"))
+                        .content("{\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"active\":true}"))
                 .andExpect(status().isCreated());
     }
 
@@ -48,7 +48,7 @@ class PartnershipControllerTest extends BaseControllerTest {
 
         mockMvc.perform(put("/v1/onepay/partnership/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"status\":\"ACTIVE\"}"))
+                        .content("{\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"active\":true}"))
                 .andExpect(status().isOk());
     }
 

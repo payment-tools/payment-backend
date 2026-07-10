@@ -35,7 +35,7 @@ class CashierControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/cashier")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"role\":\"CASHIER\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"role\":\"CASHIER\",\"status\":\"ACTIVE\"}"))
                 .andExpect(status().isCreated());
     }
 
@@ -45,7 +45,7 @@ class CashierControllerTest extends BaseControllerTest {
 
         mockMvc.perform(put("/v1/onepay/cashier/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"role\":\"CASHIER\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"role\":\"CASHIER\",\"status\":\"ACTIVE\"}"))
                 .andExpect(status().isOk());
     }
 
