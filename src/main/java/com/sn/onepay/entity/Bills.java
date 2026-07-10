@@ -59,6 +59,12 @@ public class Bills {
     @Enumerated(EnumType.STRING)
     BillStatus billStatus;
 
+    @Column(name = "Period", nullable = false)
+    String period;
+
+    @Column(name = "Active", nullable = false)
+    boolean active;
+
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)
     LocalDateTime creationDate;
