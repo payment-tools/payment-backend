@@ -1,7 +1,10 @@
 package com.sn.onepay.services.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.CashierDTO;
 import com.sn.onepay.entity.Cashier;
+import com.sn.onepay.entity.QCashier;
+import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.CashierMapper;
 import com.sn.onepay.repository.CashierRepository;
@@ -14,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -64,8 +69,51 @@ public class CashierServiceImpl implements CashierService {
     }
 
     @Override
-    public Page<CashierDTO> getCashiersByFilter(CashierDTO cashierDTO, Pageable pageable) {
-        return null;
+    public Page<CashierDTO> getCashiersByFilter(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long salesId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+
+        QCashier cashier = QCashier.cashier;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (id != null) {
+            builder.and(cashier.id.eq(id));
+        }
+        if (ref != null && !ref.isEmpty()) {
+            builder.and(cashier.ref.containsIgnoreCase(ref));
+        }
+        if (firstname != null && !firstname.isEmpty()) {
+            builder.and(cashier.firstname.containsIgnoreCase(firstname));
+        }
+        if (lastname != null && !lastname.isEmpty()) {
+            builder.and(cashier.lastname.containsIgnoreCase(lastname));
+        }
+        if (username != null && !username.isEmpty()) {
+            builder.and(cashier.username.containsIgnoreCase(username));
+        }
+        if (email != null && !email.isEmpty()) {
+            builder.and(cashier.email.containsIgnoreCase(email));
+        }
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            builder.and(cashier.phoneNumber.containsIgnoreCase(phoneNumber));
+        }
+        if (role != null) {
+            builder.and(cashier.role.eq(role));
+        }
+        if (salesId != null) {
+            builder.and(cashier.sales.id.eq(salesId));
+        }
+        if (active != null) {
+            builder.and(cashier.active.eq(active));
+        }
+        if (creationDate != null) {
+            builder.and(cashier.creationDate.goe(creationDate));
+        }
+        if (modificationDate != null) {
+            builder.and(cashier.modificationDate.loe(modificationDate));
+        }
+
+        Page<Cashier> result = cashierRepository.findAll(builder, pageable);
+
+        return result.map(cashierMapper::asDTO);
     }
 
 
