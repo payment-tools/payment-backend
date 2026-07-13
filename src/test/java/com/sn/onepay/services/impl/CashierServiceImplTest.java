@@ -2,6 +2,7 @@ package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.CashierDTO;
 import com.sn.onepay.entity.Cashier;
+import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.CashierMapper;
 import com.sn.onepay.repository.CashierRepository;
@@ -10,8 +11,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,8 +98,43 @@ class CashierServiceImplTest {
     }
 
     @Test
-    void getCashiersByFilter_returnsNull() {
-        var result = cashierService.getCashiersByFilter(mock(CashierDTO.class), Pageable.unpaged());
-        assertThat(result).isNull();
+    void getCashiersByFilter_withAllNullParams_returnsPage() {
+        var page = new PageImpl<>(List.of(new Cashier()));
+        when(cashierRepository.findAll(any(com.querydsl.core.types.Predicate.class), any(Pageable.class)))
+                .thenReturn(page);
+        when(cashierMapper.asDTO(any(Cashier.class))).thenReturn(mock(CashierDTO.class));
+
+        Page<CashierDTO> result = cashierService.getCashiersByFilter(
+                null, null, null, null, null, null, null, null, null, null, null, null, Pageable.unpaged());
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getCashiersByFilter_withAllParamsSet_returnsPage() {
+        var page = new PageImpl<>(List.of(new Cashier()));
+        when(cashierRepository.findAll(any(com.querydsl.core.types.Predicate.class), any(Pageable.class)))
+                .thenReturn(page);
+        when(cashierMapper.asDTO(any(Cashier.class))).thenReturn(mock(CashierDTO.class));
+
+        Page<CashierDTO> result = cashierService.getCashiersByFilter(
+                1L, "REF", "John", "Doe", "jdoe", "jdoe@mail.com", "770000000",
+                Roles.CASHIER, 2L, true,
+                LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getCashiersByFilter_withEmptyStringParams_returnsPage() {
+        var page = new PageImpl<>(List.of(new Cashier()));
+        when(cashierRepository.findAll(any(com.querydsl.core.types.Predicate.class), any(Pageable.class)))
+                .thenReturn(page);
+        when(cashierMapper.asDTO(any(Cashier.class))).thenReturn(mock(CashierDTO.class));
+
+        Page<CashierDTO> result = cashierService.getCashiersByFilter(
+                null, "", "", "", "", "", "", null, null, null, null, null, Pageable.unpaged());
+
+        assertThat(result).hasSize(1);
     }
 }

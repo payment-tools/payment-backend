@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -53,7 +56,23 @@ class CashierControllerTest extends BaseControllerTest {
 
     @Test
     void getCashierByFilters_returns200() throws Exception {
+        when(cashierService.getCashiersByFilter(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+
         mockMvc.perform(get("/v1/onepay/cashier"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getCashierByFilters_withParams_returns200() throws Exception {
+        when(cashierService.getCashiersByFilter(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/v1/onepay/cashier")
+                        .param("username", "cashier.test")
+                        .param("salesId", "2")
+                        .param("role", "CASHIER")
+                        .param("active", "true"))
                 .andExpect(status().isOk());
     }
 
