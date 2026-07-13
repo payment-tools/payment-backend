@@ -38,10 +38,16 @@ class SubventionControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/subvention")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"employeePercent\":60.0,\"employerPercent\":40.0," +
-                                "\"partnership\":{\"id\":1,\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"status\":\"ACTIVE\"}," +
-                                "\"employeeGroup\":{\"id\":1,\"name\":\"RH\",\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100}}}"))
+                        .content("{\"employeePercent\":60.0,\"employerPercent\":40.0,\"partnershipId\":1,\"employeeGroupId\":2}"))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void createSubvention_withMissingRequiredFields_returns400() throws Exception {
+        mockMvc.perform(post("/v1/onepay/subvention")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"employeePercent\":60.0,\"employerPercent\":40.0}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -50,9 +56,7 @@ class SubventionControllerTest extends BaseControllerTest {
 
         mockMvc.perform(put("/v1/onepay/subvention/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"employeePercent\":60.0,\"employerPercent\":40.0," +
-                                "\"partnership\":{\"id\":1,\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"status\":\"ACTIVE\"}," +
-                                "\"employeeGroup\":{\"id\":1,\"name\":\"RH\",\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100}}}"))
+                        .content("{\"employeePercent\":70.0,\"employerPercent\":30.0,\"active\":true}"))
                 .andExpect(status().isOk());
     }
 

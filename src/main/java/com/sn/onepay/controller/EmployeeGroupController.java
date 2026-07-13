@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.EmployeeGroupCreateDTO;
 import com.sn.onepay.dto.EmployeeGroupDTO;
+import com.sn.onepay.dto.EmployeeGroupUpdateDTO;
 import com.sn.onepay.services.EmployeeGroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +47,7 @@ public class EmployeeGroupController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public EmployeeGroupDTO createEmployeeGroup(@Parameter(description = "EmployeeGroup body for creation", required = true) @RequestBody @Valid EmployeeGroupDTO employeeGroup) {
+    public EmployeeGroupDTO createEmployeeGroup(@Parameter(description = "EmployeeGroup body for creation", required = true) @RequestBody @Valid EmployeeGroupCreateDTO employeeGroup) {
         return employeeGroupService.createEmployeeGroup(employeeGroup);
     }
 
@@ -57,7 +59,7 @@ public class EmployeeGroupController {
     })
     @PutMapping(value = "/{employeeGroupId}")
     @ResponseStatus(HttpStatus.OK)
-    public EmployeeGroupDTO updateEmployeeGroup(@Parameter(description = "EmployeeGroup body to update", required = true) @RequestBody @Valid EmployeeGroupDTO employeeGroup,
+    public EmployeeGroupDTO updateEmployeeGroup(@Parameter(description = "EmployeeGroup body to update", required = true) @RequestBody @Valid EmployeeGroupUpdateDTO employeeGroup,
                                                 @Parameter(description = "EmployeeGroup id to update", required = true) @PathVariable(name = "employeeGroupId") Long employeeGroupId) {
         return employeeGroupService.updateEmployeeGroup(employeeGroup, employeeGroupId);
     }

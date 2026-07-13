@@ -38,8 +38,16 @@ class EmployeeGroupControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/employee-group")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"RH\",\"enterprise\":{\"id\":1,\"name\":\"Corp\",\"maxQuota\":100}}"))
+                        .content("{\"name\":\"RH\",\"enterpriseId\":1,\"clientIds\":[1,2]}"))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void createEmployeeGroup_withMissingRequiredFields_returns400() throws Exception {
+        mockMvc.perform(post("/v1/onepay/employee-group")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"RH\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -48,7 +56,7 @@ class EmployeeGroupControllerTest extends BaseControllerTest {
 
         mockMvc.perform(put("/v1/onepay/employee-group/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"RH Updated\",\"enterprise\":{\"id\":1,\"name\":\"Corp\",\"maxQuota\":100}}"))
+                        .content("{\"name\":\"RH Updated\",\"clientIds\":[3],\"active\":true}"))
                 .andExpect(status().isOk());
     }
 

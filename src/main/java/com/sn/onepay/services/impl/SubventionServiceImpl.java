@@ -1,12 +1,18 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.SubventionCreateDTO;
 import com.sn.onepay.dto.SubventionDTO;
+import com.sn.onepay.dto.SubventionUpdateDTO;
+import com.sn.onepay.entity.EmployeeGroup;
+import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.QSubvention;
 import com.sn.onepay.entity.Subvention;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SubventionMapper;
+import com.sn.onepay.repository.EmployeeGroupRepository;
+import com.sn.onepay.repository.PartnershipRepository;
 import com.sn.onepay.repository.SubventionRepository;
 import com.sn.onepay.services.SubventionService;
 import jakarta.transaction.Transactional;
@@ -29,21 +35,40 @@ import java.util.UUID;
 public class SubventionServiceImpl implements SubventionService {
 
     final SubventionRepository subventionRepository;
+    final PartnershipRepository partnershipRepository;
+    final EmployeeGroupRepository employeeGroupRepository;
     final SubventionMapper subventionMapper;
 
     @Override
-    public SubventionDTO createSubvention(SubventionDTO subventionDTO) {
+    public SubventionDTO createSubvention(SubventionCreateDTO subventionCreateDTO) {
 
-        if (Math.abs(subventionDTO.employeePercent() + subventionDTO.employerPercent() - 100.0) > 0.001) {
-            throw new ObjectValidationException("La somme des pourcentages employé et employeur doit être égale à 100");
-        }
+        validatePercentages(subventionCreateDTO.employeePercent(), subventionCreateDTO.employerPercent());
 
-        if (subventionDTO.partnership() == null || !Boolean.TRUE.equals(subventionDTO.partnership().active())) {
+        Partnership partnership = partnershipRepository.findById(subventionCreateDTO.partnershipId())
+                .orElseThrow(() -> new ResourceNotFoundException("Partnership", "ID", subventionCreateDTO.partnershipId()));
+
+        if (!partnership.isActive()) {
             throw new ObjectValidationException("Un partenariat actif est requis pour créer une subvention");
         }
 
-        Subvention subvention = subventionMapper.asEntity(subventionDTO);
+        EmployeeGroup employeeGroup = employeeGroupRepository.findById(subventionCreateDTO.employeeGroupId())
+                .orElseThrow(() -> new ResourceNotFoundException("EmployeeGroup", "ID", subventionCreateDTO.employeeGroupId()));
+
+        if (!employeeGroup.isActive()) {
+            throw new ObjectValidationException("Un groupe de collaborateurs actif est requis pour créer une subvention");
+        }
+
+        if (employeeGroup.getEnterprise() == null || partnership.getEnterprise() == null
+                || !employeeGroup.getEnterprise().getId().equals(partnership.getEnterprise().getId())) {
+            throw new ObjectValidationException("Le groupe de collaborateurs doit appartenir à l'entreprise du partenariat");
+        }
+
+        Subvention subvention = new Subvention();
         subvention.setRef(UUID.randomUUID().toString());
+        subvention.setEmployeePercent(subventionCreateDTO.employeePercent());
+        subvention.setEmployerPercent(subventionCreateDTO.employerPercent());
+        subvention.setPartnership(partnership);
+        subvention.setEmployeeGroup(employeeGroup);
         subvention.setActive(true);
         var savedSubvention = subventionRepository.save(subvention);
 
@@ -54,14 +79,17 @@ public class SubventionServiceImpl implements SubventionService {
     }
 
     @Override
-    public SubventionDTO updateSubvention(SubventionDTO subventionDTO, Long subventionId) {
+    public SubventionDTO updateSubvention(SubventionUpdateDTO subventionUpdateDTO, Long subventionId) {
 
         Subvention existing = subventionRepository.findById(subventionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subvention", "ID", subventionId));
 
-        if (subventionDTO.employeePercent() != null) existing.setEmployeePercent(subventionDTO.employeePercent());
-        if (subventionDTO.employerPercent() != null) existing.setEmployerPercent(subventionDTO.employerPercent());
-        if (subventionDTO.active() != null) existing.setActive(subventionDTO.active());
+        if (subventionUpdateDTO.employeePercent() != null || subventionUpdateDTO.employerPercent() != null) {
+            validatePercentages(subventionUpdateDTO.employeePercent(), subventionUpdateDTO.employerPercent());
+            existing.setEmployeePercent(subventionUpdateDTO.employeePercent());
+            existing.setEmployerPercent(subventionUpdateDTO.employerPercent());
+        }
+        if (subventionUpdateDTO.active() != null) existing.setActive(subventionUpdateDTO.active());
 
         var updated = subventionRepository.saveAndFlush(existing);
 
@@ -118,5 +146,15 @@ public class SubventionServiceImpl implements SubventionService {
 
         Page<Subvention> result = subventionRepository.findAll(builder, pageable);
         return result.map(subventionMapper::asDTO);
+    }
+
+    private void validatePercentages(Double employeePercent, Double employerPercent) {
+
+        if (employeePercent == null || employerPercent == null) {
+            throw new ObjectValidationException("Les pourcentages employé et employeur doivent être fournis ensemble");
+        }
+        if (Math.abs(employeePercent + employerPercent - 100.0) > 0.001) {
+            throw new ObjectValidationException("La somme des pourcentages employé et employeur doit être égale à 100");
+        }
     }
 }

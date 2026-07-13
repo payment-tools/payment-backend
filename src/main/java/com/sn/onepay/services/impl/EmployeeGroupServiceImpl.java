@@ -1,12 +1,19 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.EmployeeGroupCreateDTO;
 import com.sn.onepay.dto.EmployeeGroupDTO;
+import com.sn.onepay.dto.EmployeeGroupUpdateDTO;
+import com.sn.onepay.entity.Client;
 import com.sn.onepay.entity.EmployeeGroup;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.QEmployeeGroup;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EmployeeGroupMapper;
+import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EmployeeGroupRepository;
+import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.services.EmployeeGroupService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -18,6 +25,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,13 +37,23 @@ import java.util.UUID;
 public class EmployeeGroupServiceImpl implements EmployeeGroupService {
 
     final EmployeeGroupRepository employeeGroupRepository;
+    final EnterpriseRepository enterpriseRepository;
+    final ClientRepository clientRepository;
     final EmployeeGroupMapper employeeGroupMapper;
 
     @Override
-    public EmployeeGroupDTO createEmployeeGroup(EmployeeGroupDTO employeeGroupDTO) {
+    public EmployeeGroupDTO createEmployeeGroup(EmployeeGroupCreateDTO employeeGroupCreateDTO) {
 
-        EmployeeGroup group = employeeGroupMapper.asEntity(employeeGroupDTO);
+        Enterprise enterprise = enterpriseRepository.findById(employeeGroupCreateDTO.enterpriseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", employeeGroupCreateDTO.enterpriseId()));
+
+        EmployeeGroup group = new EmployeeGroup();
         group.setRef(UUID.randomUUID().toString());
+        group.setName(employeeGroupCreateDTO.name());
+        group.setEnterprise(enterprise);
+        if (employeeGroupCreateDTO.clientIds() != null) {
+            group.setClients(resolveClients(employeeGroupCreateDTO.clientIds(), enterprise));
+        }
         group.setActive(true);
         var savedGroup = employeeGroupRepository.save(group);
 
@@ -45,13 +64,16 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
     }
 
     @Override
-    public EmployeeGroupDTO updateEmployeeGroup(EmployeeGroupDTO employeeGroupDTO, Long employeeGroupId) {
+    public EmployeeGroupDTO updateEmployeeGroup(EmployeeGroupUpdateDTO employeeGroupUpdateDTO, Long employeeGroupId) {
 
         EmployeeGroup existing = employeeGroupRepository.findById(employeeGroupId)
                 .orElseThrow(() -> new ResourceNotFoundException("EmployeeGroup", "ID", employeeGroupId));
 
-        existing.setName(employeeGroupDTO.name());
-        if (employeeGroupDTO.active() != null) existing.setActive(employeeGroupDTO.active());
+        if (employeeGroupUpdateDTO.name() != null) existing.setName(employeeGroupUpdateDTO.name());
+        if (employeeGroupUpdateDTO.clientIds() != null) {
+            existing.setClients(resolveClients(employeeGroupUpdateDTO.clientIds(), existing.getEnterprise()));
+        }
+        if (employeeGroupUpdateDTO.active() != null) existing.setActive(employeeGroupUpdateDTO.active());
 
         var updated = employeeGroupRepository.saveAndFlush(existing);
 
@@ -102,5 +124,23 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
 
         Page<EmployeeGroup> result = employeeGroupRepository.findAll(builder, pageable);
         return result.map(employeeGroupMapper::asDTO);
+    }
+
+    private List<Client> resolveClients(List<Long> clientIds, Enterprise enterprise) {
+
+        List<Client> clients = new ArrayList<>();
+        for (Long clientId : clientIds) {
+            Client client = clientRepository.findById(clientId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Client", "ID", clientId));
+            if (!client.isActive()) {
+                throw new ObjectValidationException("Le client " + clientId + " est inactif");
+            }
+            if (client.getEnterprise() == null || enterprise == null
+                    || !client.getEnterprise().getId().equals(enterprise.getId())) {
+                throw new ObjectValidationException("Le client " + clientId + " n'appartient pas à l'entreprise du groupe");
+            }
+            clients.add(client);
+        }
+        return clients;
     }
 }
