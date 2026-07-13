@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.SubventionCreateDTO;
 import com.sn.onepay.dto.SubventionDTO;
+import com.sn.onepay.dto.SubventionUpdateDTO;
 import com.sn.onepay.services.SubventionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +47,7 @@ public class SubventionController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public SubventionDTO createSubvention(@Parameter(description = "Subvention body for creation", required = true) @RequestBody @Valid SubventionDTO subvention) {
+    public SubventionDTO createSubvention(@Parameter(description = "Subvention body for creation", required = true) @RequestBody @Valid SubventionCreateDTO subvention) {
         return subventionService.createSubvention(subvention);
     }
 
@@ -57,7 +59,7 @@ public class SubventionController {
     })
     @PutMapping(value = "/{subventionId}")
     @ResponseStatus(HttpStatus.OK)
-    public SubventionDTO updateSubvention(@Parameter(description = "Subvention body to update", required = true) @RequestBody @Valid SubventionDTO subvention,
+    public SubventionDTO updateSubvention(@Parameter(description = "Subvention body to update", required = true) @RequestBody @Valid SubventionUpdateDTO subvention,
                                           @Parameter(description = "Subvention id to update", required = true) @PathVariable(name = "subventionId") Long subventionId) {
         return subventionService.updateSubvention(subvention, subventionId);
     }

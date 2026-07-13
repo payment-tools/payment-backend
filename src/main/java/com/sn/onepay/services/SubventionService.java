@@ -1,6 +1,8 @@
 package com.sn.onepay.services;
 
+import com.sn.onepay.dto.SubventionCreateDTO;
 import com.sn.onepay.dto.SubventionDTO;
+import com.sn.onepay.dto.SubventionUpdateDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -8,9 +10,9 @@ import java.time.LocalDateTime;
 
 public interface SubventionService {
 
-    SubventionDTO createSubvention(SubventionDTO subventionDTO);
+    SubventionDTO createSubvention(SubventionCreateDTO subventionCreateDTO);
 
-    SubventionDTO updateSubvention(SubventionDTO subventionDTO, Long subventionId);
+    SubventionDTO updateSubvention(SubventionUpdateDTO subventionUpdateDTO, Long subventionId);
 
     void deleteSubvention(Long subventionId);
 
