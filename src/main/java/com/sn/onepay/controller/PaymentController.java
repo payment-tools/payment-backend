@@ -85,7 +85,7 @@ public class PaymentController {
         return paymentService.getPaymentByFilters(id, ref, clientId, cashierId, amount, active, module, paymentDate, creationDate, modificationDate, pageable);
     }
 
-    @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client")
+    @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client, optionally restricted to a module")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),
             @ApiResponse(responseCode = "404", description = "Client not found"),
@@ -93,8 +93,11 @@ public class PaymentController {
     })
     @GetMapping("/sum/{clientId}")
     @ResponseStatus(HttpStatus.OK)
-    public double getSumOfPaymentsByClient(@Parameter(description = "Client id", required = true) @PathVariable(name = "clientId") Long clientId) {
-        return paymentService.getSumOfAllPaymentsByClientId(clientId);
+    public double getSumOfPaymentsByClient(@Parameter(description = "Client id", required = true) @PathVariable(name = "clientId") Long clientId,
+                                           @Parameter(description = "Restrict the sum to a single module") @RequestParam(required = false) Modules module) {
+        return module == null
+                ? paymentService.getSumOfAllPaymentsByClientId(clientId)
+                : paymentService.getSumOfAllPaymentsByClientIdAndModule(clientId, module);
     }
 
     @Operation(summary = "Delete a payment by id", description = "This endpoint is for deleting payment by id")
