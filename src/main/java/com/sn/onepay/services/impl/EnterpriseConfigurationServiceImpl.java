@@ -2,7 +2,6 @@ package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseConfiguration;
 import com.sn.onepay.entity.QEnterpriseConfiguration;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
@@ -68,7 +67,7 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     }
 
     @Override
-    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Enterprise enterprise, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Long enterpriseId, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QEnterpriseConfiguration enterpriseConfiguration = QEnterpriseConfiguration.enterpriseConfiguration;
         BooleanBuilder builder = new BooleanBuilder();
@@ -76,8 +75,8 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
         if (id != null) {
             builder.and(enterpriseConfiguration.id.eq(id));
         }
-        if (enterprise != null) {
-            builder.and(enterpriseConfiguration.enterprise.eq(enterprise));
+        if (enterpriseId != null) {
+            builder.and(enterpriseConfiguration.enterprise.id.eq(enterpriseId));
         }
         if (maxAmountRestauration != null) {
             builder.and(enterpriseConfiguration.maxAmountRestauration.eq(maxAmountRestauration));

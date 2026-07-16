@@ -1,7 +1,6 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.services.EnterpriseConfigurationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -74,19 +73,19 @@ public class EnterpriseConfigurationController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationByFilters(
-            @Parameter(description = "") @RequestParam(required = false) Long id,
-            @Parameter(description = "") @RequestParam(required = false) Enterprise enterprise,
-            @Parameter(description = "") @RequestParam(required = false) Double maxAmountRestauration,
-            @Parameter(description = "") @RequestParam(required = false) Double maxAmountMarket,
-            @Parameter(description = "") @RequestParam(required = false) Double maxAmountGasStation,
-            @Parameter(description = "") @RequestParam(required = false) Double maxAmountTelephony,
-            @Parameter(description = "") @RequestParam(required = false) Integer enterprisePercentage,
-            @Parameter(description = "") @RequestParam(required = false) Integer employeePercentage,
-            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
-            @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+            @Parameter(description = "Filter by configuration ID") @RequestParam(required = false) Long id,
+            @Parameter(description = "Filter by enterprise ID") @RequestParam(required = false) Long enterpriseId,
+            @Parameter(description = "Filter by restauration max amount") @RequestParam(required = false) Double maxAmountRestauration,
+            @Parameter(description = "Filter by market max amount") @RequestParam(required = false) Double maxAmountMarket,
+            @Parameter(description = "Filter by gas station max amount") @RequestParam(required = false) Double maxAmountGasStation,
+            @Parameter(description = "Filter by telephony max amount") @RequestParam(required = false) Double maxAmountTelephony,
+            @Parameter(description = "Filter by enterprise percentage") @RequestParam(required = false) Integer enterprisePercentage,
+            @Parameter(description = "Filter by employee percentage") @RequestParam(required = false) Integer employeePercentage,
+            @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+            @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
             Pageable pageable
     ) {
-        return enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(id, enterprise, maxAmountRestauration, maxAmountMarket, maxAmountGasStation, maxAmountTelephony, enterprisePercentage, employeePercentage, creationDate, modificationDate, pageable);
+        return enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(id, enterpriseId, maxAmountRestauration, maxAmountMarket, maxAmountGasStation, maxAmountTelephony, enterprisePercentage, employeePercentage, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a enterprise Configuration by id", description = "This endpoint is for deleting enterprise Configuration by id")
