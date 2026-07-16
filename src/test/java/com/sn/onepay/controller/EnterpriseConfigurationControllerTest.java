@@ -15,8 +15,10 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -61,6 +63,17 @@ class EnterpriseConfigurationControllerTest extends BaseControllerTest {
 
         mockMvc.perform(get("/v1/onepay/enterpriseConfiguration"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getEnterpriseConfigurationByFilters_bindsEnterpriseId() throws Exception {
+        when(enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/v1/onepay/enterpriseConfiguration").param("enterpriseId", "7"))
+                .andExpect(status().isOk());
+
+        verify(enterpriseConfigurationService).getEnterpriseConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

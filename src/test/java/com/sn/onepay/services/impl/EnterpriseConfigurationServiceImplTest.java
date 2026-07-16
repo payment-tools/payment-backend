@@ -1,7 +1,6 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
-import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseConfiguration;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseConfigurationMapper;
@@ -114,7 +113,7 @@ class EnterpriseConfigurationServiceImplTest {
         when(enterpriseConfigurationMapper.asDTO(any(EnterpriseConfiguration.class))).thenReturn(mock(EnterpriseConfigurationDTO.class));
 
         Page<EnterpriseConfigurationDTO> result = enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(
-                1L, mock(Enterprise.class), 500.0, 300.0, 200.0, 100.0, 60, 40,
+                1L, 7L, 500.0, 300.0, 200.0, 100.0, 60, 40,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
