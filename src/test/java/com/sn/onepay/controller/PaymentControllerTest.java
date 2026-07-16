@@ -1,6 +1,7 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.PaymentDTO;
+import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.services.PaymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +18,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PaymentController.class)
@@ -68,7 +72,21 @@ class PaymentControllerTest extends BaseControllerTest {
         when(paymentService.getSumOfAllPaymentsByClientId(anyLong())).thenReturn(150.0);
 
         mockMvc.perform(get("/v1/onepay/payment/sum/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().string("150.0"));
+
+        verify(paymentService, never()).getSumOfAllPaymentsByClientIdAndModule(anyLong(), any());
+    }
+
+    @Test
+    void getSumOfPaymentsByClient_withModule_returns200() throws Exception {
+        when(paymentService.getSumOfAllPaymentsByClientIdAndModule(1L, Modules.MARKET)).thenReturn(80.0);
+
+        mockMvc.perform(get("/v1/onepay/payment/sum/1").param("module", "MARKET"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("80.0"));
+
+        verify(paymentService, never()).getSumOfAllPaymentsByClientId(anyLong());
     }
 
     @Test
