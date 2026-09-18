@@ -50,6 +50,7 @@ class EnterpriseServiceImplTest {
         var result = enterpriseService.createEnterprise(dto);
 
         assertThat(entity.getActualQuota()).isEqualTo(0L);
+        assertThat(entity.isActive()).isTrue();
         assertThat(result).isEqualTo(resultDTO);
         verify(enterpriseRepository).save(entity);
     }
@@ -90,11 +91,12 @@ class EnterpriseServiceImplTest {
     void deleteEnterprise_deletesWhenFound() {
         var existing = new Enterprise();
         when(enterpriseRepository.findById(1L)).thenReturn(Optional.of(existing));
-        doNothing().when(enterpriseRepository).deleteById(1L);
+        when(enterpriseRepository.saveAndFlush(existing)).thenReturn(existing);
 
         enterpriseService.deleteEnterprise(1L);
 
-        verify(enterpriseRepository).deleteById(1L);
+        assertThat(existing.isActive()).isFalse();
+        verify(enterpriseRepository).saveAndFlush(existing);
     }
 
     @Test
@@ -105,7 +107,7 @@ class EnterpriseServiceImplTest {
         when(enterpriseMapper.asDTO(any(Enterprise.class))).thenReturn(mock(EnterpriseDTO.class));
 
         Page<EnterpriseDTO> result = enterpriseService.getEnterprisesByFilters(
-                null, null, null, null, null, null, null, null, null, Pageable.unpaged());
+                null, null, null, null, null, null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }
@@ -119,7 +121,7 @@ class EnterpriseServiceImplTest {
 
         Page<EnterpriseDTO> result = enterpriseService.getEnterprisesByFilters(
                 1L, "REF01", "MyEnterprise", 100L, 50L, "Dakar",
-                Modules.RESTAURATION, LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
+                Modules.RESTAURATION, true, LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }

@@ -15,5 +15,5 @@ public interface EnterpriseService {
 
     void deleteEnterprise(Long enterpriseId);
 
-    Page<EnterpriseDTO> getEnterprisesByFilters(Long id, String ref, String name, Long maxQuota, Long actualQuota, String address, Modules enrolledModules, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<EnterpriseDTO> getEnterprisesByFilters(Long id, String ref, String name, Long maxQuota, Long actualQuota, String address, Modules enrolledModules, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 }

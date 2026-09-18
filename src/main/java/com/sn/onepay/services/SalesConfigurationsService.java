@@ -16,7 +16,7 @@ public interface SalesConfigurationsService {
     void deleteSalesConfigurations(Long salesConfigurationsId);
 
 
-    Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Sales sales, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Sales sales, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     SalesConfigurationsDTO getSalesConfigurationsBySalesId(Long salesId);
 }

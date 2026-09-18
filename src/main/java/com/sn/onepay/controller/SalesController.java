@@ -78,10 +78,11 @@ public class SalesController {
                                             @Parameter(description = "") @RequestParam(required = false) String name,
                                             @Parameter(description = "") @RequestParam(required = false) Modules type,
                                             @Parameter(description = "") @RequestParam(required = false) String address,
+                                            @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
                                             @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
                                             @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                             Pageable pageable) {
-        return salesService.getSalesByFilters(id, ref, name, type, address, creationDate, modificationDate, pageable);
+        return salesService.getSalesByFilters(id, ref, name, type, address, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a sales by id", description = "This endpoint is for deleting sales by id")

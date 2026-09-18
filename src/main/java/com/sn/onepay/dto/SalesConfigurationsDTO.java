@@ -19,6 +19,9 @@ public record SalesConfigurationsDTO(
         @Schema(name = "maxAmount", description = "Sales max amount for cashier")
         Double maxAmount,
 
+        @Schema(name = "active", description = "Whether the sales configuration is active")
+        Boolean active,
+
         @Schema(name = "creationDate", description = "Sales configuration date of creation")
         LocalDateTime creationDate,
 

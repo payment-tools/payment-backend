@@ -22,6 +22,9 @@ public record SalesDTO(
         @Schema(name = "type", description = "Type of sales")
         Modules type,
 
+        @Schema(name = "active", description = "Whether the sales point is active")
+        Boolean active,
+
         @Schema(name = "creationDate", description = "Sales date of creation")
         LocalDateTime creationDate,
 

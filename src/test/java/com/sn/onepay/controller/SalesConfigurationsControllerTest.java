@@ -56,7 +56,7 @@ class SalesConfigurationsControllerTest extends BaseControllerTest {
 
     @Test
     void getSalesConfigurationsByFilters_returns200() throws Exception {
-        when(salesConfigurationsService.getSalesConfigurationsByFilters(any(), any(), any(), any(), any()))
+        when(salesConfigurationsService.getSalesConfigurationsByFilters(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/v1/onepay/salesConfiguration"))

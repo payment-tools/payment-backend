@@ -14,7 +14,7 @@ public interface EnterpriseConfigurationService {
 
     void deleteEnterpriseConfiguration(Long enterpriseConfigurationId);
 
-    Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Long enterpriseId, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Long enterpriseId, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     EnterpriseConfigurationDTO getEnterpriseConfigurationByEnterpriseId(Long enterpriseId);
 }

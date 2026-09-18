@@ -36,6 +36,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 
         Enterprise enterprise = enterpriseMapper.asEntity(enterpriseDTO);
         enterprise.setActualQuota(0L);
+        enterprise.setActive(true);
 
         var savedEnterprise = enterpriseRepository.save(enterprise);
 
@@ -62,9 +63,11 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     @Override
     public void deleteEnterprise(Long enterpriseId) {
 
-        enterpriseRepository.findById(enterpriseId).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseId));
+        Enterprise enterprise = enterpriseRepository.findById(enterpriseId).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseId));
 
-        enterpriseRepository.deleteById(enterpriseId);
+        /*Implements logical deletion*/
+        enterprise.setActive(false);
+        enterpriseRepository.saveAndFlush(enterprise);
 
         log.info("Deleted Enterprise: {}", enterpriseId);
         log.trace("Deleted Enterprise with id: {}", enterpriseId);
@@ -72,7 +75,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     }
 
     @Override
-    public Page<EnterpriseDTO> getEnterprisesByFilters(Long id, String ref, String name, Long maxQuota, Long actualQuota, String address, Modules enrolledModules, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<EnterpriseDTO> getEnterprisesByFilters(Long id, String ref, String name, Long maxQuota, Long actualQuota, String address, Modules enrolledModules, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QEnterprise enterprise = QEnterprise.enterprise;
         BooleanBuilder builder = new BooleanBuilder();
@@ -98,6 +101,9 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         if (enrolledModules != null) {
             // On vérifie si le module de l'entreprise est dans la collection
             builder.and(enterprise.enrolledModules.contains(enrolledModules));
+        }
+        if (active != null) {
+            builder.and(enterprise.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(enterprise.creationDate.goe(creationDate));

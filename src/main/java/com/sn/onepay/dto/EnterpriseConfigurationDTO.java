@@ -34,6 +34,9 @@ public record EnterpriseConfigurationDTO(
         @NotNull(message = "Employee percentage can not be null")
         int employeePercentage,
 
+        @Schema(name = "active", description = "Whether the enterprise configuration is active")
+        Boolean active,
+
         @Schema(name = "creationDate", description = "Enterprise configuration date of creation")
         LocalDateTime creationDate,
 

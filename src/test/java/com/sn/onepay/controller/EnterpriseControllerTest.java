@@ -64,7 +64,7 @@ class EnterpriseControllerTest extends BaseControllerTest {
 
     @Test
     void getEnterpriseByFilters_returns200() throws Exception {
-        when(enterpriseService.getEnterprisesByFilters(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(enterpriseService.getEnterprisesByFilters(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/v1/onepay/enterprise"))

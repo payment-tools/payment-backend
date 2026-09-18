@@ -45,6 +45,9 @@ public class SalesConfigurations {
     @Column(name = "maxAmount")
     Double maxAmount;
 
+    @Column(name = "active", nullable = false)
+    boolean active;
+
     @CreatedDate
     @Column(name = "creationDate", updatable = false)
     LocalDateTime creationDate;

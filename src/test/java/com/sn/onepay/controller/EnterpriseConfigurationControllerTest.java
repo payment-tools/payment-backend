@@ -58,7 +58,7 @@ class EnterpriseConfigurationControllerTest extends BaseControllerTest {
 
     @Test
     void getEnterpriseConfigurationByFilters_returns200() throws Exception {
-        when(enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/v1/onepay/enterpriseConfiguration"))
@@ -67,13 +67,13 @@ class EnterpriseConfigurationControllerTest extends BaseControllerTest {
 
     @Test
     void getEnterpriseConfigurationByFilters_bindsEnterpriseId() throws Exception {
-        when(enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/v1/onepay/enterpriseConfiguration").param("enterpriseId", "7"))
                 .andExpect(status().isOk());
 
-        verify(enterpriseConfigurationService).getEnterpriseConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        verify(enterpriseConfigurationService).getEnterpriseConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

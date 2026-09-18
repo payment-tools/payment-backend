@@ -75,10 +75,11 @@ public class SalesConfigurationsController {
     @ResponseStatus(HttpStatus.OK)
     public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(@RequestParam(required = false) Long id,
                                                                         @RequestParam(required = false) Sales sales,
+                                                                        @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
                                                                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
                                                                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                                         Pageable pageable) {
-        return salesConfigurationsService.getSalesConfigurationsByFilters(id, sales, creationDate, modificationDate, pageable);
+        return salesConfigurationsService.getSalesConfigurationsByFilters(id, sales, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a sales Configurations by id", description = "This endpoint is for deleting sales Configurations by id")
