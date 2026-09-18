@@ -1,7 +1,6 @@
 package com.sn.onepay.services;
 
 import com.sn.onepay.dto.SalesConfigurationsDTO;
-import com.sn.onepay.entity.Sales;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,7 +15,7 @@ public interface SalesConfigurationsService {
     void deleteSalesConfigurations(Long salesConfigurationsId);
 
 
-    Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Sales sales, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+    Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Long salesId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     SalesConfigurationsDTO getSalesConfigurationsBySalesId(Long salesId);
 }

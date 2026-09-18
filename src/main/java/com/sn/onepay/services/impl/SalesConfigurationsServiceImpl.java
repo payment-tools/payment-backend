@@ -3,7 +3,6 @@ package com.sn.onepay.services.impl;
 import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
 import com.sn.onepay.entity.QSalesConfigurations;
-import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesConfigurations;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesConfigurationsMapper;
@@ -50,7 +49,7 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
 
         salesConfigurationsRepository.findById(salesConfigurationsId).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", salesConfigurationsId));
 
-        var updatedSalesConfigurations = salesConfigurationsMapper.asEntity(salesConfigurationsDTO);
+        var updatedSalesConfigurations = salesConfigurationsRepository.saveAndFlush(salesConfigurationsMapper.asEntity(salesConfigurationsDTO));
 
         log.info("Sales configurations updated: {}", updatedSalesConfigurations);
         log.trace("Sales configurations updated with id: {}", updatedSalesConfigurations.getId());
@@ -73,7 +72,7 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     }
 
     @Override
-    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Sales sales, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Long salesId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QSalesConfigurations configurations = QSalesConfigurations.salesConfigurations;
         BooleanBuilder builder = new BooleanBuilder();
@@ -81,8 +80,8 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
         if (id != null) {
             builder.and(configurations.id.eq(id));
         }
-        if (sales != null) {
-            builder.and(configurations.sales.eq(sales));
+        if (salesId != null) {
+            builder.and(configurations.sales.id.eq(salesId));
         }
         if (active != null) {
             builder.and(configurations.active.eq(active));
