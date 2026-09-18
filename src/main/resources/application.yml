@@ -35,3 +35,9 @@ logging:
 
 server:
   port: 8086
+
+onepay:
+  qrcode:
+    client:
+      ttl-seconds: ${QRCODE_CLIENT_TTL_SECONDS:300}
+      purge-interval-ms: ${QRCODE_CLIENT_PURGE_INTERVAL_MS:300000}

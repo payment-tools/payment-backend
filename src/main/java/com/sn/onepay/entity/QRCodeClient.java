@@ -48,6 +48,9 @@ public class QRCodeClient {
     @Column(name = "Active", nullable = false)
     boolean active;
 
+    @Column(name = "ExpirationDate")
+    LocalDateTime expirationDate;
+
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)
     LocalDateTime creationDate;

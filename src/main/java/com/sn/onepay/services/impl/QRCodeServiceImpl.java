@@ -16,8 +16,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -33,6 +35,9 @@ public class QRCodeServiceImpl implements QRCodeService {
     final ClientRepository clientRepository;
     final EnterpriseConfigurationRepository enterpriseConfigurationRepository;
     final QRCodeClientRepository qrCodeClientRepository;
+
+    @Value("${onepay.qrcode.client.ttl-seconds:300}")
+    long qrCodeClientTtlSeconds;
 
     @Override
     public QRCodeCashierDTO getCashierQrCode(Long cashierId) {
@@ -57,16 +62,25 @@ public class QRCodeServiceImpl implements QRCodeService {
         qrCode.setClient(client);
         qrCode.setUsed(false);
         qrCode.setActive(true);
+        qrCode.setExpirationDate(LocalDateTime.now().plusSeconds(qrCodeClientTtlSeconds));
         qrCode = qrCodeClientRepository.save(qrCode);
 
         log.info("QRCode client saved: {}", qrCode);
         log.trace("QRCode client saved with id: {}", qrCode.getId());
 
-        return new QRCodeClientDTO(qrCode.getRef(), clientId, qrCode.isUsed(), configuration.getMaxAmountRestauration(), configuration.getMaxAmountGasStation(), configuration.getMaxAmountTelephony(), configuration.getMaxAmountMarket());
+        return new QRCodeClientDTO(qrCode.getRef(), clientId, qrCode.isUsed(), qrCode.getExpirationDate(), configuration.getMaxAmountRestauration(), configuration.getMaxAmountGasStation(), configuration.getMaxAmountTelephony(), configuration.getMaxAmountMarket());
     }
 
     @Override
     public void consumeClientQrCode(String qrCodeRef, Long clientId) {
+        LocalDateTime now = LocalDateTime.now();
+
+        /*Atomic update: prevents two concurrent scans from both consuming the same QR code*/
+        if (qrCodeClientRepository.consume(qrCodeRef, clientId, now) == 1) {
+            log.info("QRCode client consumed: {}", qrCodeRef);
+            return;
+        }
+
         var qrCode = qrCodeClientRepository.findByRef(qrCodeRef).orElseThrow(() -> new ResourceNotFoundException("QRCode client", "ref", qrCodeRef));
 
         if (!qrCode.isActive() || !qrCode.getClient().getId().equals(clientId))
@@ -75,10 +89,6 @@ public class QRCodeServiceImpl implements QRCodeService {
         if (qrCode.isUsed())
             throw new ObjectValidationException("QR code déjà utilisé");
 
-        qrCode.setUsed(true);
-        qrCodeClientRepository.saveAndFlush(qrCode);
-
-        log.info("QRCode client consumed: {}", qrCodeRef);
-        log.trace("QRCode client consumed with id: {}", qrCode.getId());
+        throw new ObjectValidationException("QR code expiré");
     }
 }

@@ -621,6 +621,14 @@
 
     </changeSet>
 
+    <changeSet id="1.0.0-add-qrcode-client-expiration" author="mouhamed">
+
+        <addColumn tableName="qrcodeclient">
+            <column name="expirationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </addColumn>
+
+    </changeSet>
+
     <changeSet id="1.0.0-logical-deletion-everywhere" author="mouhamed">
 
         <addColumn tableName="enterprise">
