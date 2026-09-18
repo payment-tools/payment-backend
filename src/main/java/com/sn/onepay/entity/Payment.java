@@ -52,6 +52,12 @@ public class Payment {
     @Column(name = "Amount", nullable = false)
     Double amount;
 
+    @Column(name = "EmployerAmount")
+    Double employerAmount;
+
+    @Column(name = "EmployeeAmount")
+    Double employeeAmount;
+
     @Column(name = "Active", nullable = false)
     boolean active;
 
