@@ -609,6 +609,18 @@
 
     </changeSet>
 
+    <changeSet id="1.0.0-payment-subvention-split" author="mouhamed">
+
+        <addColumn tableName="payment">
+            <column name="employeramount" type="double"/>
+        </addColumn>
+
+        <addColumn tableName="payment">
+            <column name="employeeamount" type="double"/>
+        </addColumn>
+
+    </changeSet>
+
     <changeSet id="1.0.0-logical-deletion-everywhere" author="mouhamed">
 
         <addColumn tableName="enterprise">
