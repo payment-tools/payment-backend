@@ -1,7 +1,6 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.SalesConfigurationsDTO;
-import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesConfigurations;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesConfigurationsMapper;
@@ -61,18 +60,20 @@ class SalesConfigurationsServiceImplTest {
     }
 
     @Test
-    void updateSalesConfigurations_returnsWhenFound() {
-        // Note: the existing service has a bug (does not save), but tests what exists
+    void updateSalesConfigurations_savesWhenFound() {
         var dto = mock(SalesConfigurationsDTO.class);
-        var entity = new SalesConfigurations();
+        var mapped = new SalesConfigurations();
+        var saved = new SalesConfigurations();
         var resultDTO = mock(SalesConfigurationsDTO.class);
 
         when(salesConfigurationsRepository.findById(1L)).thenReturn(Optional.of(new SalesConfigurations()));
-        when(salesConfigurationsMapper.asEntity(dto)).thenReturn(entity);
-        when(salesConfigurationsMapper.asDTO(entity)).thenReturn(resultDTO);
+        when(salesConfigurationsMapper.asEntity(dto)).thenReturn(mapped);
+        when(salesConfigurationsRepository.saveAndFlush(mapped)).thenReturn(saved);
+        when(salesConfigurationsMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = salesConfigurationsService.updateSalesConfigurations(dto, 1L);
         assertThat(result).isEqualTo(resultDTO);
+        verify(salesConfigurationsRepository).saveAndFlush(mapped);
     }
 
     @Test
@@ -116,7 +117,7 @@ class SalesConfigurationsServiceImplTest {
         when(salesConfigurationsMapper.asDTO(any(SalesConfigurations.class))).thenReturn(mock(SalesConfigurationsDTO.class));
 
         Page<SalesConfigurationsDTO> result = salesConfigurationsService.getSalesConfigurationsByFilters(
-                1L, mock(Sales.class), true, LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
+                1L, 2L, true, LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }

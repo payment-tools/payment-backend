@@ -1,7 +1,6 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.SalesConfigurationsDTO;
-import com.sn.onepay.entity.Sales;
 import com.sn.onepay.services.SalesConfigurationsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -73,13 +72,13 @@ public class SalesConfigurationsController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(@RequestParam(required = false) Long id,
-                                                                        @RequestParam(required = false) Sales sales,
+    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(@Parameter(description = "Filter by configuration ID") @RequestParam(required = false) Long id,
+                                                                        @Parameter(description = "Filter by sales ID") @RequestParam(required = false) Long salesId,
                                                                         @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
-                                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
-                                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
+                                                                        @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
+                                                                        @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                                         Pageable pageable) {
-        return salesConfigurationsService.getSalesConfigurationsByFilters(id, sales, active, creationDate, modificationDate, pageable);
+        return salesConfigurationsService.getSalesConfigurationsByFilters(id, salesId, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a sales Configurations by id", description = "This endpoint is for deleting sales Configurations by id")
