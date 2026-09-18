@@ -39,6 +39,9 @@ public class Sales {
     @Column(name = "Address")
     String address;
 
+    @Column(name = "Active", nullable = false)
+    boolean active;
+
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)
     LocalDateTime creationDate;

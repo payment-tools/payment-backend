@@ -33,7 +33,10 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     @Override
     public SalesConfigurationsDTO createSalesConfigurations(SalesConfigurationsDTO salesConfigurationsDTO) {
 
-        var savedSalesConfigurations = salesConfigurationsRepository.save(salesConfigurationsMapper.asEntity(salesConfigurationsDTO));
+        SalesConfigurations salesConfigurations = salesConfigurationsMapper.asEntity(salesConfigurationsDTO);
+        salesConfigurations.setActive(true);
+
+        var savedSalesConfigurations = salesConfigurationsRepository.save(salesConfigurations);
 
         log.info("Sales configurations saved: {}", savedSalesConfigurations);
         log.trace("Sales configurations saved with id: {}", savedSalesConfigurations.getId());
@@ -58,9 +61,11 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     @Override
     public void deleteSalesConfigurations(Long salesConfigurationsId) {
 
-        salesConfigurationsRepository.findById(salesConfigurationsId).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", salesConfigurationsId));
+        SalesConfigurations salesConfigurations = salesConfigurationsRepository.findById(salesConfigurationsId).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", salesConfigurationsId));
 
-        salesConfigurationsRepository.deleteById(salesConfigurationsId);
+        /*Implements logical deletion*/
+        salesConfigurations.setActive(false);
+        salesConfigurationsRepository.saveAndFlush(salesConfigurations);
 
         log.info("Sales configurations deleted with id: {}", salesConfigurationsId);
         log.trace("Sales configurations deleted with id: {}", salesConfigurationsId);
@@ -68,7 +73,7 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     }
 
     @Override
-    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Sales sales, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Sales sales, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QSalesConfigurations configurations = QSalesConfigurations.salesConfigurations;
         BooleanBuilder builder = new BooleanBuilder();
@@ -78,6 +83,9 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
         }
         if (sales != null) {
             builder.and(configurations.sales.eq(sales));
+        }
+        if (active != null) {
+            builder.and(configurations.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(configurations.creationDate.goe(creationDate));

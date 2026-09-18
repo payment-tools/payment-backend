@@ -57,6 +57,9 @@ public class EnterpriseConfiguration {
     @Column(name = "EmployeePercentage", nullable = false)
     int employeePercentage;
 
+    @Column(name = "Active", nullable = false)
+    boolean active;
+
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)
     LocalDateTime creationDate;

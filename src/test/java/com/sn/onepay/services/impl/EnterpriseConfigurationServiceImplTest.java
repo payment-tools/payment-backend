@@ -47,6 +47,7 @@ class EnterpriseConfigurationServiceImplTest {
         when(enterpriseConfigurationMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = enterpriseConfigurationService.createEnterpriseConfiguration(dto);
+        assertThat(entity.isActive()).isTrue();
         assertThat(result).isEqualTo(resultDTO);
     }
 
@@ -84,12 +85,14 @@ class EnterpriseConfigurationServiceImplTest {
 
     @Test
     void deleteEnterpriseConfiguration_deletesWhenFound() {
-        when(enterpriseConfigurationRepository.findById(1L)).thenReturn(Optional.of(new EnterpriseConfiguration()));
-        doNothing().when(enterpriseConfigurationRepository).deleteById(1L);
+        var existing = new EnterpriseConfiguration();
+        when(enterpriseConfigurationRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(enterpriseConfigurationRepository.saveAndFlush(existing)).thenReturn(existing);
 
         enterpriseConfigurationService.deleteEnterpriseConfiguration(1L);
 
-        verify(enterpriseConfigurationRepository).deleteById(1L);
+        assertThat(existing.isActive()).isFalse();
+        verify(enterpriseConfigurationRepository).saveAndFlush(existing);
     }
 
     @Test
@@ -100,7 +103,7 @@ class EnterpriseConfigurationServiceImplTest {
         when(enterpriseConfigurationMapper.asDTO(any(EnterpriseConfiguration.class))).thenReturn(mock(EnterpriseConfigurationDTO.class));
 
         Page<EnterpriseConfigurationDTO> result = enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(
-                null, null, null, null, null, null, null, null, null, null, Pageable.unpaged());
+                null, null, null, null, null, null, null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }
@@ -113,7 +116,7 @@ class EnterpriseConfigurationServiceImplTest {
         when(enterpriseConfigurationMapper.asDTO(any(EnterpriseConfiguration.class))).thenReturn(mock(EnterpriseConfigurationDTO.class));
 
         Page<EnterpriseConfigurationDTO> result = enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(
-                1L, 7L, 500.0, 300.0, 200.0, 100.0, 60, 40,
+                1L, 7L, 500.0, 300.0, 200.0, 100.0, 60, 40, true,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);

@@ -48,6 +48,7 @@ class SalesConfigurationsServiceImplTest {
         when(salesConfigurationsMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = salesConfigurationsService.createSalesConfigurations(dto);
+        assertThat(entity.isActive()).isTrue();
         assertThat(result).isEqualTo(resultDTO);
     }
 
@@ -84,12 +85,14 @@ class SalesConfigurationsServiceImplTest {
 
     @Test
     void deleteSalesConfigurations_deletesWhenFound() {
-        when(salesConfigurationsRepository.findById(1L)).thenReturn(Optional.of(new SalesConfigurations()));
-        doNothing().when(salesConfigurationsRepository).deleteById(1L);
+        var existing = new SalesConfigurations();
+        when(salesConfigurationsRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesConfigurationsRepository.saveAndFlush(existing)).thenReturn(existing);
 
         salesConfigurationsService.deleteSalesConfigurations(1L);
 
-        verify(salesConfigurationsRepository).deleteById(1L);
+        assertThat(existing.isActive()).isFalse();
+        verify(salesConfigurationsRepository).saveAndFlush(existing);
     }
 
     @Test
@@ -100,7 +103,7 @@ class SalesConfigurationsServiceImplTest {
         when(salesConfigurationsMapper.asDTO(any(SalesConfigurations.class))).thenReturn(mock(SalesConfigurationsDTO.class));
 
         Page<SalesConfigurationsDTO> result = salesConfigurationsService.getSalesConfigurationsByFilters(
-                null, null, null, null, Pageable.unpaged());
+                null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }
@@ -113,7 +116,7 @@ class SalesConfigurationsServiceImplTest {
         when(salesConfigurationsMapper.asDTO(any(SalesConfigurations.class))).thenReturn(mock(SalesConfigurationsDTO.class));
 
         Page<SalesConfigurationsDTO> result = salesConfigurationsService.getSalesConfigurationsByFilters(
-                1L, mock(Sales.class), LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
+                1L, mock(Sales.class), true, LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }

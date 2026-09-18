@@ -62,6 +62,9 @@ public class Enterprise {
     @JoinTable(name = "EnrolledModules", joinColumns = @JoinColumn(name = "EnterpriseId"))
     Collection<Modules> enrolledModules;
 
+    @Column(name = "Active", nullable = false)
+    boolean active;
+
     @CreatedDate
     @Column(name = "CreationDate", updatable = false)
     LocalDateTime creationDate;

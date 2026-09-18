@@ -32,7 +32,10 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     @Override
     public EnterpriseConfigurationDTO createEnterpriseConfiguration(EnterpriseConfigurationDTO enterpriseConfigurationDTO) {
 
-        var savedEnterpriseConfiguration = enterpriseConfigurationRepository.save(enterpriseConfigurationMapper.asEntity(enterpriseConfigurationDTO));
+        EnterpriseConfiguration enterpriseConfiguration = enterpriseConfigurationMapper.asEntity(enterpriseConfigurationDTO);
+        enterpriseConfiguration.setActive(true);
+
+        var savedEnterpriseConfiguration = enterpriseConfigurationRepository.save(enterpriseConfiguration);
 
         log.info("Created new enterprise configuration: {}", savedEnterpriseConfiguration);
         log.trace("Created new enterprise configuration with id: {}", savedEnterpriseConfiguration.getId());
@@ -57,9 +60,11 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     @Override
     public void deleteEnterpriseConfiguration(Long enterpriseConfigurationId) {
 
-        enterpriseConfigurationRepository.findById(enterpriseConfigurationId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Configuration", "ID", enterpriseConfigurationId));
+        EnterpriseConfiguration enterpriseConfiguration = enterpriseConfigurationRepository.findById(enterpriseConfigurationId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Configuration", "ID", enterpriseConfigurationId));
 
-        enterpriseConfigurationRepository.deleteById(enterpriseConfigurationId);
+        /*Implements logical deletion*/
+        enterpriseConfiguration.setActive(false);
+        enterpriseConfigurationRepository.saveAndFlush(enterpriseConfiguration);
 
         log.info("Deleted enterprise configuration with id: {}", enterpriseConfigurationId);
         log.trace("Deleted enterprise configuration with id: {}", enterpriseConfigurationId);
@@ -67,7 +72,7 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     }
 
     @Override
-    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Long enterpriseId, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Long enterpriseId, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QEnterpriseConfiguration enterpriseConfiguration = QEnterpriseConfiguration.enterpriseConfiguration;
         BooleanBuilder builder = new BooleanBuilder();
@@ -95,6 +100,9 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
         }
         if (employeePercentage != null) {
             builder.and(enterpriseConfiguration.employeePercentage.eq(employeePercentage));
+        }
+        if (active != null) {
+            builder.and(enterpriseConfiguration.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(enterpriseConfiguration.creationDate.goe(creationDate));

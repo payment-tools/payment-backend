@@ -85,11 +85,12 @@ public class EnterpriseController {
             @Parameter(description = "") @RequestParam(required = false) Long actualQuota,
             @Parameter(description = "") @RequestParam(required = false) String address,
             @Parameter(description = "") @RequestParam(required = false) Modules enrolledModules,
+            @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
             @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
             @Parameter(description = "") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
             Pageable pageable
     ) {
-        return enterpriseService.getEnterprisesByFilters(id, ref, name, maxQuota, actualQuota, address, enrolledModules, creationDate, modificationDate, pageable);
+        return enterpriseService.getEnterprisesByFilters(id, ref, name, maxQuota, actualQuota, address, enrolledModules, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a enterprise by id", description = "This endpoint is for deleting enterprise by id")

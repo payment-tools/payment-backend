@@ -628,4 +628,32 @@
         </addColumn>
 
     </changeSet>
+
+    <changeSet id="1.0.0-logical-deletion-everywhere" author="mouhamed">
+
+        <addColumn tableName="enterprise">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="enterpriseconfiguration">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="sales">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="salesconfigurations">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+    </changeSet>
 </databaseChangeLog>

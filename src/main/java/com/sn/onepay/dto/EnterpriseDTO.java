@@ -32,6 +32,9 @@ public record EnterpriseDTO(
         @Schema(name = "enrolledModules", description = "List of modules enrolled by the enterprise")
         Collection<Modules> enrolledModules,
 
+        @Schema(name = "active", description = "Whether the enterprise is active")
+        Boolean active,
+
         @Schema(name = "creationDate", description = "Enterprise date of creation")
         LocalDateTime creationDate,
 

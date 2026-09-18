@@ -34,7 +34,10 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public SalesDTO createSales(SalesDTO salesDTO) {
 
-        var savedSales = salesRepository.save(salesMapper.asEntity(salesDTO));
+        Sales sales = salesMapper.asEntity(salesDTO);
+        sales.setActive(true);
+
+        var savedSales = salesRepository.save(sales);
 
         log.info("Sales saved: {}", savedSales);
         log.trace("Sales saved with id: {}", savedSales.getId());
@@ -59,9 +62,11 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public void deleteSales(Long id) {
 
-        salesRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", id));
+        Sales sales = salesRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", id));
 
-        salesRepository.deleteById(id);
+        /*Implements logical deletion*/
+        sales.setActive(false);
+        salesRepository.saveAndFlush(sales);
 
         log.info("Sales deleted with id: {}", id);
         log.debug("Sales deleted with id: {}", id);
@@ -69,7 +74,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Page<SalesDTO> getSalesByFilters(Long id, String ref, String name, Modules type, String address, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
+    public Page<SalesDTO> getSalesByFilters(Long id, String ref, String name, Modules type, String address, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable) {
 
         QSales sales = QSales.sales;
         BooleanBuilder builder = new BooleanBuilder();
@@ -88,6 +93,9 @@ public class SalesServiceImpl implements SalesService {
         }
         if (address != null && !address.isEmpty()) {
             builder.and(sales.address.containsIgnoreCase(address));
+        }
+        if (active != null) {
+            builder.and(sales.active.eq(active));
         }
         if (creationDate != null) {
             builder.and(sales.creationDate.goe(creationDate));

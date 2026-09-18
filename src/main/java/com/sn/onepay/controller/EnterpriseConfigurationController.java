@@ -81,11 +81,12 @@ public class EnterpriseConfigurationController {
             @Parameter(description = "Filter by telephony max amount") @RequestParam(required = false) Double maxAmountTelephony,
             @Parameter(description = "Filter by enterprise percentage") @RequestParam(required = false) Integer enterprisePercentage,
             @Parameter(description = "Filter by employee percentage") @RequestParam(required = false) Integer employeePercentage,
+            @Parameter(description = "Filter by active status (true or false)") @RequestParam(required = false) Boolean active,
             @Parameter(description = "Filter records created after this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime creationDate,
             @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
             Pageable pageable
     ) {
-        return enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(id, enterpriseId, maxAmountRestauration, maxAmountMarket, maxAmountGasStation, maxAmountTelephony, enterprisePercentage, employeePercentage, creationDate, modificationDate, pageable);
+        return enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(id, enterpriseId, maxAmountRestauration, maxAmountMarket, maxAmountGasStation, maxAmountTelephony, enterprisePercentage, employeePercentage, active, creationDate, modificationDate, pageable);
     }
 
     @Operation(summary = "Delete a enterprise Configuration by id", description = "This endpoint is for deleting enterprise Configuration by id")

@@ -48,6 +48,7 @@ class SalesServiceImplTest {
         when(salesMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = salesService.createSales(dto);
+        assertThat(entity.isActive()).isTrue();
         assertThat(result).isEqualTo(resultDTO);
     }
 
@@ -85,12 +86,14 @@ class SalesServiceImplTest {
 
     @Test
     void deleteSales_deletesWhenFound() {
-        when(salesRepository.findById(1L)).thenReturn(Optional.of(new Sales()));
-        doNothing().when(salesRepository).deleteById(1L);
+        var existing = new Sales();
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesRepository.saveAndFlush(existing)).thenReturn(existing);
 
         salesService.deleteSales(1L);
 
-        verify(salesRepository).deleteById(1L);
+        assertThat(existing.isActive()).isFalse();
+        verify(salesRepository).saveAndFlush(existing);
     }
 
     @Test
@@ -101,7 +104,7 @@ class SalesServiceImplTest {
         when(salesMapper.asDTO(any(Sales.class))).thenReturn(mock(SalesDTO.class));
 
         Page<SalesDTO> result = salesService.getSalesByFilters(
-                null, null, null, null, null, null, null, Pageable.unpaged());
+                null, null, null, null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result).hasSize(1);
     }
@@ -114,7 +117,7 @@ class SalesServiceImplTest {
         when(salesMapper.asDTO(any(Sales.class))).thenReturn(mock(SalesDTO.class));
 
         Page<SalesDTO> result = salesService.getSalesByFilters(
-                1L, "REF", "Sales Name", Modules.RESTAURATION, "Dakar",
+                1L, "REF", "Sales Name", Modules.RESTAURATION, "Dakar", true,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
