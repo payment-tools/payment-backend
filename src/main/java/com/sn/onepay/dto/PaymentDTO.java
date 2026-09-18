@@ -26,6 +26,12 @@ public record PaymentDTO(
         @NotNull(message = "Amount can not be null")
         Double amount,
 
+        @Schema(name = "employerAmount", description = "Part of the amount covered by the enterprise subvention (computed server-side)")
+        Double employerAmount,
+
+        @Schema(name = "employeeAmount", description = "Part of the amount paid by the employee (computed server-side)")
+        Double employeeAmount,
+
         @Schema(name = "active", description = "Whether the payment is active")
         Boolean active,
 
