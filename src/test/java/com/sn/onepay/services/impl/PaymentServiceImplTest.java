@@ -8,18 +8,23 @@ import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.PaymentDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
 import com.sn.onepay.dto.SalesDTO;
+import com.sn.onepay.entity.EmployeeGroup;
 import com.sn.onepay.entity.Payment;
+import com.sn.onepay.entity.Subvention;
 import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PaymentMapper;
+import com.sn.onepay.repository.EmployeeGroupRepository;
 import com.sn.onepay.repository.PaymentRepository;
+import com.sn.onepay.repository.SubventionRepository;
 import com.sn.onepay.services.EnterpriseConfigurationService;
 import com.sn.onepay.services.PartnershipService;
 import com.sn.onepay.services.QRCodeService;
 import com.sn.onepay.services.SalesConfigurationsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -59,6 +64,12 @@ class PaymentServiceImplTest {
 
     @Mock
     QRCodeService qrCodeService;
+
+    @Mock
+    EmployeeGroupRepository employeeGroupRepository;
+
+    @Mock
+    SubventionRepository subventionRepository;
 
     @InjectMocks
     PaymentServiceImpl paymentService;
@@ -105,7 +116,29 @@ class PaymentServiceImplTest {
     private PartnershipDTO buildActivePartnership() {
         var p = mock(PartnershipDTO.class);
         when(p.active()).thenReturn(true);
+        when(p.id()).thenReturn(10L);
         return p;
+    }
+
+    private EmployeeGroup buildEmployeeGroup(Long id) {
+        var group = new EmployeeGroup();
+        group.setId(id);
+        return group;
+    }
+
+    private Subvention buildSubvention(Double employerPercent, Double employeePercent) {
+        var subvention = new Subvention();
+        subvention.setEmployerPercent(employerPercent);
+        subvention.setEmployeePercent(employeePercent);
+        subvention.setActive(true);
+        return subvention;
+    }
+
+    /*Stubs a single active employee group (id 5) for client 3, with an active subvention covering partnership 10*/
+    private void stubApplicableSubvention(Double employerPercent, Double employeePercent) {
+        when(employeeGroupRepository.findByActiveTrueAndClients_Id(3L)).thenReturn(List.of(buildEmployeeGroup(5L)));
+        when(subventionRepository.findByActiveTrueAndPartnership_IdAndEmployeeGroup_IdIn(10L, List.of(5L)))
+                .thenReturn(List.of(buildSubvention(employerPercent, employeePercent)));
     }
 
     @Test
@@ -183,12 +216,19 @@ class PaymentServiceImplTest {
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = paymentService.createPayment(dto);
         assertThat(result).isEqualTo(resultDTO);
+
+        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(captor.capture());
+        assertThat(captor.getValue().getEmployerAmount()).isEqualTo(35.0);
+        assertThat(captor.getValue().getEmployeeAmount()).isEqualTo(15.0);
+        assertThat(captor.getValue().isActive()).isTrue();
     }
 
     @Test
@@ -222,6 +262,7 @@ class PaymentServiceImplTest {
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "MARKET")).thenReturn(0.0);
+        stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
@@ -261,6 +302,7 @@ class PaymentServiceImplTest {
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "GAS_STATION")).thenReturn(0.0);
+        stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
@@ -300,6 +342,7 @@ class PaymentServiceImplTest {
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "TELEPHONY")).thenReturn(0.0);
+        stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
@@ -340,6 +383,7 @@ class PaymentServiceImplTest {
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
@@ -365,6 +409,7 @@ class PaymentServiceImplTest {
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
         when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
         when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
@@ -372,6 +417,78 @@ class PaymentServiceImplTest {
         paymentService.createPayment(dto);
 
         verify(qrCodeService, never()).consumeClientQrCode(anyString(), anyLong());
+    }
+
+    @Test
+    void createPayment_throwsWhenClientHasNoActiveEmployeeGroup() {
+        var dto = buildPaymentDTO(Modules.RESTAURATION, 50.0);
+        var salesConfig = buildSalesConfig(10.0, 100.0);
+        var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
+        var activePartnership = buildActivePartnership();
+
+        when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
+        when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
+        when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(employeeGroupRepository.findByActiveTrueAndClients_Id(3L)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> paymentService.createPayment(dto))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("Aucune subvention active");
+
+        verify(subventionRepository, never()).findByActiveTrueAndPartnership_IdAndEmployeeGroup_IdIn(anyLong(), anyList());
+        verify(paymentRepository, never()).save(any(Payment.class));
+    }
+
+    @Test
+    void createPayment_throwsWhenNoSubventionCoversPartnership() {
+        var dto = buildPaymentDTO(Modules.RESTAURATION, 50.0);
+        var salesConfig = buildSalesConfig(10.0, 100.0);
+        var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
+        var activePartnership = buildActivePartnership();
+
+        when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
+        when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
+        when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(employeeGroupRepository.findByActiveTrueAndClients_Id(3L)).thenReturn(List.of(buildEmployeeGroup(5L)));
+        when(subventionRepository.findByActiveTrueAndPartnership_IdAndEmployeeGroup_IdIn(10L, List.of(5L))).thenReturn(List.of());
+
+        assertThatThrownBy(() -> paymentService.createPayment(dto))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("Aucune subvention active");
+
+        verify(paymentRepository, never()).save(any(Payment.class));
+    }
+
+    @Test
+    void createPayment_picksSubventionMostAdvantageousToEmployeeWhenClientInMultipleGroups() {
+        var dto = buildPaymentDTO(Modules.RESTAURATION, 100.0);
+        var entity = new Payment();
+        var saved = new Payment();
+        var resultDTO = mock(PaymentDTO.class);
+        var salesConfig = buildSalesConfig(10.0, 200.0);
+        var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
+        var activePartnership = buildActivePartnership();
+
+        when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
+        when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
+        when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(employeeGroupRepository.findByActiveTrueAndClients_Id(3L)).thenReturn(List.of(buildEmployeeGroup(5L), buildEmployeeGroup(6L)));
+        when(subventionRepository.findByActiveTrueAndPartnership_IdAndEmployeeGroup_IdIn(10L, List.of(5L, 6L)))
+                .thenReturn(List.of(buildSubvention(40.0, 60.0), buildSubvention(90.0, 10.0)));
+        when(paymentMapper.asEntity(dto)).thenReturn(entity);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
+        when(paymentMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = paymentService.createPayment(dto);
+        assertThat(result).isEqualTo(resultDTO);
+
+        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(captor.capture());
+        assertThat(captor.getValue().getEmployerAmount()).isEqualTo(90.0);
+        assertThat(captor.getValue().getEmployeeAmount()).isEqualTo(10.0);
     }
 
     @Test
