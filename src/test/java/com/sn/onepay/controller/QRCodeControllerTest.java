@@ -10,6 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -28,7 +30,7 @@ class QRCodeControllerTest extends BaseControllerTest {
     @Test
     void getClientQRCode_returns200() throws Exception {
         when(qrCodeService.getClientQrCode(anyLong()))
-                .thenReturn(new QRCodeClientDTO("qr-ref", 1L, false, 500.0, 200.0, 100.0, 300.0));
+                .thenReturn(new QRCodeClientDTO("qr-ref", 1L, false, LocalDateTime.now().plusMinutes(5), 500.0, 200.0, 100.0, 300.0));
 
         mockMvc.perform(get("/v1/onepay/qrcode/client").param("clientId", "1"))
                 .andExpect(status().isOk());

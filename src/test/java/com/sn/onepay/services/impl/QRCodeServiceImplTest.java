@@ -14,16 +14,22 @@ import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EnterpriseConfigurationRepository;
 import com.sn.onepay.repository.QRCodeClientRepository;
 import com.sn.onepay.repository.SalesConfigurationsRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +52,11 @@ class QRCodeServiceImplTest {
 
     @InjectMocks
     QRCodeServiceImpl qrCodeService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(qrCodeService, "qrCodeClientTtlSeconds", 300L);
+    }
 
     @Test
     void getCashierQrCode_throwsWhenCashierNotFound() {
@@ -130,6 +141,7 @@ class QRCodeServiceImplTest {
         assertThat(result.ref()).isNotNull();
         assertThat(result.clientId()).isEqualTo(1L);
         assertThat(result.used()).isFalse();
+        assertThat(result.expirationDate()).isAfter(LocalDateTime.now());
         assertThat(result.maxAmountRestauration()).isEqualTo(500.0);
         assertThat(result.maxAmountMarket()).isEqualTo(300.0);
 
@@ -137,7 +149,18 @@ class QRCodeServiceImplTest {
     }
 
     @Test
+    void consumeClientQrCode_marksAsUsedAtomically() {
+        when(qrCodeClientRepository.consume(eq("ref"), eq(1L), any(LocalDateTime.class))).thenReturn(1);
+
+        qrCodeService.consumeClientQrCode("ref", 1L);
+
+        verify(qrCodeClientRepository).consume(eq("ref"), eq(1L), any(LocalDateTime.class));
+        verify(qrCodeClientRepository, never()).findByRef(anyString());
+    }
+
+    @Test
     void consumeClientQrCode_throwsWhenRefNotFound() {
+        when(qrCodeClientRepository.consume(anyString(), anyLong(), any(LocalDateTime.class))).thenReturn(0);
         when(qrCodeClientRepository.findByRef("unknown")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> qrCodeService.consumeClientQrCode("unknown", 1L))
@@ -146,6 +169,7 @@ class QRCodeServiceImplTest {
 
     @Test
     void consumeClientQrCode_throwsWhenInactive() {
+        when(qrCodeClientRepository.consume(anyString(), anyLong(), any(LocalDateTime.class))).thenReturn(0);
         var qrCode = new QRCodeClient();
         qrCode.setActive(false);
         when(qrCodeClientRepository.findByRef("ref")).thenReturn(Optional.of(qrCode));
@@ -157,6 +181,7 @@ class QRCodeServiceImplTest {
 
     @Test
     void consumeClientQrCode_throwsWhenClientMismatch() {
+        when(qrCodeClientRepository.consume(anyString(), anyLong(), any(LocalDateTime.class))).thenReturn(0);
         var client = mock(Client.class);
         when(client.getId()).thenReturn(2L);
         var qrCode = new QRCodeClient();
@@ -171,6 +196,7 @@ class QRCodeServiceImplTest {
 
     @Test
     void consumeClientQrCode_throwsWhenAlreadyUsed() {
+        when(qrCodeClientRepository.consume(anyString(), anyLong(), any(LocalDateTime.class))).thenReturn(0);
         var client = mock(Client.class);
         when(client.getId()).thenReturn(1L);
         var qrCode = new QRCodeClient();
@@ -185,19 +211,19 @@ class QRCodeServiceImplTest {
     }
 
     @Test
-    void consumeClientQrCode_marksAsUsed() {
+    void consumeClientQrCode_throwsWhenExpired() {
+        when(qrCodeClientRepository.consume(anyString(), anyLong(), any(LocalDateTime.class))).thenReturn(0);
         var client = mock(Client.class);
         when(client.getId()).thenReturn(1L);
         var qrCode = new QRCodeClient();
         qrCode.setActive(true);
         qrCode.setUsed(false);
         qrCode.setClient(client);
+        qrCode.setExpirationDate(LocalDateTime.now().minusMinutes(1));
         when(qrCodeClientRepository.findByRef("ref")).thenReturn(Optional.of(qrCode));
-        when(qrCodeClientRepository.saveAndFlush(qrCode)).thenReturn(qrCode);
 
-        qrCodeService.consumeClientQrCode("ref", 1L);
-
-        assertThat(qrCode.isUsed()).isTrue();
-        verify(qrCodeClientRepository).saveAndFlush(qrCode);
+        assertThatThrownBy(() -> qrCodeService.consumeClientQrCode("ref", 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("expiré");
     }
 }
