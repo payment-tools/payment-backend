@@ -18,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +36,6 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping(value = "/v1/onepay/enterprise")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class EnterpriseController {
 
     final EnterpriseService enterpriseService;

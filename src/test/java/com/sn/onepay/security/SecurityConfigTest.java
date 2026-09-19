@@ -29,8 +29,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PaymentController.class)
@@ -157,6 +159,18 @@ class SecurityConfigTest {
 
         mockMvc.perform(get("/v1/onepay/payment").with(as("ENTERPRISE_FINANCE"))).andExpect(status().isOk());
         assertAccessGranted(mockMvc.perform(get("/v1/onepay/enterprise").with(as("CASHIER"))));
+    }
+
+    @Test
+    void corsPreflight_onProtectedEndpoint_isNotBlockedByAuthentication() throws Exception {
+        /*A browser preflight carries no Authorization header: without CORS wired into the
+          security filter chain, it would hit .anyRequest().authenticated() and get 401,
+          which breaks every cross-origin caller (Angular front, mobile PWA)*/
+        mockMvc.perform(options("/v1/onepay/payment")
+                        .header("Origin", "http://localhost:4200")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "*"));
     }
 
     @Test
