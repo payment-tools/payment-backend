@@ -1,6 +1,7 @@
 package com.sn.onepay.scheduling;
 
 import com.sn.onepay.repository.QRCodeClientRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
+@Transactional
 public class QRCodeClientPurgeJob {
 
     final QRCodeClientRepository qrCodeClientRepository;
