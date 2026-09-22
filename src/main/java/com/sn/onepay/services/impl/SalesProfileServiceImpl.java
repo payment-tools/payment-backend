@@ -46,9 +46,19 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     @Override
     public SalesProfileDTO updateSalesProfile(SalesProfileDTO salesProfileDTO, Long salesProfileId) {
 
-        salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
+        SalesProfile existing = salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
 
-        var updatedSalesProfile = salesProfileRepository.save(salesProfileMapper.asEntity(salesProfileDTO));
+        if (salesProfileDTO.ref() != null) existing.setRef(salesProfileDTO.ref());
+        if (salesProfileDTO.firstname() != null) existing.setFirstname(salesProfileDTO.firstname());
+        if (salesProfileDTO.lastname() != null) existing.setLastname(salesProfileDTO.lastname());
+        if (salesProfileDTO.username() != null) existing.setUsername(salesProfileDTO.username());
+        if (salesProfileDTO.email() != null) existing.setEmail(salesProfileDTO.email());
+        if (salesProfileDTO.phoneNumber() != null) existing.setPhoneNumber(salesProfileDTO.phoneNumber());
+        if (salesProfileDTO.role() != null) existing.setRole(salesProfileDTO.role());
+        if (salesProfileDTO.sales() != null) existing.setSales(salesProfileDTO.sales());
+        if (salesProfileDTO.active() != null) existing.setActive(salesProfileDTO.active());
+
+        var updatedSalesProfile = salesProfileRepository.saveAndFlush(existing);
 
         log.info("Sales profile updated: {}", updatedSalesProfile);
         log.trace("Sales profile updated with id: {}", updatedSalesProfile.getId());

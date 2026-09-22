@@ -1,6 +1,7 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.SalesProfileDTO;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
@@ -62,19 +63,63 @@ class SalesProfileServiceImplTest {
     }
 
     @Test
-    void updateSalesProfile_savesWhenFound() {
+    void updateSalesProfile_updatesAllFieldsWhenProvided() {
         var dto = mock(SalesProfileDTO.class);
+        when(dto.ref()).thenReturn("REF1");
+        when(dto.firstname()).thenReturn("Jean");
+        when(dto.lastname()).thenReturn("Dupont");
+        when(dto.username()).thenReturn("jdupont");
+        when(dto.email()).thenReturn("jean@mail.com");
+        when(dto.phoneNumber()).thenReturn("770000000");
+        when(dto.role()).thenReturn(Roles.SALES_ADMIN);
+        var sales = new Sales();
+        when(dto.sales()).thenReturn(sales);
+        when(dto.active()).thenReturn(true);
+
         var existing = new SalesProfile();
-        var updated = new SalesProfile();
+        var saved = new SalesProfile();
         var resultDTO = mock(SalesProfileDTO.class);
 
         when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(salesProfileMapper.asEntity(dto)).thenReturn(updated);
-        when(salesProfileRepository.save(updated)).thenReturn(updated);
-        when(salesProfileMapper.asDTO(updated)).thenReturn(resultDTO);
+        when(salesProfileRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(salesProfileMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = salesProfileService.updateSalesProfile(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getRef()).isEqualTo("REF1");
+        assertThat(existing.getFirstname()).isEqualTo("Jean");
+        assertThat(existing.getLastname()).isEqualTo("Dupont");
+        assertThat(existing.getUsername()).isEqualTo("jdupont");
+        assertThat(existing.getEmail()).isEqualTo("jean@mail.com");
+        assertThat(existing.getPhoneNumber()).isEqualTo("770000000");
+        assertThat(existing.getRole()).isEqualTo(Roles.SALES_ADMIN);
+        assertThat(existing.getSales()).isEqualTo(sales);
+        assertThat(existing.isActive()).isTrue();
+    }
+
+    @Test
+    void updateSalesProfile_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed Boolean accessor is false, not null,
+          so it needs to be stubbed explicitly to exercise the "field not provided" branch*/
+        var dto = mock(SalesProfileDTO.class);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new SalesProfile();
+        existing.setFirstname("Original");
+        existing.setActive(true);
+        var saved = new SalesProfile();
+        var resultDTO = mock(SalesProfileDTO.class);
+
+        when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesProfileRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(salesProfileMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = salesProfileService.updateSalesProfile(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getFirstname()).isEqualTo("Original");
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test

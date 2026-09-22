@@ -1,7 +1,9 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.CashierDTO;
+import com.sn.onepay.dto.SalesDTO;
 import com.sn.onepay.entity.Cashier;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.CashierMapper;
@@ -62,19 +64,67 @@ class CashierServiceImplTest {
     }
 
     @Test
-    void updateCashier_savesWhenFound() {
+    void updateCashier_updatesAllFieldsWhenProvided() {
         var dto = mock(CashierDTO.class);
+        when(dto.ref()).thenReturn("REF1");
+        when(dto.firstname()).thenReturn("Jean");
+        when(dto.lastname()).thenReturn("Dupont");
+        when(dto.username()).thenReturn("jdupont");
+        when(dto.email()).thenReturn("jean@mail.com");
+        when(dto.phoneNumber()).thenReturn("770000000");
+        when(dto.role()).thenReturn(Roles.CASHIER);
+        when(dto.sales()).thenReturn(mock(SalesDTO.class));
+        when(dto.active()).thenReturn(true);
+
         var existing = new Cashier();
-        var updated = new Cashier();
+        var mappedSales = new Sales();
+        var mapped = new Cashier();
+        mapped.setSales(mappedSales);
+        var saved = new Cashier();
         var resultDTO = mock(CashierDTO.class);
 
         when(cashierRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(cashierMapper.asEntity(dto)).thenReturn(updated);
-        when(cashierRepository.saveAndFlush(updated)).thenReturn(updated);
-        when(cashierMapper.asDTO(updated)).thenReturn(resultDTO);
+        when(cashierMapper.asEntity(dto)).thenReturn(mapped);
+        when(cashierRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(cashierMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = cashierService.updateCashier(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getRef()).isEqualTo("REF1");
+        assertThat(existing.getFirstname()).isEqualTo("Jean");
+        assertThat(existing.getLastname()).isEqualTo("Dupont");
+        assertThat(existing.getUsername()).isEqualTo("jdupont");
+        assertThat(existing.getEmail()).isEqualTo("jean@mail.com");
+        assertThat(existing.getPhoneNumber()).isEqualTo("770000000");
+        assertThat(existing.getRole()).isEqualTo(Roles.CASHIER);
+        assertThat(existing.getSales()).isEqualTo(mappedSales);
+        assertThat(existing.isActive()).isTrue();
+    }
+
+    @Test
+    void updateCashier_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed Boolean accessor is false, not null,
+          so it needs to be stubbed explicitly to exercise the "field not provided" branch*/
+        var dto = mock(CashierDTO.class);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new Cashier();
+        existing.setFirstname("Original");
+        existing.setActive(true);
+        var saved = new Cashier();
+        var resultDTO = mock(CashierDTO.class);
+
+        when(cashierRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(cashierRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(cashierMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = cashierService.updateCashier(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getFirstname()).isEqualTo("Original");
+        assertThat(existing.isActive()).isTrue();
+        verify(cashierMapper, never()).asEntity(any());
     }
 
     @Test

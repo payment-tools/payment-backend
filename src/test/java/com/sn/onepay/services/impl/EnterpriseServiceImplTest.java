@@ -64,19 +64,64 @@ class EnterpriseServiceImplTest {
     }
 
     @Test
-    void updateEnterprise_savesWhenFound() {
+    void updateEnterprise_updatesAllFieldsWhenProvided() {
         var dto = mock(EnterpriseDTO.class);
+        when(dto.ref()).thenReturn("REF1");
+        when(dto.name()).thenReturn("Acme");
+        when(dto.maxQuota()).thenReturn(100L);
+        when(dto.actualQuota()).thenReturn(50L);
+        when(dto.address()).thenReturn("Dakar");
+        when(dto.enrolledModules()).thenReturn(List.of(Modules.RESTAURATION));
+        when(dto.active()).thenReturn(true);
+
         var existing = new Enterprise();
-        var updated = new Enterprise();
+        var saved = new Enterprise();
         var resultDTO = mock(EnterpriseDTO.class);
 
         when(enterpriseRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(enterpriseMapper.asEntity(dto)).thenReturn(updated);
-        when(enterpriseRepository.saveAndFlush(updated)).thenReturn(updated);
-        when(enterpriseMapper.asDTO(updated)).thenReturn(resultDTO);
+        when(enterpriseRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(enterpriseMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = enterpriseService.updateEnterprise(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getRef()).isEqualTo("REF1");
+        assertThat(existing.getName()).isEqualTo("Acme");
+        assertThat(existing.getMaxQuota()).isEqualTo(100L);
+        assertThat(existing.getActualQuota()).isEqualTo(50L);
+        assertThat(existing.getAddress()).isEqualTo("Dakar");
+        assertThat(existing.getEnrolledModules()).containsExactly(Modules.RESTAURATION);
+        assertThat(existing.isActive()).isTrue();
+    }
+
+    @Test
+    void updateEnterprise_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed boxed-type accessor (Long/Boolean) is
+          the zero value, not null, so these need to be stubbed explicitly to exercise the
+          "field not provided" branch*/
+        var dto = mock(EnterpriseDTO.class);
+        when(dto.maxQuota()).thenReturn(null);
+        when(dto.actualQuota()).thenReturn(null);
+        when(dto.enrolledModules()).thenReturn(null);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new Enterprise();
+        existing.setName("Original");
+        existing.setMaxQuota(100L);
+        existing.setActive(true);
+        var saved = new Enterprise();
+        var resultDTO = mock(EnterpriseDTO.class);
+
+        when(enterpriseRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(enterpriseRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(enterpriseMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = enterpriseService.updateEnterprise(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getName()).isEqualTo("Original");
+        assertThat(existing.getMaxQuota()).isEqualTo(100L);
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test

@@ -49,9 +49,15 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public SalesDTO updateSales(SalesDTO salesDTO, Long salesId) {
 
-        salesRepository.findById(salesId).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesId));
+        Sales existing = salesRepository.findById(salesId).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesId));
 
-        var updatedSales = salesRepository.saveAndFlush(salesMapper.asEntity(salesDTO));
+        if (salesDTO.ref() != null) existing.setRef(salesDTO.ref());
+        if (salesDTO.name() != null) existing.setName(salesDTO.name());
+        if (salesDTO.address() != null) existing.setAddress(salesDTO.address());
+        if (salesDTO.type() != null) existing.setType(salesDTO.type());
+        if (salesDTO.active() != null) existing.setActive(salesDTO.active());
+
+        var updatedSales = salesRepository.saveAndFlush(existing);
 
         log.info("Sales updated: {}", updatedSales);
         log.debug("Sales updated with id: {}", updatedSales.getId());

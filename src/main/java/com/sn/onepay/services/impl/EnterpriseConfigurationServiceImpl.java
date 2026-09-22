@@ -47,9 +47,18 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
     @Override
     public EnterpriseConfigurationDTO updateEnterpriseConfiguration(EnterpriseConfigurationDTO enterpriseConfigurationDTO, Long enterpriseConfigurationId) {
 
-        enterpriseConfigurationRepository.findById(enterpriseConfigurationId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Configuration", "ID", enterpriseConfigurationId));
+        EnterpriseConfiguration existing = enterpriseConfigurationRepository.findById(enterpriseConfigurationId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Configuration", "ID", enterpriseConfigurationId));
 
-        var updatedEnterpriseConfiguration = enterpriseConfigurationRepository.saveAndFlush(enterpriseConfigurationMapper.asEntity(enterpriseConfigurationDTO));
+        if (enterpriseConfigurationDTO.enterprise() != null) existing.setEnterprise(enterpriseConfigurationDTO.enterprise());
+        if (enterpriseConfigurationDTO.maxAmountRestauration() != null) existing.setMaxAmountRestauration(enterpriseConfigurationDTO.maxAmountRestauration());
+        if (enterpriseConfigurationDTO.maxAmountMarket() != null) existing.setMaxAmountMarket(enterpriseConfigurationDTO.maxAmountMarket());
+        if (enterpriseConfigurationDTO.maxAmountGasStation() != null) existing.setMaxAmountGasStation(enterpriseConfigurationDTO.maxAmountGasStation());
+        if (enterpriseConfigurationDTO.maxAmountTelephony() != null) existing.setMaxAmountTelephony(enterpriseConfigurationDTO.maxAmountTelephony());
+        existing.setEnterprisePercentage(enterpriseConfigurationDTO.enterprisePercentage());
+        existing.setEmployeePercentage(enterpriseConfigurationDTO.employeePercentage());
+        if (enterpriseConfigurationDTO.active() != null) existing.setActive(enterpriseConfigurationDTO.active());
+
+        var updatedEnterpriseConfiguration = enterpriseConfigurationRepository.saveAndFlush(existing);
 
         log.info("Updated enterprise configuration: {}", updatedEnterpriseConfiguration);
         log.trace("Updated enterprise configuration with id: {}", updatedEnterpriseConfiguration.getId());

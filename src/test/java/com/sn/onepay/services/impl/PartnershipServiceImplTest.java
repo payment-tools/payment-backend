@@ -3,15 +3,20 @@ package com.sn.onepay.services.impl;
 import com.sn.onepay.dto.EnterpriseDTO;
 import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.SalesDTO;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.Partnership;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PartnershipMapper;
+import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.repository.PartnershipRepository;
+import com.sn.onepay.repository.SalesRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,18 +45,21 @@ class PartnershipServiceImplTest {
     @Mock
     PartnershipMapper partnershipMapper;
 
+    @Mock
+    EnterpriseRepository enterpriseRepository;
+
+    @Mock
+    SalesRepository salesRepository;
+
     @InjectMocks
     PartnershipServiceImpl partnershipService;
 
-    private PartnershipDTO buildPartnershipDTO(Long salesId, Modules salesType, Long enterpriseId,
-                                                List<Modules> enrolledModules) {
+    private PartnershipDTO buildPartnershipDTO(Long salesId, Long enterpriseId) {
         var salesDTO = mock(SalesDTO.class);
         when(salesDTO.id()).thenReturn(salesId);
-        when(salesDTO.type()).thenReturn(salesType);
 
         var enterpriseDTO = mock(EnterpriseDTO.class);
         when(enterpriseDTO.id()).thenReturn(enterpriseId);
-        when(enterpriseDTO.enrolledModules()).thenReturn(enrolledModules);
 
         var dto = mock(PartnershipDTO.class);
         when(dto.sales()).thenReturn(salesDTO);
@@ -59,9 +67,44 @@ class PartnershipServiceImplTest {
         return dto;
     }
 
+    private Enterprise buildEnterprise(Long id, List<Modules> enrolledModules) {
+        var enterprise = new Enterprise();
+        enterprise.setId(id);
+        enterprise.setEnrolledModules(enrolledModules);
+        return enterprise;
+    }
+
+    private Sales buildSales(Long id, Modules type) {
+        var sales = new Sales();
+        sales.setId(id);
+        sales.setType(type);
+        return sales;
+    }
+
+    @Test
+    void createPartnership_throwsWhenEnterpriseNotFound() {
+        var dto = buildPartnershipDTO(1L, 99L);
+        when(enterpriseRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> partnershipService.createPartnership(dto))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void createPartnership_throwsWhenSalesNotFound() {
+        var dto = buildPartnershipDTO(99L, 2L);
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, List.of(Modules.RESTAURATION))));
+        when(salesRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> partnershipService.createPartnership(dto))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
     @Test
     void createPartnership_throwsWhenAlreadyExists() {
-        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.RESTAURATION));
+        var dto = buildPartnershipDTO(1L, 2L);
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(buildSales(1L, Modules.RESTAURATION)));
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, List.of(Modules.RESTAURATION))));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L))
                 .thenReturn(new Partnership());
 
@@ -71,7 +114,20 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_throwsWhenModuleNotAllowed() {
-        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.MARKET));
+        var dto = buildPartnershipDTO(1L, 2L);
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(buildSales(1L, Modules.RESTAURATION)));
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, List.of(Modules.MARKET))));
+        when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(null);
+
+        assertThatThrownBy(() -> partnershipService.createPartnership(dto))
+                .isInstanceOf(ObjectValidationException.class);
+    }
+
+    @Test
+    void createPartnership_throwsWhenEnterpriseHasNoEnrolledModules() {
+        var dto = buildPartnershipDTO(1L, 2L);
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(buildSales(1L, Modules.RESTAURATION)));
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, null)));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(null);
 
         assertThatThrownBy(() -> partnershipService.createPartnership(dto))
@@ -80,20 +136,29 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_happyPath() {
-        var dto = buildPartnershipDTO(1L, Modules.RESTAURATION, 2L, List.of(Modules.RESTAURATION));
-        var entity = new Partnership();
+        var dto = buildPartnershipDTO(1L, 2L);
+        when(dto.ref()).thenReturn("REF1");
+        var sales = buildSales(1L, Modules.RESTAURATION);
+        var enterprise = buildEnterprise(2L, List.of(Modules.RESTAURATION));
         var saved = new Partnership();
         var resultDTO = mock(PartnershipDTO.class);
 
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(sales));
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(enterprise));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(null);
-        when(partnershipMapper.asEntity(dto)).thenReturn(entity);
         when(partnershipRepository.save(any(Partnership.class))).thenReturn(saved);
         when(partnershipMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = partnershipService.createPartnership(dto);
 
         assertThat(result).isEqualTo(resultDTO);
-        assertThat(entity.isActive()).isTrue();
+
+        ArgumentCaptor<Partnership> captor = ArgumentCaptor.forClass(Partnership.class);
+        verify(partnershipRepository).save(captor.capture());
+        assertThat(captor.getValue().isActive()).isTrue();
+        assertThat(captor.getValue().getRef()).isEqualTo("REF1");
+        assertThat(captor.getValue().getSales()).isEqualTo(sales);
+        assertThat(captor.getValue().getEnterprise()).isEqualTo(enterprise);
     }
 
     @Test
@@ -105,19 +170,79 @@ class PartnershipServiceImplTest {
     }
 
     @Test
-    void updatePartnership_savesWhenFound() {
-        var dto = mock(PartnershipDTO.class);
+    void updatePartnership_updatesAllFieldsWhenProvided() {
+        var dto = buildPartnershipDTO(1L, 2L);
+        when(dto.ref()).thenReturn("REF1");
+        when(dto.active()).thenReturn(true);
+
         var existing = new Partnership();
-        var updated = new Partnership();
+        var sales = buildSales(1L, Modules.RESTAURATION);
+        var enterprise = buildEnterprise(2L, List.of(Modules.RESTAURATION));
+        var saved = new Partnership();
         var resultDTO = mock(PartnershipDTO.class);
 
         when(partnershipRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(partnershipMapper.asEntity(dto)).thenReturn(updated);
-        when(partnershipRepository.saveAndFlush(updated)).thenReturn(updated);
-        when(partnershipMapper.asDTO(updated)).thenReturn(resultDTO);
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(sales));
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(enterprise));
+        when(partnershipRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(partnershipMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = partnershipService.updatePartnership(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getRef()).isEqualTo("REF1");
+        assertThat(existing.getSales()).isEqualTo(sales);
+        assertThat(existing.getEnterprise()).isEqualTo(enterprise);
+        assertThat(existing.isActive()).isTrue();
+    }
+
+    @Test
+    void updatePartnership_throwsWhenSalesNotFound() {
+        var dto = buildPartnershipDTO(99L, 2L);
+        var existing = new Partnership();
+
+        when(partnershipRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> partnershipService.updatePartnership(dto, 1L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void updatePartnership_throwsWhenEnterpriseNotFound() {
+        var dto = buildPartnershipDTO(1L, 99L);
+        var existing = new Partnership();
+
+        when(partnershipRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(buildSales(1L, Modules.RESTAURATION)));
+        when(enterpriseRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> partnershipService.updatePartnership(dto, 1L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void updatePartnership_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed Boolean accessor is false, not null,
+          so it needs to be stubbed explicitly to exercise the "field not provided" branch*/
+        var dto = mock(PartnershipDTO.class);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new Partnership();
+        existing.setRef("Original");
+        existing.setActive(true);
+        var saved = new Partnership();
+        var resultDTO = mock(PartnershipDTO.class);
+
+        when(partnershipRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(partnershipRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(partnershipMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = partnershipService.updatePartnership(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getRef()).isEqualTo("Original");
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test

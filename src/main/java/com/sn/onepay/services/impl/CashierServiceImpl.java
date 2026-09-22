@@ -46,9 +46,19 @@ public class CashierServiceImpl implements CashierService {
     @Override
     public CashierDTO updateCashier(CashierDTO cashierDTO, Long cashierId) {
 
-        cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
+        Cashier existing = cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
 
-        var updatedCashier = cashierRepository.saveAndFlush(cashierMapper.asEntity(cashierDTO));
+        if (cashierDTO.ref() != null) existing.setRef(cashierDTO.ref());
+        if (cashierDTO.firstname() != null) existing.setFirstname(cashierDTO.firstname());
+        if (cashierDTO.lastname() != null) existing.setLastname(cashierDTO.lastname());
+        if (cashierDTO.username() != null) existing.setUsername(cashierDTO.username());
+        if (cashierDTO.email() != null) existing.setEmail(cashierDTO.email());
+        if (cashierDTO.phoneNumber() != null) existing.setPhoneNumber(cashierDTO.phoneNumber());
+        if (cashierDTO.role() != null) existing.setRole(cashierDTO.role());
+        if (cashierDTO.sales() != null) existing.setSales(cashierMapper.asEntity(cashierDTO).getSales());
+        if (cashierDTO.active() != null) existing.setActive(cashierDTO.active());
+
+        var updatedCashier = cashierRepository.saveAndFlush(existing);
 
         log.info("Updated cashier: {}", updatedCashier);
         log.trace("Updated cashier with id: {}", updatedCashier.getId());

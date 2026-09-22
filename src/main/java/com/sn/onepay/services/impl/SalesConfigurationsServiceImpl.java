@@ -47,9 +47,14 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     @Override
     public SalesConfigurationsDTO updateSalesConfigurations(SalesConfigurationsDTO salesConfigurationsDTO, Long salesConfigurationsId) {
 
-        salesConfigurationsRepository.findById(salesConfigurationsId).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", salesConfigurationsId));
+        SalesConfigurations existing = salesConfigurationsRepository.findById(salesConfigurationsId).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", salesConfigurationsId));
 
-        var updatedSalesConfigurations = salesConfigurationsRepository.saveAndFlush(salesConfigurationsMapper.asEntity(salesConfigurationsDTO));
+        if (salesConfigurationsDTO.sales() != null) existing.setSales(salesConfigurationsDTO.sales());
+        if (salesConfigurationsDTO.minAmount() != null) existing.setMinAmount(salesConfigurationsDTO.minAmount());
+        if (salesConfigurationsDTO.maxAmount() != null) existing.setMaxAmount(salesConfigurationsDTO.maxAmount());
+        if (salesConfigurationsDTO.active() != null) existing.setActive(salesConfigurationsDTO.active());
+
+        var updatedSalesConfigurations = salesConfigurationsRepository.saveAndFlush(existing);
 
         log.info("Sales configurations updated: {}", updatedSalesConfigurations);
         log.trace("Sales configurations updated with id: {}", updatedSalesConfigurations.getId());

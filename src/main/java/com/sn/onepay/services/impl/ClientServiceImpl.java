@@ -47,9 +47,19 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public ClientDTO updateClient(ClientDTO clientDTO, Long clientId) {
 
-        clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
+        Client existing = clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
 
-        var updatedClient = clientRepository.saveAndFlush(clientMapper.asEntity(clientDTO));
+        if (clientDTO.ref() != null) existing.setRef(clientDTO.ref());
+        if (clientDTO.firstname() != null) existing.setFirstname(clientDTO.firstname());
+        if (clientDTO.lastname() != null) existing.setLastname(clientDTO.lastname());
+        if (clientDTO.username() != null) existing.setUsername(clientDTO.username());
+        if (clientDTO.email() != null) existing.setEmail(clientDTO.email());
+        if (clientDTO.phoneNumber() != null) existing.setPhoneNumber(clientDTO.phoneNumber());
+        if (clientDTO.role() != null) existing.setRole(clientDTO.role());
+        if (clientDTO.enterprise() != null) existing.setEnterprise(clientMapper.asEntity(clientDTO).getEnterprise());
+        if (clientDTO.active() != null) existing.setActive(clientDTO.active());
+
+        var updatedClient = clientRepository.saveAndFlush(existing);
 
         log.info("Updated client: {}", updatedClient);
         log.trace("Updated client with id: {}", updatedClient.getId());

@@ -1,6 +1,7 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.EnterpriseProfileDTO;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
@@ -62,19 +63,63 @@ class EnterpriseProfileServiceImplTest {
     }
 
     @Test
-    void updateEnterpriseProfile_savesWhenFound() {
+    void updateEnterpriseProfile_updatesAllFieldsWhenProvided() {
         var dto = mock(EnterpriseProfileDTO.class);
+        when(dto.ref()).thenReturn("REF1");
+        when(dto.firstname()).thenReturn("Jean");
+        when(dto.lastname()).thenReturn("Dupont");
+        when(dto.username()).thenReturn("jdupont");
+        when(dto.email()).thenReturn("jean@mail.com");
+        when(dto.phoneNumber()).thenReturn("770000000");
+        when(dto.role()).thenReturn(Roles.ENTERPRISE_ADMIN);
+        var enterprise = new Enterprise();
+        when(dto.enterprise()).thenReturn(enterprise);
+        when(dto.active()).thenReturn(true);
+
         var existing = new EnterpriseProfile();
-        var updated = new EnterpriseProfile();
+        var saved = new EnterpriseProfile();
         var resultDTO = mock(EnterpriseProfileDTO.class);
 
         when(enterpriseProfileRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(enterpriseProfileMapper.asEntity(dto)).thenReturn(updated);
-        when(enterpriseProfileRepository.save(updated)).thenReturn(updated);
-        when(enterpriseProfileMapper.asDTO(updated)).thenReturn(resultDTO);
+        when(enterpriseProfileRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(enterpriseProfileMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = enterpriseProfileService.updateEnterpriseProfile(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getRef()).isEqualTo("REF1");
+        assertThat(existing.getFirstname()).isEqualTo("Jean");
+        assertThat(existing.getLastname()).isEqualTo("Dupont");
+        assertThat(existing.getUsername()).isEqualTo("jdupont");
+        assertThat(existing.getEmail()).isEqualTo("jean@mail.com");
+        assertThat(existing.getPhoneNumber()).isEqualTo("770000000");
+        assertThat(existing.getRole()).isEqualTo(Roles.ENTERPRISE_ADMIN);
+        assertThat(existing.getEnterprise()).isEqualTo(enterprise);
+        assertThat(existing.isActive()).isTrue();
+    }
+
+    @Test
+    void updateEnterpriseProfile_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed Boolean accessor is false, not null,
+          so it needs to be stubbed explicitly to exercise the "field not provided" branch*/
+        var dto = mock(EnterpriseProfileDTO.class);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new EnterpriseProfile();
+        existing.setFirstname("Original");
+        existing.setActive(true);
+        var saved = new EnterpriseProfile();
+        var resultDTO = mock(EnterpriseProfileDTO.class);
+
+        when(enterpriseProfileRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(enterpriseProfileRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(enterpriseProfileMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = enterpriseProfileService.updateEnterpriseProfile(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getFirstname()).isEqualTo("Original");
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test

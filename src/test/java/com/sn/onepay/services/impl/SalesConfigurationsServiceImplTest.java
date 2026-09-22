@@ -1,6 +1,7 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.SalesConfigurationsDTO;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesConfigurations;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesConfigurationsMapper;
@@ -60,20 +61,57 @@ class SalesConfigurationsServiceImplTest {
     }
 
     @Test
-    void updateSalesConfigurations_savesWhenFound() {
+    void updateSalesConfigurations_updatesAllFieldsWhenProvided() {
         var dto = mock(SalesConfigurationsDTO.class);
-        var mapped = new SalesConfigurations();
+        var sales = new Sales();
+        when(dto.sales()).thenReturn(sales);
+        when(dto.minAmount()).thenReturn(10.0);
+        when(dto.maxAmount()).thenReturn(1000.0);
+        when(dto.active()).thenReturn(true);
+
+        var existing = new SalesConfigurations();
         var saved = new SalesConfigurations();
         var resultDTO = mock(SalesConfigurationsDTO.class);
 
-        when(salesConfigurationsRepository.findById(1L)).thenReturn(Optional.of(new SalesConfigurations()));
-        when(salesConfigurationsMapper.asEntity(dto)).thenReturn(mapped);
-        when(salesConfigurationsRepository.saveAndFlush(mapped)).thenReturn(saved);
+        when(salesConfigurationsRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesConfigurationsRepository.saveAndFlush(existing)).thenReturn(saved);
         when(salesConfigurationsMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = salesConfigurationsService.updateSalesConfigurations(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
-        verify(salesConfigurationsRepository).saveAndFlush(mapped);
+        assertThat(existing.getSales()).isEqualTo(sales);
+        assertThat(existing.getMinAmount()).isEqualTo(10.0);
+        assertThat(existing.getMaxAmount()).isEqualTo(1000.0);
+        assertThat(existing.isActive()).isTrue();
+        verify(salesConfigurationsRepository).saveAndFlush(existing);
+    }
+
+    @Test
+    void updateSalesConfigurations_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed boxed-type accessor (Double/Boolean) is
+          the zero value, not null, so these need to be stubbed explicitly to exercise the
+          "field not provided" branch*/
+        var dto = mock(SalesConfigurationsDTO.class);
+        when(dto.minAmount()).thenReturn(null);
+        when(dto.maxAmount()).thenReturn(null);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new SalesConfigurations();
+        existing.setMinAmount(50.0);
+        existing.setActive(true);
+        var saved = new SalesConfigurations();
+        var resultDTO = mock(SalesConfigurationsDTO.class);
+
+        when(salesConfigurationsRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesConfigurationsRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(salesConfigurationsMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = salesConfigurationsService.updateSalesConfigurations(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getMinAmount()).isEqualTo(50.0);
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test

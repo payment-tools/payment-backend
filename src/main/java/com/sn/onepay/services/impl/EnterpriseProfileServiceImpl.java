@@ -46,9 +46,19 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     @Override
     public EnterpriseProfileDTO updateEnterpriseProfile(EnterpriseProfileDTO enterpriseProfileDTO, Long enterpriseProfileId) {
 
-        enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
+        EnterpriseProfile existing = enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
 
-        var updatedEnterpriseProfile = enterpriseProfileRepository.save(enterpriseProfileMapper.asEntity(enterpriseProfileDTO));
+        if (enterpriseProfileDTO.ref() != null) existing.setRef(enterpriseProfileDTO.ref());
+        if (enterpriseProfileDTO.firstname() != null) existing.setFirstname(enterpriseProfileDTO.firstname());
+        if (enterpriseProfileDTO.lastname() != null) existing.setLastname(enterpriseProfileDTO.lastname());
+        if (enterpriseProfileDTO.username() != null) existing.setUsername(enterpriseProfileDTO.username());
+        if (enterpriseProfileDTO.email() != null) existing.setEmail(enterpriseProfileDTO.email());
+        if (enterpriseProfileDTO.phoneNumber() != null) existing.setPhoneNumber(enterpriseProfileDTO.phoneNumber());
+        if (enterpriseProfileDTO.role() != null) existing.setRole(enterpriseProfileDTO.role());
+        if (enterpriseProfileDTO.enterprise() != null) existing.setEnterprise(enterpriseProfileDTO.enterprise());
+        if (enterpriseProfileDTO.active() != null) existing.setActive(enterpriseProfileDTO.active());
+
+        var updatedEnterpriseProfile = enterpriseProfileRepository.saveAndFlush(existing);
 
         log.info("Updated Enterprise Profile: {}", updatedEnterpriseProfile);
         log.trace("Updated Enterprise Profile with id: {}", updatedEnterpriseProfile.getId());

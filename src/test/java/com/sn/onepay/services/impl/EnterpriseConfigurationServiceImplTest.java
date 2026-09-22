@@ -1,6 +1,7 @@
 package com.sn.onepay.services.impl;
 
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseConfiguration;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseConfigurationMapper;
@@ -60,19 +61,66 @@ class EnterpriseConfigurationServiceImplTest {
     }
 
     @Test
-    void updateEnterpriseConfiguration_savesWhenFound() {
+    void updateEnterpriseConfiguration_updatesAllFieldsWhenProvided() {
         var dto = mock(EnterpriseConfigurationDTO.class);
+        var enterprise = new Enterprise();
+        when(dto.enterprise()).thenReturn(enterprise);
+        when(dto.maxAmountRestauration()).thenReturn(500.0);
+        when(dto.maxAmountMarket()).thenReturn(300.0);
+        when(dto.maxAmountGasStation()).thenReturn(200.0);
+        when(dto.maxAmountTelephony()).thenReturn(100.0);
+        when(dto.enterprisePercentage()).thenReturn(60);
+        when(dto.employeePercentage()).thenReturn(40);
+        when(dto.active()).thenReturn(true);
+
         var existing = new EnterpriseConfiguration();
-        var updated = new EnterpriseConfiguration();
+        var saved = new EnterpriseConfiguration();
         var resultDTO = mock(EnterpriseConfigurationDTO.class);
 
         when(enterpriseConfigurationRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(enterpriseConfigurationMapper.asEntity(dto)).thenReturn(updated);
-        when(enterpriseConfigurationRepository.saveAndFlush(updated)).thenReturn(updated);
-        when(enterpriseConfigurationMapper.asDTO(updated)).thenReturn(resultDTO);
+        when(enterpriseConfigurationRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(enterpriseConfigurationMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = enterpriseConfigurationService.updateEnterpriseConfiguration(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getEnterprise()).isEqualTo(enterprise);
+        assertThat(existing.getMaxAmountRestauration()).isEqualTo(500.0);
+        assertThat(existing.getMaxAmountMarket()).isEqualTo(300.0);
+        assertThat(existing.getMaxAmountGasStation()).isEqualTo(200.0);
+        assertThat(existing.getMaxAmountTelephony()).isEqualTo(100.0);
+        assertThat(existing.getEnterprisePercentage()).isEqualTo(60);
+        assertThat(existing.getEmployeePercentage()).isEqualTo(40);
+        assertThat(existing.isActive()).isTrue();
+    }
+
+    @Test
+    void updateEnterpriseConfiguration_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed boxed-type accessor (Double/Boolean) is
+          the zero value, not null, so these need to be stubbed explicitly to exercise the
+          "field not provided" branch*/
+        var dto = mock(EnterpriseConfigurationDTO.class);
+        when(dto.maxAmountRestauration()).thenReturn(null);
+        when(dto.maxAmountMarket()).thenReturn(null);
+        when(dto.maxAmountGasStation()).thenReturn(null);
+        when(dto.maxAmountTelephony()).thenReturn(null);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new EnterpriseConfiguration();
+        existing.setMaxAmountRestauration(999.0);
+        existing.setActive(true);
+        var saved = new EnterpriseConfiguration();
+        var resultDTO = mock(EnterpriseConfigurationDTO.class);
+
+        when(enterpriseConfigurationRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(enterpriseConfigurationRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(enterpriseConfigurationMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = enterpriseConfigurationService.updateEnterpriseConfiguration(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getMaxAmountRestauration()).isEqualTo(999.0);
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test

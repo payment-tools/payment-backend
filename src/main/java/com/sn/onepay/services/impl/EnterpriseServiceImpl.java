@@ -49,9 +49,17 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     @Override
     public EnterpriseDTO updateEnterprise(EnterpriseDTO enterpriseDTO, Long enterpriseId) {
 
-        enterpriseRepository.findById(enterpriseId).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseId));
+        Enterprise existing = enterpriseRepository.findById(enterpriseId).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseId));
 
-        var updatedEnterprise = enterpriseRepository.saveAndFlush(enterpriseMapper.asEntity(enterpriseDTO));
+        if (enterpriseDTO.ref() != null) existing.setRef(enterpriseDTO.ref());
+        if (enterpriseDTO.name() != null) existing.setName(enterpriseDTO.name());
+        if (enterpriseDTO.maxQuota() != null) existing.setMaxQuota(enterpriseDTO.maxQuota());
+        if (enterpriseDTO.actualQuota() != null) existing.setActualQuota(enterpriseDTO.actualQuota());
+        if (enterpriseDTO.address() != null) existing.setAddress(enterpriseDTO.address());
+        if (enterpriseDTO.enrolledModules() != null) existing.setEnrolledModules(enterpriseDTO.enrolledModules());
+        if (enterpriseDTO.active() != null) existing.setActive(enterpriseDTO.active());
+
+        var updatedEnterprise = enterpriseRepository.saveAndFlush(existing);
 
         log.info("Updated Enterprise: {}", updatedEnterprise);
         log.trace("Updated Enterprise with id: {}", updatedEnterprise.getId());

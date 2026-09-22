@@ -2,13 +2,17 @@ package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.PartnershipDTO;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.QPartnership;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PartnershipMapper;
+import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.repository.PartnershipRepository;
+import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.PartnershipService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -31,19 +35,30 @@ public class PartnershipServiceImpl implements PartnershipService {
 
     final PartnershipRepository partnershipRepository;
     final PartnershipMapper partnershipMapper;
+    final EnterpriseRepository enterpriseRepository;
+    final SalesRepository salesRepository;
 
 
     @Override
     public PartnershipDTO createPartnership(PartnershipDTO partnershipDTO) {
 
+        /*Reload the real entities by id instead of trusting the business fields the client sent*/
+        Enterprise enterprise = enterpriseRepository.findById(partnershipDTO.enterprise().id())
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", partnershipDTO.enterprise().id()));
+        Sales sales = salesRepository.findById(partnershipDTO.sales().id())
+                .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", partnershipDTO.sales().id()));
+
         /*Check if partnership already exist*/
-        if(Objects.nonNull(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(partnershipDTO.sales().id(), partnershipDTO.enterprise().id())))
+        if(Objects.nonNull(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(sales.getId(), enterprise.getId())))
             throw new ResourceAlreadyExistException("Partnership", partnershipDTO);
 
         /*Check if partnership is allowed*/
-        if(partnershipDTO.enterprise().enrolledModules().contains(partnershipDTO.sales().type())){
+        if(enterprise.getEnrolledModules() != null && enterprise.getEnrolledModules().contains(sales.getType())){
 
-            Partnership partnership = partnershipMapper.asEntity(partnershipDTO);
+            Partnership partnership = new Partnership();
+            partnership.setRef(partnershipDTO.ref());
+            partnership.setEnterprise(enterprise);
+            partnership.setSales(sales);
             partnership.setActive(true);
             var savedPartnership = partnershipRepository.save(partnership);
 
@@ -60,9 +75,18 @@ public class PartnershipServiceImpl implements PartnershipService {
     @Override
     public PartnershipDTO updatePartnership(PartnershipDTO partnershipDTO, Long partnershipId) {
 
-        partnershipRepository.findById(partnershipId).orElseThrow( () -> new ResourceNotFoundException("Partnership", "ID", partnershipId));
+        Partnership existing = partnershipRepository.findById(partnershipId).orElseThrow( () -> new ResourceNotFoundException("Partnership", "ID", partnershipId));
 
-        var updatedPartnership = partnershipRepository.saveAndFlush(partnershipMapper.asEntity(partnershipDTO));
+        if (partnershipDTO.ref() != null) existing.setRef(partnershipDTO.ref());
+        if (partnershipDTO.sales() != null)
+            existing.setSales(salesRepository.findById(partnershipDTO.sales().id())
+                    .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", partnershipDTO.sales().id())));
+        if (partnershipDTO.enterprise() != null)
+            existing.setEnterprise(enterpriseRepository.findById(partnershipDTO.enterprise().id())
+                    .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", partnershipDTO.enterprise().id())));
+        if (partnershipDTO.active() != null) existing.setActive(partnershipDTO.active());
+
+        var updatedPartnership = partnershipRepository.saveAndFlush(existing);
 
         log.info("Updated Partnership: {}", updatedPartnership);
         log.trace("Updated Partnership with id: {}", updatedPartnership.getId());
