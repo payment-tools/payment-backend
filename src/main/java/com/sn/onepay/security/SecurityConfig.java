@@ -48,14 +48,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/v1/onepay/enterprise/**", "/v1/onepay/sales/**", "/v1/onepay/partnership/**").hasRole(SUPER_ADMIN)
 
                         // Côté entreprise : clients, profils, configurations, groupes et subventions
-                        .requestMatchers(HttpMethod.POST, "/v1/onepay/client/**", "/v1/onepay/enterprise-profile/**", "/v1/onepay/enterprise-configuration/**", "/v1/onepay/employee-group/**", "/v1/onepay/subvention/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/v1/onepay/client/**", "/v1/onepay/enterprise-profile/**", "/v1/onepay/enterprise-configuration/**", "/v1/onepay/employee-group/**", "/v1/onepay/subvention/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/v1/onepay/client/**", "/v1/onepay/enterprise-profile/**", "/v1/onepay/enterprise-configuration/**", "/v1/onepay/employee-group/**", "/v1/onepay/subvention/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/v1/onepay/client/**", "/v1/onepay/enterpriseProfile/**", "/v1/onepay/enterpriseConfiguration/**", "/v1/onepay/employee-group/**", "/v1/onepay/subvention/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/v1/onepay/client/**", "/v1/onepay/enterpriseProfile/**", "/v1/onepay/enterpriseConfiguration/**", "/v1/onepay/employee-group/**", "/v1/onepay/subvention/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/v1/onepay/client/**", "/v1/onepay/enterpriseProfile/**", "/v1/onepay/enterpriseConfiguration/**", "/v1/onepay/employee-group/**", "/v1/onepay/subvention/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_ADMIN)
 
                         // Côté commerce : caissiers, profils et configurations du point de vente
-                        .requestMatchers(HttpMethod.POST, "/v1/onepay/cashier/**", "/v1/onepay/sales-profile/**", "/v1/onepay/sales-configuration/**").hasAnyRole(SUPER_ADMIN, SALES_ADMIN)
-                        .requestMatchers(HttpMethod.PUT, "/v1/onepay/cashier/**", "/v1/onepay/sales-profile/**", "/v1/onepay/sales-configuration/**").hasAnyRole(SUPER_ADMIN, SALES_ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/v1/onepay/cashier/**", "/v1/onepay/sales-profile/**", "/v1/onepay/sales-configuration/**").hasAnyRole(SUPER_ADMIN, SALES_ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/v1/onepay/cashier/**", "/v1/onepay/salesProfile/**", "/v1/onepay/salesConfiguration/**").hasAnyRole(SUPER_ADMIN, SALES_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/v1/onepay/cashier/**", "/v1/onepay/salesProfile/**", "/v1/onepay/salesConfiguration/**").hasAnyRole(SUPER_ADMIN, SALES_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/v1/onepay/cashier/**", "/v1/onepay/salesProfile/**", "/v1/onepay/salesConfiguration/**").hasAnyRole(SUPER_ADMIN, SALES_ADMIN)
 
                         // Paiements : créés par un employé ou un caissier, annulés (suppression logique) par le caissier
                         .requestMatchers(HttpMethod.POST, "/v1/onepay/payment/**").hasAnyRole(CLIENT, CASHIER)
