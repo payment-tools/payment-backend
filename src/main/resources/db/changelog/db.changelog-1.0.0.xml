@@ -656,4 +656,40 @@
         </addColumn>
 
     </changeSet>
+
+    <changeSet id="1.0.0-create-prospect" author="mouhamed">
+        <createTable tableName="prospect">
+            <column name="prospectid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ref" type="varchar(255)"/>
+            <column name="companyname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contactname" type="varchar(255)"/>
+            <column name="email" type="varchar(255)"/>
+            <column name="phonenumber" type="varchar(50)"/>
+            <column name="stage" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="note" type="varchar(1000)"/>
+            <column name="potentialemployees" type="integer"/>
+            <column name="assignedto" type="varchar(255)"/>
+            <column name="score" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1.0.0-init-jpa-sequence-prospect" author="mouhamed">
+        <insert tableName="jpa_sequence">
+            <column name="seq_key" value="ProspectId"/>
+            <column name="seq_value" valueNumeric="1"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

@@ -70,6 +70,12 @@ public class SecurityConfig {
                         // Console plateforme SUPER_ADMIN : supervision technique (Actuator)
                         .requestMatchers(HttpMethod.GET, "/actuator", "/actuator/**").hasRole(SUPER_ADMIN)
 
+                        // Console plateforme SUPER_ADMIN : prospects (mini-CRM interne)
+                        .requestMatchers(HttpMethod.POST, "/v1/onepay/prospect/**").hasRole(SUPER_ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/v1/onepay/prospect/**").hasRole(SUPER_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/v1/onepay/prospect/**").hasRole(SUPER_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/v1/onepay/prospect/**").hasRole(SUPER_ADMIN)
+
                         // Lectures (GET) et QR codes : tout utilisateur authentifié
                         .anyRequest().authenticated()
                 )

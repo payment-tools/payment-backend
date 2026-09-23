@@ -184,6 +184,16 @@ class SecurityConfigTest {
     }
 
     @Test
+    void prospectWritesAndReads_requireSuperAdmin() throws Exception {
+        mockMvc.perform(post("/v1/onepay/prospect").with(as("ENTERPRISE_ADMIN"))).andExpect(status().isForbidden());
+        mockMvc.perform(put("/v1/onepay/prospect/1").with(as("SALES_ADMIN"))).andExpect(status().isForbidden());
+        mockMvc.perform(delete("/v1/onepay/prospect/1").with(as("CLIENT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/v1/onepay/prospect").with(as("ENTERPRISE_FINANCE"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(post("/v1/onepay/prospect").with(as("SUPER_ADMIN"))));
+        assertAccessGranted(mockMvc.perform(get("/v1/onepay/prospect").with(as("SUPER_ADMIN"))));
+    }
+
+    @Test
     void realmRolesFromJwtClaims_grantAccessThroughConverter() throws Exception {
         doNothing().when(paymentService).deletePayment(anyLong());
 
