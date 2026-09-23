@@ -77,6 +77,14 @@ class EnterpriseConfigurationControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getEnterpriseConfigurationById_returns200() throws Exception {
+        when(enterpriseConfigurationService.getEnterpriseConfigurationById(1L)).thenReturn(mock(EnterpriseConfigurationDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/enterpriseConfiguration/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteEnterpriseConfiguration_returns200() throws Exception {
         doNothing().when(enterpriseConfigurationService).deleteEnterpriseConfiguration(anyLong());
 

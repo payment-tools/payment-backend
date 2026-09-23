@@ -18,4 +18,6 @@ public interface SalesConfigurationsService {
     Page<SalesConfigurationsDTO> getSalesConfigurationsByFilters(Long id, Long salesId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     SalesConfigurationsDTO getSalesConfigurationsBySalesId(Long salesId);
+
+    SalesConfigurationsDTO getSalesConfigurationsById(Long id);
 }

@@ -83,6 +83,14 @@ class EnterpriseProfileControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getEnterpriseProfileById_returns200() throws Exception {
+        when(enterpriseProfileService.getEnterpriseProfileById(1L)).thenReturn(mock(EnterpriseProfileDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/enterpriseProfile/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteEnterpriseProfile_returns200() throws Exception {
         doNothing().when(enterpriseProfileService).deleteEnterpriseProfile(anyLong());
 

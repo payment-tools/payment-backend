@@ -89,6 +89,18 @@ public class ClientController {
         return clientService.getClientsByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a client by id", description = "This endpoint returns a single client by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{clientId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ClientDTO getClientById(@Parameter(description = "Client id", required = true) @PathVariable(name = "clientId") Long clientId) {
+        return clientService.getClientById(clientId);
+    }
+
     @Operation(summary = "Delete a client by id", description = "This endpoint is for deleting client by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

@@ -168,4 +168,24 @@ class SalesConfigurationsServiceImplTest {
         var result = salesConfigurationsService.getSalesConfigurationsBySalesId(1L);
         assertThat(result).isEqualTo(resultDTO);
     }
+
+    @Test
+    void getSalesConfigurationsById_returnsMappedDTOWhenFound() {
+        var entity = new SalesConfigurations();
+        var resultDTO = mock(SalesConfigurationsDTO.class);
+
+        when(salesConfigurationsRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(salesConfigurationsMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = salesConfigurationsService.getSalesConfigurationsById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getSalesConfigurationsById_throwsWhenNotFound() {
+        when(salesConfigurationsRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> salesConfigurationsService.getSalesConfigurationsById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

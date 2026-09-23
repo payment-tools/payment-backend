@@ -16,4 +16,6 @@ public interface ClientService {
     void deleteClient(Long clientId);
 
     Page<ClientDTO> getClientsByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+
+    ClientDTO getClientById(Long id);
 }

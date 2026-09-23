@@ -300,4 +300,24 @@ class EmployeeGroupServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
+
+    @Test
+    void getEmployeeGroupById_returnsMappedDTOWhenFound() {
+        var entity = new EmployeeGroup();
+        var resultDTO = mock(EmployeeGroupDTO.class);
+
+        when(employeeGroupRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(employeeGroupMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = employeeGroupService.getEmployeeGroupById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getEmployeeGroupById_throwsWhenNotFound() {
+        when(employeeGroupRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> employeeGroupService.getEmployeeGroupById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

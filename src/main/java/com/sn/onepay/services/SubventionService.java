@@ -17,4 +17,6 @@ public interface SubventionService {
     void deleteSubvention(Long subventionId);
 
     Page<SubventionDTO> getSubventionsByFilters(Long id, String ref, Double employeePercent, Double employerPercent, Long partnershipId, Long employeeGroupId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+
+    SubventionDTO getSubventionById(Long id);
 }

@@ -87,6 +87,18 @@ public class PaymentController {
         return paymentService.getPaymentByFilters(id, ref, clientId, cashierId, amount, active, module, paymentDate, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a payment by id", description = "This endpoint returns a single payment by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{paymentId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PaymentDTO getPaymentById(@Parameter(description = "Payment id", required = true) @PathVariable(name = "paymentId") Long paymentId) {
+        return paymentService.getPaymentById(paymentId);
+    }
+
     @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client, optionally restricted to a module")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

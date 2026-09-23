@@ -129,4 +129,9 @@ public class EnterpriseConfigurationServiceImpl implements EnterpriseConfigurati
         return enterpriseConfigurationMapper.asDTO(enterpriseConfigurationRepository.getEnterpriseConfigurationByEnterpriseId(enterpriseId));
     }
 
+    @Override
+    public EnterpriseConfigurationDTO getEnterpriseConfigurationById(Long id) {
+        return enterpriseConfigurationMapper.asDTO(enterpriseConfigurationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Enterprise Configuration", "ID", id)));
+    }
+
 }

@@ -64,6 +64,14 @@ class PartnershipControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getPartnershipById_returns200() throws Exception {
+        when(partnershipService.getPartnershipById(1L)).thenReturn(mock(PartnershipDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/partnership/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deletePartnership_returns200() throws Exception {
         doNothing().when(partnershipService).deletePartnership(anyLong());
 

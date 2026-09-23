@@ -83,6 +83,18 @@ public class PartnershipController {
         return partnershipService.getPartnershipsByFilters(id, ref, salesId, enterpriseId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a partnership by id", description = "This endpoint returns a single partnership by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{partnershipId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PartnershipDTO getPartnershipById(@Parameter(description = "Partnership id", required = true) @PathVariable(name = "partnershipId") Long partnershipId) {
+        return partnershipService.getPartnershipById(partnershipId);
+    }
+
     @Operation(summary = "Delete a partnership by id", description = "This endpoint is for deleting partnership by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

@@ -634,4 +634,24 @@ class PaymentServiceImplTest {
         assertThat(result).isEmpty();
         verify(paymentRepository).findMonthlySumByEnterpriseId(eq(5L), any(LocalDateTime.class));
     }
+
+    @Test
+    void getPaymentById_returnsMappedDTOWhenFound() {
+        var entity = new Payment();
+        var resultDTO = mock(PaymentDTO.class);
+
+        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = paymentService.getPaymentById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getPaymentById_throwsWhenNotFound() {
+        when(paymentRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> paymentService.getPaymentById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

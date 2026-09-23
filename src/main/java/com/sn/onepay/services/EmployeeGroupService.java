@@ -17,4 +17,6 @@ public interface EmployeeGroupService {
     void deleteEmployeeGroup(Long employeeGroupId);
 
     Page<EmployeeGroupDTO> getEmployeeGroupsByFilters(Long id, String ref, String name, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+
+    EmployeeGroupDTO getEmployeeGroupById(Long id);
 }

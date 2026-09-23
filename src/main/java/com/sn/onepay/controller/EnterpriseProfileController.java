@@ -91,6 +91,18 @@ public class EnterpriseProfileController {
         return enterpriseProfileService.getEnterpriseProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get an enterprise profile by id", description = "This endpoint returns a single enterprise profile by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{enterpriseProfileId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EnterpriseProfileDTO getEnterpriseProfileById(@Parameter(description = "Enterprise profile id", required = true) @PathVariable(name = "enterpriseProfileId") Long enterpriseProfileId) {
+        return enterpriseProfileService.getEnterpriseProfileById(enterpriseProfileId);
+    }
+
     @Operation(summary = "Get the profile of the currently authenticated user", description = "Resolves the enterprise profile (and its enterprise) from the caller's JWT, no parameter needed")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

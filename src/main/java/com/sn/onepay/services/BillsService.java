@@ -16,4 +16,6 @@ public interface BillsService {
     void deleteBills(Long billsId);
 
     Page<BillsDTO> getBillsByFilters(Long id, String ref, Long partnershipId, BillStatus billStatus, String period, Boolean active, LocalDateTime startDate, LocalDateTime endDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+
+    BillsDTO getBillsById(Long id);
 }

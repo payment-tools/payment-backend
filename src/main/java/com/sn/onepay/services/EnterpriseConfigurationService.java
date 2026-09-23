@@ -17,4 +17,6 @@ public interface EnterpriseConfigurationService {
     Page<EnterpriseConfigurationDTO> getEnterpriseConfigurationsByFilters(Long id, Long enterpriseId, Double maxAmountRestauration, Double maxAmountMarket, Double maxAmountGasStation, Double maxAmountTelephony, Integer enterprisePercentage, Integer employeePercentage, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     EnterpriseConfigurationDTO getEnterpriseConfigurationByEnterpriseId(Long enterpriseId);
+
+    EnterpriseConfigurationDTO getEnterpriseConfigurationById(Long id);
 }

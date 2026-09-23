@@ -79,6 +79,18 @@ public class SalesConfigurationsController {
         return salesConfigurationsService.getSalesConfigurationsByFilters(id, salesId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a sales configuration by id", description = "This endpoint returns a single sales configuration by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{salesConfigurationsId}")
+    @ResponseStatus(HttpStatus.OK)
+    public SalesConfigurationsDTO getSalesConfigurationsById(@Parameter(description = "Sales configurations id", required = true) @PathVariable(name = "salesConfigurationsId") Long salesConfigurationsId) {
+        return salesConfigurationsService.getSalesConfigurationsById(salesConfigurationsId);
+    }
+
     @Operation(summary = "Delete a sales Configurations by id", description = "This endpoint is for deleting sales Configurations by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

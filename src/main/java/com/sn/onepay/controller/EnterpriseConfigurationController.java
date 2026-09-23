@@ -87,6 +87,18 @@ public class EnterpriseConfigurationController {
         return enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(id, enterpriseId, maxAmountRestauration, maxAmountMarket, maxAmountGasStation, maxAmountTelephony, enterprisePercentage, employeePercentage, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get an enterprise configuration by id", description = "This endpoint returns a single enterprise configuration by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{enterpriseConfigurationId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EnterpriseConfigurationDTO getEnterpriseConfigurationById(@Parameter(description = "Enterprise configuration id", required = true) @PathVariable(name = "enterpriseConfigurationId") Long enterpriseConfigurationId) {
+        return enterpriseConfigurationService.getEnterpriseConfigurationById(enterpriseConfigurationId);
+    }
+
     @Operation(summary = "Delete a enterprise Configuration by id", description = "This endpoint is for deleting enterprise Configuration by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

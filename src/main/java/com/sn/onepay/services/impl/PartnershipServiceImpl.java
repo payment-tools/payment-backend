@@ -144,4 +144,9 @@ public class PartnershipServiceImpl implements PartnershipService {
     public PartnershipDTO getPartnershipsBySalesIdAndEnterpriseId(Long salesId, Long enterpriseId) {
             return partnershipMapper.asDTO(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(salesId, enterpriseId));
     }
+
+    @Override
+    public PartnershipDTO getPartnershipById(Long id) {
+        return partnershipMapper.asDTO(partnershipRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Partnership", "ID", id)));
+    }
 }

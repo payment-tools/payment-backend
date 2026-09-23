@@ -175,4 +175,24 @@ class ClientServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
+
+    @Test
+    void getClientById_returnsMappedDTOWhenFound() {
+        var entity = new Client();
+        var resultDTO = mock(ClientDTO.class);
+
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(clientMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = clientService.getClientById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getClientById_throwsWhenNotFound() {
+        when(clientRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> clientService.getClientById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

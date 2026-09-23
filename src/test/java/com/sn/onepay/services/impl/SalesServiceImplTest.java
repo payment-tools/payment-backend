@@ -158,4 +158,24 @@ class SalesServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
+
+    @Test
+    void getSalesById_returnsMappedDTOWhenFound() {
+        var entity = new Sales();
+        var resultDTO = mock(SalesDTO.class);
+
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(salesMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = salesService.getSalesById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getSalesById_throwsWhenNotFound() {
+        when(salesRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> salesService.getSalesById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

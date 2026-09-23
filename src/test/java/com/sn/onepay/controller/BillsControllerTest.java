@@ -76,6 +76,14 @@ class BillsControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getBillsById_returns200() throws Exception {
+        when(billsService.getBillsById(1L)).thenReturn(mock(BillsDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/bills/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteBills_returns200() throws Exception {
         doNothing().when(billsService).deleteBills(anyLong());
 

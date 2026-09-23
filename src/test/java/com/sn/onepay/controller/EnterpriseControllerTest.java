@@ -72,6 +72,14 @@ class EnterpriseControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getEnterpriseById_returns200() throws Exception {
+        when(enterpriseService.getEnterpriseById(1L)).thenReturn(mock(EnterpriseDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/enterprise/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteEnterprise_returns200() throws Exception {
         doNothing().when(enterpriseService).deleteEnterprise(anyLong());
 

@@ -110,6 +110,14 @@ class PaymentControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getPaymentById_returns200() throws Exception {
+        when(paymentService.getPaymentById(1L)).thenReturn(mock(PaymentDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/payment/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deletePayment_returns200() throws Exception {
         doNothing().when(paymentService).deletePayment(anyLong());
 

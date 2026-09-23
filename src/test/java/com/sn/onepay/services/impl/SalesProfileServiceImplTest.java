@@ -189,4 +189,24 @@ class SalesProfileServiceImplTest {
         assertThatThrownBy(() -> salesProfileService.getMyProfile("unknown"))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
+
+    @Test
+    void getSalesProfileById_returnsMappedDTOWhenFound() {
+        var entity = new SalesProfile();
+        var resultDTO = mock(SalesProfileDTO.class);
+
+        when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(salesProfileMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = salesProfileService.getSalesProfileById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getSalesProfileById_throwsWhenNotFound() {
+        when(salesProfileRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> salesProfileService.getSalesProfileById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

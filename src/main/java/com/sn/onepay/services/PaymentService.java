@@ -24,4 +24,6 @@ public interface PaymentService {
     Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Long clientId, Long cashierId, Double amount, Boolean active, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     List<PaymentMonthlySumDTO> getSumByMonth(Long enterpriseId, Integer months);
+
+    PaymentDTO getPaymentById(Long id);
 }

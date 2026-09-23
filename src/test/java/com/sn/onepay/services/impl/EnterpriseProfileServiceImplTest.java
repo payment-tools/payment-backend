@@ -189,4 +189,24 @@ class EnterpriseProfileServiceImplTest {
         assertThatThrownBy(() -> enterpriseProfileService.getMyProfile("unknown"))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
+
+    @Test
+    void getEnterpriseProfileById_returnsMappedDTOWhenFound() {
+        var entity = new EnterpriseProfile();
+        var resultDTO = mock(EnterpriseProfileDTO.class);
+
+        when(enterpriseProfileRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(enterpriseProfileMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = enterpriseProfileService.getEnterpriseProfileById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getEnterpriseProfileById_throwsWhenNotFound() {
+        when(enterpriseProfileRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> enterpriseProfileService.getEnterpriseProfileById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

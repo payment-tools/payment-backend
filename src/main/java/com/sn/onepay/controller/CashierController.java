@@ -89,6 +89,18 @@ public class CashierController {
         return cashierService.getCashiersByFilter(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a cashier by id", description = "This endpoint returns a single cashier by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{cashierId}")
+    @ResponseStatus(HttpStatus.OK)
+    public CashierDTO getCashierById(@Parameter(description = "Cashier id", required = true) @PathVariable(name = "cashierId") Long cashierId) {
+        return cashierService.getCashierById(cashierId);
+    }
+
     @Operation(summary = "Delete a cashier by id", description = "This endpoint is for deleting cashier by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

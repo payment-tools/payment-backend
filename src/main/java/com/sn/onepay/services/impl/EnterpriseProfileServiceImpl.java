@@ -132,4 +132,9 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
 
         return enterpriseProfileMapper.asDTO(profile);
     }
+
+    @Override
+    public EnterpriseProfileDTO getEnterpriseProfileById(Long id) {
+        return enterpriseProfileMapper.asDTO(enterpriseProfileRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Enterprise Profile", "ID", id)));
+    }
 }

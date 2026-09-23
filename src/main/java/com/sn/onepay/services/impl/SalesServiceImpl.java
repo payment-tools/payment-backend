@@ -116,4 +116,9 @@ public class SalesServiceImpl implements SalesService {
 
         return result.map(salesMapper::asDTO);
     }
+
+    @Override
+    public SalesDTO getSalesById(Long id) {
+        return salesMapper.asDTO(salesRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", id)));
+    }
 }

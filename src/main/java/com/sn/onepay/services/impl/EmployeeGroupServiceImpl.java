@@ -143,4 +143,9 @@ public class EmployeeGroupServiceImpl implements EmployeeGroupService {
         }
         return clients;
     }
+
+    @Override
+    public EmployeeGroupDTO getEmployeeGroupById(Long id) {
+        return employeeGroupMapper.asDTO(employeeGroupRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("EmployeeGroup", "ID", id)));
+    }
 }

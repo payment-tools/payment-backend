@@ -125,4 +125,9 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         Page<Enterprise> result = enterpriseRepository.findAll(builder, pageable);
         return result.map(enterpriseMapper::asDTO);
     }
+
+    @Override
+    public EnterpriseDTO getEnterpriseById(Long id) {
+        return enterpriseMapper.asDTO(enterpriseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", id)));
+    }
 }

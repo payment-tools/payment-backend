@@ -209,4 +209,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .map(row -> new PaymentMonthlySumDTO(row.getMonth(), Modules.valueOf(row.getModule()), row.getTotalAmount()))
                 .toList();
     }
+
+    @Override
+    public PaymentDTO getPaymentById(Long id) {
+        return paymentMapper.asDTO(paymentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Payment", "ID", id)));
+    }
 }

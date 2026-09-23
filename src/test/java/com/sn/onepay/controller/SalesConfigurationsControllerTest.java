@@ -77,6 +77,14 @@ class SalesConfigurationsControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getSalesConfigurationsById_returns200() throws Exception {
+        when(salesConfigurationsService.getSalesConfigurationsById(1L)).thenReturn(mock(SalesConfigurationsDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/salesConfiguration/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteSalesConfigurations_returns200() throws Exception {
         doNothing().when(salesConfigurationsService).deleteSalesConfigurations(anyLong());
 

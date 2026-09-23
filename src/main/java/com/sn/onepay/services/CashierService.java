@@ -18,4 +18,6 @@ public interface CashierService {
 
     Page<CashierDTO> getCashiersByFilter(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long salesId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
+    CashierDTO getCashierById(Long id);
+
 }

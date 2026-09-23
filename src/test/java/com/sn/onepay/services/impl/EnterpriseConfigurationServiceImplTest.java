@@ -181,4 +181,24 @@ class EnterpriseConfigurationServiceImplTest {
         var result = enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(1L);
         assertThat(result).isEqualTo(resultDTO);
     }
+
+    @Test
+    void getEnterpriseConfigurationById_returnsMappedDTOWhenFound() {
+        var entity = new EnterpriseConfiguration();
+        var resultDTO = mock(EnterpriseConfigurationDTO.class);
+
+        when(enterpriseConfigurationRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(enterpriseConfigurationMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = enterpriseConfigurationService.getEnterpriseConfigurationById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getEnterpriseConfigurationById_throwsWhenNotFound() {
+        when(enterpriseConfigurationRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> enterpriseConfigurationService.getEnterpriseConfigurationById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

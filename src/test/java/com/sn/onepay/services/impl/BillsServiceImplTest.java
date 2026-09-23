@@ -191,4 +191,24 @@ class BillsServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
+
+    @Test
+    void getBillsById_returnsMappedDTOWhenFound() {
+        var entity = new Bills();
+        var resultDTO = mock(BillsDTO.class);
+
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(billsMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = billsService.getBillsById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getBillsById_throwsWhenNotFound() {
+        when(billsRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> billsService.getBillsById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

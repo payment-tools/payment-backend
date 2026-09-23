@@ -89,6 +89,18 @@ public class SalesProfileController {
         return salesProfileService.getSalesProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a sales profile by id", description = "This endpoint returns a single sales profile by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{salesProfileId}")
+    @ResponseStatus(HttpStatus.OK)
+    public SalesProfileDTO getSalesProfileById(@Parameter(description = "Sales profile id", required = true) @PathVariable(name = "salesProfileId") Long salesProfileId) {
+        return salesProfileService.getSalesProfileById(salesProfileId);
+    }
+
     @Operation(summary = "Get the profile of the currently authenticated user", description = "Resolves the sales profile (and its sales point) from the caller's JWT, no parameter needed")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

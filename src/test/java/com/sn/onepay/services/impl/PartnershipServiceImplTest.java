@@ -302,4 +302,24 @@ class PartnershipServiceImplTest {
         var result = partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L);
         assertThat(result).isEqualTo(resultDTO);
     }
+
+    @Test
+    void getPartnershipById_returnsMappedDTOWhenFound() {
+        var entity = new Partnership();
+        var resultDTO = mock(PartnershipDTO.class);
+
+        when(partnershipRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(partnershipMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = partnershipService.getPartnershipById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getPartnershipById_throwsWhenNotFound() {
+        when(partnershipRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> partnershipService.getPartnershipById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

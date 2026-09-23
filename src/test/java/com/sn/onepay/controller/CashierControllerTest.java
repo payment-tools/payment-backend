@@ -77,6 +77,14 @@ class CashierControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getCashierById_returns200() throws Exception {
+        when(cashierService.getCashierById(1L)).thenReturn(mock(CashierDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/cashier/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteCashier_returns200() throws Exception {
         doNothing().when(cashierService).deleteCashier(anyLong());
 

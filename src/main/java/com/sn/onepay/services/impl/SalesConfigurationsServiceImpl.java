@@ -107,4 +107,9 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     public SalesConfigurationsDTO getSalesConfigurationsBySalesId(Long salesId) {
         return salesConfigurationsRepository.getSalesConfigurationsBySalesId(salesId) ;
     }
+
+    @Override
+    public SalesConfigurationsDTO getSalesConfigurationsById(Long id) {
+        return salesConfigurationsMapper.asDTO(salesConfigurationsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", id)));
+    }
 }

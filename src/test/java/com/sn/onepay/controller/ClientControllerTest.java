@@ -64,6 +64,14 @@ class ClientControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getClientById_returns200() throws Exception {
+        when(clientService.getClientById(1L)).thenReturn(mock(ClientDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/client/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteClient_returns200() throws Exception {
         doNothing().when(clientService).deleteClient(anyLong());
 

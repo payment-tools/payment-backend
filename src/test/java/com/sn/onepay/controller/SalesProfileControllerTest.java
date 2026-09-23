@@ -83,6 +83,14 @@ class SalesProfileControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getSalesProfileById_returns200() throws Exception {
+        when(salesProfileService.getSalesProfileById(1L)).thenReturn(mock(SalesProfileDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/salesProfile/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteSalesProfile_returns200() throws Exception {
         doNothing().when(salesProfileService).deleteSalesProfile(anyLong());
 

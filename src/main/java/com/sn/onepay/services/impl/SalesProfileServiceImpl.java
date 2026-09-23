@@ -133,4 +133,9 @@ public class SalesProfileServiceImpl implements SalesProfileService {
 
         return salesProfileMapper.asDTO(profile);
     }
+
+    @Override
+    public SalesProfileDTO getSalesProfileById(Long id) {
+        return salesProfileMapper.asDTO(salesProfileRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("SalesProfile", "ID", id)));
+    }
 }

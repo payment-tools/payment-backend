@@ -128,4 +128,9 @@ public class ClientServiceImpl implements ClientService {
 
         return result.map(clientMapper::asDTO);
     }
+
+    @Override
+    public ClientDTO getClientById(Long id) {
+        return clientMapper.asDTO(clientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client", "ID", id)));
+    }
 }

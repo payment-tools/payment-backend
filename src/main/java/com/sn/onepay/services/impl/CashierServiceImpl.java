@@ -128,5 +128,8 @@ public class CashierServiceImpl implements CashierService {
         return result.map(cashierMapper::asDTO);
     }
 
-
+    @Override
+    public CashierDTO getCashierById(Long id) {
+        return cashierMapper.asDTO(cashierRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Cashier", "ID", id)));
+    }
 }

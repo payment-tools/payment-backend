@@ -18,4 +18,6 @@ public interface PartnershipService {
     Page<PartnershipDTO> getPartnershipsByFilters(Long id, String ref, Long salesId, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
 
     PartnershipDTO getPartnershipsBySalesIdAndEnterpriseId(Long salesId, Long enterpriseId);
+
+    PartnershipDTO getPartnershipById(Long id);
 }

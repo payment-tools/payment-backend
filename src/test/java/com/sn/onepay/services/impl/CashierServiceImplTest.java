@@ -188,4 +188,24 @@ class CashierServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
+
+    @Test
+    void getCashierById_returnsMappedDTOWhenFound() {
+        var entity = new Cashier();
+        var resultDTO = mock(CashierDTO.class);
+
+        when(cashierRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(cashierMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = cashierService.getCashierById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getCashierById_throwsWhenNotFound() {
+        when(cashierRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cashierService.getCashierById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

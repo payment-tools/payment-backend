@@ -171,4 +171,24 @@ class EnterpriseServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
+
+    @Test
+    void getEnterpriseById_returnsMappedDTOWhenFound() {
+        var entity = new Enterprise();
+        var resultDTO = mock(EnterpriseDTO.class);
+
+        when(enterpriseRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(enterpriseMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = enterpriseService.getEnterpriseById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getEnterpriseById_throwsWhenNotFound() {
+        when(enterpriseRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> enterpriseService.getEnterpriseById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

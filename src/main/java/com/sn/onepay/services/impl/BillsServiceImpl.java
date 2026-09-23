@@ -118,4 +118,9 @@ public class BillsServiceImpl implements BillsService {
         Page<Bills> result = billsRepository.findAll(builder, pageable);
         return result.map(billsMapper::asDTO);
     }
+
+    @Override
+    public BillsDTO getBillsById(Long id) {
+        return billsMapper.asDTO(billsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Bills", "ID", id)));
+    }
 }
