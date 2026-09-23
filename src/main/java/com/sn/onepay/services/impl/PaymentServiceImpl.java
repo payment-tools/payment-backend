@@ -4,6 +4,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
 import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.dto.PaymentDTO;
+import com.sn.onepay.dto.PaymentMonthlySumDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
 import com.sn.onepay.entity.EmployeeGroup;
 import com.sn.onepay.entity.Payment;
@@ -195,5 +196,17 @@ public class PaymentServiceImpl implements PaymentService {
         Page<Payment> result = paymentRepository.findAll(builder, pageable);
 
         return result.map(paymentMapper::asDTO);
+    }
+
+    @Override
+    public List<PaymentMonthlySumDTO> getSumByMonth(Long enterpriseId, Integer months) {
+
+        int monthsBack = months != null ? months : 12;
+        LocalDateTime fromDate = LocalDateTime.now().minusMonths(monthsBack - 1L)
+                .withDayOfMonth(1).toLocalDate().atStartOfDay();
+
+        return paymentRepository.findMonthlySumByEnterpriseId(enterpriseId, fromDate).stream()
+                .map(row -> new PaymentMonthlySumDTO(row.getMonth(), Modules.valueOf(row.getModule()), row.getTotalAmount()))
+                .toList();
     }
 }

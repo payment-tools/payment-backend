@@ -16,6 +16,7 @@ import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PaymentMapper;
 import com.sn.onepay.repository.EmployeeGroupRepository;
+import com.sn.onepay.repository.PaymentMonthlyModuleSum;
 import com.sn.onepay.repository.PaymentRepository;
 import com.sn.onepay.repository.SubventionRepository;
 import com.sn.onepay.services.EnterpriseConfigurationService;
@@ -605,5 +606,32 @@ class PaymentServiceImplTest {
                 LocalDateTime.now(), LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getSumByMonth_mapsRowsToDTO() {
+        var row = mock(PaymentMonthlyModuleSum.class);
+        when(row.getMonth()).thenReturn("2026-09");
+        when(row.getModule()).thenReturn("RESTAURATION");
+        when(row.getTotalAmount()).thenReturn(150.0);
+
+        when(paymentRepository.findMonthlySumByEnterpriseId(eq(5L), any(LocalDateTime.class))).thenReturn(List.of(row));
+
+        var result = paymentService.getSumByMonth(5L, 12);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).month()).isEqualTo("2026-09");
+        assertThat(result.get(0).module()).isEqualTo(Modules.RESTAURATION);
+        assertThat(result.get(0).totalAmount()).isEqualTo(150.0);
+    }
+
+    @Test
+    void getSumByMonth_defaultsToTwelveMonthsWhenNull() {
+        when(paymentRepository.findMonthlySumByEnterpriseId(eq(5L), any(LocalDateTime.class))).thenReturn(List.of());
+
+        var result = paymentService.getSumByMonth(5L, null);
+
+        assertThat(result).isEmpty();
+        verify(paymentRepository).findMonthlySumByEnterpriseId(eq(5L), any(LocalDateTime.class));
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -19,4 +20,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, Queryds
     Double findSumOfAllActivePaymentsByClientId(@Param("clientId") Long clientId);
 
     List<Payment> getAllPaymentsByClientId(Long clientId);
+
+    @Query(value = "SELECT TO_CHAR(p.PaymentDate, 'YYYY-MM') AS month, p.Module AS module, COALESCE(SUM(p.Amount), 0) AS totalAmount " +
+            "FROM Payment p JOIN Client c ON p.ClientId = c.ClientId " +
+            "WHERE c.EnterpriseId = :enterpriseId AND p.Active = true AND p.PaymentDate >= :fromDate " +
+            "GROUP BY TO_CHAR(p.PaymentDate, 'YYYY-MM'), p.Module " +
+            "ORDER BY month", nativeQuery = true)
+    List<PaymentMonthlyModuleSum> findMonthlySumByEnterpriseId(@Param("enterpriseId") Long enterpriseId, @Param("fromDate") LocalDateTime fromDate);
 }

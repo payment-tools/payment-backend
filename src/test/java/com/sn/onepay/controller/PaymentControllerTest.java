@@ -90,6 +90,26 @@ class PaymentControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getSumByMonth_returns200() throws Exception {
+        when(paymentService.getSumByMonth(5L, 12)).thenReturn(List.of());
+
+        mockMvc.perform(get("/v1/onepay/payment/sum-by-month").param("enterpriseId", "5"))
+                .andExpect(status().isOk());
+
+        verify(paymentService).getSumByMonth(5L, 12);
+    }
+
+    @Test
+    void getSumByMonth_withExplicitMonths_returns200() throws Exception {
+        when(paymentService.getSumByMonth(5L, 6)).thenReturn(List.of());
+
+        mockMvc.perform(get("/v1/onepay/payment/sum-by-month").param("enterpriseId", "5").param("months", "6"))
+                .andExpect(status().isOk());
+
+        verify(paymentService).getSumByMonth(5L, 6);
+    }
+
+    @Test
     void deletePayment_returns200() throws Exception {
         doNothing().when(paymentService).deletePayment(anyLong());
 
