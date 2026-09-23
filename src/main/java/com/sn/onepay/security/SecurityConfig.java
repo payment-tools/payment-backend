@@ -76,6 +76,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/v1/onepay/prospect/**").hasRole(SUPER_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/v1/onepay/prospect/**").hasRole(SUPER_ADMIN)
 
+                        // Console plateforme SUPER_ADMIN : vue transverse Utilisateurs (agrégation lecture seule)
+                        .requestMatchers(HttpMethod.GET, "/v1/onepay/platformUser/**").hasRole(SUPER_ADMIN)
+
                         // Lectures (GET) et QR codes : tout utilisateur authentifié
                         .anyRequest().authenticated()
                 )

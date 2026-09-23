@@ -194,6 +194,12 @@ class SecurityConfigTest {
     }
 
     @Test
+    void platformUserReads_requireSuperAdmin() throws Exception {
+        mockMvc.perform(get("/v1/onepay/platformUser").with(as("ENTERPRISE_ADMIN"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(get("/v1/onepay/platformUser").with(as("SUPER_ADMIN"))));
+    }
+
+    @Test
     void realmRolesFromJwtClaims_grantAccessThroughConverter() throws Exception {
         doNothing().when(paymentService).deletePayment(anyLong());
 
