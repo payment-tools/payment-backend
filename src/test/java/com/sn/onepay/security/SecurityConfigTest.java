@@ -2,6 +2,7 @@ package com.sn.onepay.security;
 
 import com.sn.onepay.controller.PaymentController;
 import com.sn.onepay.dto.PaymentDTO;
+import com.sn.onepay.services.AuditLogService;
 import com.sn.onepay.services.PaymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,9 @@ class SecurityConfigTest {
 
     @MockBean
     JwtDecoder jwtDecoder;
+
+    @MockBean
+    AuditLogService auditLogService;
 
     private static RequestPostProcessor as(String role) {
         return jwt().authorities(new SimpleGrantedAuthority("ROLE_" + role));
@@ -197,6 +201,12 @@ class SecurityConfigTest {
     void platformUserReads_requireSuperAdmin() throws Exception {
         mockMvc.perform(get("/v1/onepay/platformUser").with(as("ENTERPRISE_ADMIN"))).andExpect(status().isForbidden());
         assertAccessGranted(mockMvc.perform(get("/v1/onepay/platformUser").with(as("SUPER_ADMIN"))));
+    }
+
+    @Test
+    void auditLogReads_requireSuperAdmin() throws Exception {
+        mockMvc.perform(get("/v1/onepay/auditLog").with(as("ENTERPRISE_FINANCE"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(get("/v1/onepay/auditLog").with(as("SUPER_ADMIN"))));
     }
 
     @Test
