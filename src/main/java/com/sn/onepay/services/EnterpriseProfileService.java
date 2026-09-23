@@ -16,4 +16,6 @@ public interface EnterpriseProfileService {
     void deleteEnterpriseProfile(Long enterpriseProfileId);
 
     Page<EnterpriseProfileDTO> getEnterpriseProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long enterpriseId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+
+    EnterpriseProfileDTO getMyProfile(String username);
 }

@@ -123,4 +123,13 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
         Page<EnterpriseProfile> result = enterpriseProfileRepository.findAll(builder, pageable);
         return result.map(enterpriseProfileMapper::asDTO);
     }
+
+    @Override
+    public EnterpriseProfileDTO getMyProfile(String username) {
+
+        EnterpriseProfile profile = enterpriseProfileRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise Profile", "username", username));
+
+        return enterpriseProfileMapper.asDTO(profile);
+    }
 }

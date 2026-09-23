@@ -16,4 +16,6 @@ public interface SalesProfileService {
     void deleteSalesProfile(Long salesProfileId);
 
     Page<SalesProfileDTO> getSalesProfilesByFilters(Long id, String ref, String firstname, String lastname, String username, String email, String phoneNumber, Roles role, Long salesId, Boolean active, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
+
+    SalesProfileDTO getMyProfile(String username);
 }

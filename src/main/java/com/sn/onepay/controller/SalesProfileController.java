@@ -16,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -85,6 +87,18 @@ public class SalesProfileController {
                                                           @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                           Pageable pageable) {
         return salesProfileService.getSalesProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get the profile of the currently authenticated user", description = "Resolves the sales profile (and its sales point) from the caller's JWT, no parameter needed")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "No sales profile for this user"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public SalesProfileDTO getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+        return salesProfileService.getMyProfile(jwt.getClaimAsString("preferred_username"));
     }
 
     @Operation(summary = "Delete a sales Profile by id", description = "This endpoint is for deleting sales Profile by id")

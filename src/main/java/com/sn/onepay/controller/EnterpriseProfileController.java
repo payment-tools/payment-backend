@@ -16,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -87,6 +89,18 @@ public class EnterpriseProfileController {
             Pageable pageable
     ) {
         return enterpriseProfileService.getEnterpriseProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get the profile of the currently authenticated user", description = "Resolves the enterprise profile (and its enterprise) from the caller's JWT, no parameter needed")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "No enterprise profile for this user"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public EnterpriseProfileDTO getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+        return enterpriseProfileService.getMyProfile(jwt.getClaimAsString("preferred_username"));
     }
 
     @Operation(summary = "Delete a enterprise Profile by id", description = "This endpoint is for deleting enterprise Profile by id")

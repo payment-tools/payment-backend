@@ -124,4 +124,13 @@ public class SalesProfileServiceImpl implements SalesProfileService {
         Page<SalesProfile> result = salesProfileRepository.findAll(builder, pageable);
         return result.map(salesProfileMapper::asDTO);
     }
+
+    @Override
+    public SalesProfileDTO getMyProfile(String username) {
+
+        SalesProfile profile = salesProfileRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("SalesProfile", "username", username));
+
+        return salesProfileMapper.asDTO(profile);
+    }
 }
