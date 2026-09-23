@@ -1,13 +1,17 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.ClientCreateDTO;
 import com.sn.onepay.dto.ClientDTO;
+import com.sn.onepay.dto.ClientUpdateDTO;
 import com.sn.onepay.entity.Client;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.QClient;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
+import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.services.ClientService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -29,13 +33,24 @@ import java.util.UUID;
 public class ClientServiceImpl implements ClientService {
 
     final ClientRepository clientRepository;
+    final EnterpriseRepository enterpriseRepository;
     final ClientMapper clientMapper;
 
     @Override
-    public ClientDTO createClient(ClientDTO clientDTO) {
+    public ClientDTO createClient(ClientCreateDTO clientCreateDTO) {
 
-        Client client = clientMapper.asEntity(clientDTO);
+        Enterprise enterprise = enterpriseRepository.findById(clientCreateDTO.enterpriseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", clientCreateDTO.enterpriseId()));
+
+        Client client = new Client();
         client.setRef(UUID.randomUUID().toString());
+        client.setFirstname(clientCreateDTO.firstname());
+        client.setLastname(clientCreateDTO.lastname());
+        client.setUsername(clientCreateDTO.username());
+        client.setEmail(clientCreateDTO.email());
+        client.setPhoneNumber(clientCreateDTO.phoneNumber());
+        client.setRole(clientCreateDTO.role());
+        client.setEnterprise(enterprise);
         client.setActive(true);
         var savedClient = clientRepository.save(client);
 
@@ -47,19 +62,17 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ClientDTO updateClient(ClientDTO clientDTO, Long clientId) {
+    public ClientDTO updateClient(ClientUpdateDTO clientUpdateDTO, Long clientId) {
 
         Client existing = clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
 
-        if (clientDTO.ref() != null) existing.setRef(clientDTO.ref());
-        if (clientDTO.firstname() != null) existing.setFirstname(clientDTO.firstname());
-        if (clientDTO.lastname() != null) existing.setLastname(clientDTO.lastname());
-        if (clientDTO.username() != null) existing.setUsername(clientDTO.username());
-        if (clientDTO.email() != null) existing.setEmail(clientDTO.email());
-        if (clientDTO.phoneNumber() != null) existing.setPhoneNumber(clientDTO.phoneNumber());
-        if (clientDTO.role() != null) existing.setRole(clientDTO.role());
-        if (clientDTO.enterprise() != null) existing.setEnterprise(clientMapper.asEntity(clientDTO).getEnterprise());
-        if (clientDTO.active() != null) existing.setActive(clientDTO.active());
+        if (clientUpdateDTO.firstname() != null) existing.setFirstname(clientUpdateDTO.firstname());
+        if (clientUpdateDTO.lastname() != null) existing.setLastname(clientUpdateDTO.lastname());
+        if (clientUpdateDTO.username() != null) existing.setUsername(clientUpdateDTO.username());
+        if (clientUpdateDTO.email() != null) existing.setEmail(clientUpdateDTO.email());
+        if (clientUpdateDTO.phoneNumber() != null) existing.setPhoneNumber(clientUpdateDTO.phoneNumber());
+        if (clientUpdateDTO.role() != null) existing.setRole(clientUpdateDTO.role());
+        if (clientUpdateDTO.active() != null) existing.setActive(clientUpdateDTO.active());
 
         var updatedClient = clientRepository.saveAndFlush(existing);
 

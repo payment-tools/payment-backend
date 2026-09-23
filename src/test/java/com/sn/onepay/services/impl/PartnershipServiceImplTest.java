@@ -1,8 +1,8 @@
 package com.sn.onepay.services.impl;
 
-import com.sn.onepay.dto.EnterpriseDTO;
+import com.sn.onepay.dto.PartnershipCreateDTO;
 import com.sn.onepay.dto.PartnershipDTO;
-import com.sn.onepay.dto.SalesDTO;
+import com.sn.onepay.dto.PartnershipUpdateDTO;
 import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.Sales;
@@ -54,16 +54,17 @@ class PartnershipServiceImplTest {
     @InjectMocks
     PartnershipServiceImpl partnershipService;
 
-    private PartnershipDTO buildPartnershipDTO(Long salesId, Long enterpriseId) {
-        var salesDTO = mock(SalesDTO.class);
-        when(salesDTO.id()).thenReturn(salesId);
+    private PartnershipCreateDTO buildPartnershipCreateDTO(Long salesId, Long enterpriseId) {
+        var dto = mock(PartnershipCreateDTO.class);
+        when(dto.salesId()).thenReturn(salesId);
+        when(dto.enterpriseId()).thenReturn(enterpriseId);
+        return dto;
+    }
 
-        var enterpriseDTO = mock(EnterpriseDTO.class);
-        when(enterpriseDTO.id()).thenReturn(enterpriseId);
-
-        var dto = mock(PartnershipDTO.class);
-        when(dto.sales()).thenReturn(salesDTO);
-        when(dto.enterprise()).thenReturn(enterpriseDTO);
+    private PartnershipUpdateDTO buildPartnershipUpdateDTO(Long salesId, Long enterpriseId) {
+        var dto = mock(PartnershipUpdateDTO.class);
+        when(dto.salesId()).thenReturn(salesId);
+        when(dto.enterpriseId()).thenReturn(enterpriseId);
         return dto;
     }
 
@@ -83,7 +84,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_throwsWhenEnterpriseNotFound() {
-        var dto = buildPartnershipDTO(1L, 99L);
+        var dto = buildPartnershipCreateDTO(1L, 99L);
         when(enterpriseRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> partnershipService.createPartnership(dto))
@@ -92,7 +93,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_throwsWhenSalesNotFound() {
-        var dto = buildPartnershipDTO(99L, 2L);
+        var dto = buildPartnershipCreateDTO(99L, 2L);
         when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, List.of(Modules.RESTAURATION))));
         when(salesRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -102,7 +103,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_throwsWhenAlreadyExists() {
-        var dto = buildPartnershipDTO(1L, 2L);
+        var dto = buildPartnershipCreateDTO(1L, 2L);
         when(salesRepository.findById(1L)).thenReturn(Optional.of(buildSales(1L, Modules.RESTAURATION)));
         when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, List.of(Modules.RESTAURATION))));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L))
@@ -114,7 +115,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_throwsWhenModuleNotAllowed() {
-        var dto = buildPartnershipDTO(1L, 2L);
+        var dto = buildPartnershipCreateDTO(1L, 2L);
         when(salesRepository.findById(1L)).thenReturn(Optional.of(buildSales(1L, Modules.RESTAURATION)));
         when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, List.of(Modules.MARKET))));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(null);
@@ -125,7 +126,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_throwsWhenEnterpriseHasNoEnrolledModules() {
-        var dto = buildPartnershipDTO(1L, 2L);
+        var dto = buildPartnershipCreateDTO(1L, 2L);
         when(salesRepository.findById(1L)).thenReturn(Optional.of(buildSales(1L, Modules.RESTAURATION)));
         when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(buildEnterprise(2L, null)));
         when(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(null);
@@ -136,7 +137,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void createPartnership_happyPath() {
-        var dto = buildPartnershipDTO(1L, 2L);
+        var dto = buildPartnershipCreateDTO(1L, 2L);
         var sales = buildSales(1L, Modules.RESTAURATION);
         var enterprise = buildEnterprise(2L, List.of(Modules.RESTAURATION));
         var saved = new Partnership();
@@ -164,14 +165,13 @@ class PartnershipServiceImplTest {
     void updatePartnership_throwsWhenNotFound() {
         when(partnershipRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> partnershipService.updatePartnership(mock(PartnershipDTO.class), 99L))
+        assertThatThrownBy(() -> partnershipService.updatePartnership(mock(PartnershipUpdateDTO.class), 99L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void updatePartnership_updatesAllFieldsWhenProvided() {
-        var dto = buildPartnershipDTO(1L, 2L);
-        when(dto.ref()).thenReturn("REF1");
+        var dto = buildPartnershipUpdateDTO(1L, 2L);
         when(dto.active()).thenReturn(true);
 
         var existing = new Partnership();
@@ -189,7 +189,6 @@ class PartnershipServiceImplTest {
         var result = partnershipService.updatePartnership(dto, 1L);
 
         assertThat(result).isEqualTo(resultDTO);
-        assertThat(existing.getRef()).isEqualTo("REF1");
         assertThat(existing.getSales()).isEqualTo(sales);
         assertThat(existing.getEnterprise()).isEqualTo(enterprise);
         assertThat(existing.isActive()).isTrue();
@@ -197,7 +196,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void updatePartnership_throwsWhenSalesNotFound() {
-        var dto = buildPartnershipDTO(99L, 2L);
+        var dto = buildPartnershipUpdateDTO(99L, 2L);
         var existing = new Partnership();
 
         when(partnershipRepository.findById(1L)).thenReturn(Optional.of(existing));
@@ -209,7 +208,7 @@ class PartnershipServiceImplTest {
 
     @Test
     void updatePartnership_throwsWhenEnterpriseNotFound() {
-        var dto = buildPartnershipDTO(1L, 99L);
+        var dto = buildPartnershipUpdateDTO(1L, 99L);
         var existing = new Partnership();
 
         when(partnershipRepository.findById(1L)).thenReturn(Optional.of(existing));
@@ -222,9 +221,12 @@ class PartnershipServiceImplTest {
 
     @Test
     void updatePartnership_keepsExistingFieldsWhenDtoFieldsNull() {
-        /*Mockito's default answer for an unstubbed Boolean accessor is false, not null,
-          so it needs to be stubbed explicitly to exercise the "field not provided" branch*/
-        var dto = mock(PartnershipDTO.class);
+        /*Mockito's default answer for an unstubbed boxed-type accessor (Long/Boolean) is
+          the zero-equivalent, not null, so these need to be stubbed explicitly to exercise the
+          "field not provided" branch*/
+        var dto = mock(PartnershipUpdateDTO.class);
+        when(dto.salesId()).thenReturn(null);
+        when(dto.enterpriseId()).thenReturn(null);
         when(dto.active()).thenReturn(null);
 
         var existing = new Partnership();

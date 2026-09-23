@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.ClientCreateDTO;
 import com.sn.onepay.dto.ClientDTO;
+import com.sn.onepay.dto.ClientUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.services.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +48,7 @@ public class ClientController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public ClientDTO createClient(@Parameter(description = "Client body for creation", required = true) @RequestBody @Valid ClientDTO client) {
+    public ClientDTO createClient(@Parameter(description = "Client body for creation", required = true) @RequestBody @Valid ClientCreateDTO client) {
         return clientService.createClient(client);
     }
 
@@ -58,7 +60,7 @@ public class ClientController {
     })
     @PutMapping(value = "/{clientId}")
     @ResponseStatus(HttpStatus.OK)
-    public ClientDTO updateClient(@Parameter(description = "Client body to update", required = true) @RequestBody @Valid ClientDTO client,
+    public ClientDTO updateClient(@Parameter(description = "Client body to update", required = true) @RequestBody @Valid ClientUpdateDTO client,
                                   @Parameter(description = "Client id to update", required = true) @PathVariable(name = "clientId") Long clientId) {
         return clientService.updateClient(client, clientId);
     }

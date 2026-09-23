@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.SalesConfigurationsCreateDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
+import com.sn.onepay.dto.SalesConfigurationsUpdateDTO;
 import com.sn.onepay.services.SalesConfigurationsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +47,7 @@ public class SalesConfigurationsController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public SalesConfigurationsDTO createSalesConfiguration(@Parameter(description = "Sales configuration body for creation", required = true) @RequestBody @Valid SalesConfigurationsDTO salesConfigurations) {
+    public SalesConfigurationsDTO createSalesConfiguration(@Parameter(description = "Sales configuration body for creation", required = true) @RequestBody @Valid SalesConfigurationsCreateDTO salesConfigurations) {
         return salesConfigurationsService.createSalesConfigurations(salesConfigurations);
     }
 
@@ -57,7 +59,7 @@ public class SalesConfigurationsController {
     })
     @PutMapping(value = "/{salesConfigurationsId}")
     @ResponseStatus(HttpStatus.OK)
-    public SalesConfigurationsDTO updateSalesConfigurations(@Parameter(description = "Sales Configurations body to update", required = true) @RequestBody @Valid SalesConfigurationsDTO salesConfigurations,
+    public SalesConfigurationsDTO updateSalesConfigurations(@Parameter(description = "Sales Configurations body to update", required = true) @RequestBody @Valid SalesConfigurationsUpdateDTO salesConfigurations,
                                                             @Parameter(description = "Sales Configurations id to update", required = true) @PathVariable(name = "salesConfigurationsId") Long salesConfigurationsId) {
         return salesConfigurationsService.updateSalesConfigurations(salesConfigurations, salesConfigurationsId);
     }

@@ -42,7 +42,7 @@ class EnterpriseConfigurationControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/enterpriseConfiguration")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"enterprisePercentage\":60,\"employeePercentage\":40}"))
+                        .content("{\"enterpriseId\":1,\"enterprisePercentage\":60,\"employeePercentage\":40}"))
                 .andExpect(status().isCreated());
     }
 

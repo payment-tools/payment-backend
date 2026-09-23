@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.EnterpriseConfigurationCreateDTO;
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
+import com.sn.onepay.dto.EnterpriseConfigurationUpdateDTO;
 import com.sn.onepay.services.EnterpriseConfigurationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +47,7 @@ public class EnterpriseConfigurationController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public EnterpriseConfigurationDTO createEnterpriseConfiguration(@Parameter(description = "Enterprise configuration body for creation", required = true) @RequestBody @Valid EnterpriseConfigurationDTO enterpriseConfiguration) {
+    public EnterpriseConfigurationDTO createEnterpriseConfiguration(@Parameter(description = "Enterprise configuration body for creation", required = true) @RequestBody @Valid EnterpriseConfigurationCreateDTO enterpriseConfiguration) {
         return enterpriseConfigurationService.createEnterpriseConfiguration(enterpriseConfiguration);
     }
 
@@ -57,7 +59,7 @@ public class EnterpriseConfigurationController {
     })
     @PutMapping(value = "/{enterpriseConfigurationId}")
     @ResponseStatus(HttpStatus.OK)
-    public EnterpriseConfigurationDTO updateEnterpriseConfiguration(@Parameter(description = "Enterprise Configuration body to update", required = true) @RequestBody @Valid EnterpriseConfigurationDTO enterpriseConfiguration,
+    public EnterpriseConfigurationDTO updateEnterpriseConfiguration(@Parameter(description = "Enterprise Configuration body to update", required = true) @RequestBody @Valid EnterpriseConfigurationUpdateDTO enterpriseConfiguration,
                                                                     @Parameter(description = "Enterprise Configuration id to update", required = true) @PathVariable(name = "enterpriseConfigurationId") Long enterpriseConfigurationId) {
         return enterpriseConfigurationService.updateEnterpriseConfiguration(enterpriseConfiguration, enterpriseConfigurationId);
     }

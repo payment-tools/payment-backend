@@ -1,13 +1,17 @@
 package com.sn.onepay.services.impl;
 
+import com.sn.onepay.dto.EnterpriseConfigurationCreateDTO;
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
+import com.sn.onepay.dto.EnterpriseConfigurationUpdateDTO;
 import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseConfiguration;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseConfigurationMapper;
 import com.sn.onepay.repository.EnterpriseConfigurationRepository;
+import com.sn.onepay.repository.EnterpriseRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +35,9 @@ class EnterpriseConfigurationServiceImplTest {
     EnterpriseConfigurationRepository enterpriseConfigurationRepository;
 
     @Mock
+    EnterpriseRepository enterpriseRepository;
+
+    @Mock
     EnterpriseConfigurationMapper enterpriseConfigurationMapper;
 
     @InjectMocks
@@ -38,33 +45,60 @@ class EnterpriseConfigurationServiceImplTest {
 
     @Test
     void createEnterpriseConfiguration_savesAndReturnsDTO() {
-        var dto = mock(EnterpriseConfigurationDTO.class);
-        var entity = new EnterpriseConfiguration();
+        var createDTO = mock(EnterpriseConfigurationCreateDTO.class);
+        when(createDTO.enterpriseId()).thenReturn(2L);
+        when(createDTO.maxAmountRestauration()).thenReturn(500.0);
+        when(createDTO.maxAmountMarket()).thenReturn(300.0);
+        when(createDTO.maxAmountGasStation()).thenReturn(200.0);
+        when(createDTO.maxAmountTelephony()).thenReturn(100.0);
+        when(createDTO.enterprisePercentage()).thenReturn(60);
+        when(createDTO.employeePercentage()).thenReturn(40);
+
+        var enterprise = new Enterprise();
         var saved = new EnterpriseConfiguration();
         var resultDTO = mock(EnterpriseConfigurationDTO.class);
 
-        when(enterpriseConfigurationMapper.asEntity(dto)).thenReturn(entity);
-        when(enterpriseConfigurationRepository.save(entity)).thenReturn(saved);
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(enterprise));
+        when(enterpriseConfigurationRepository.save(any(EnterpriseConfiguration.class))).thenReturn(saved);
         when(enterpriseConfigurationMapper.asDTO(saved)).thenReturn(resultDTO);
 
-        var result = enterpriseConfigurationService.createEnterpriseConfiguration(dto);
-        assertThat(entity.isActive()).isTrue();
+        var result = enterpriseConfigurationService.createEnterpriseConfiguration(createDTO);
+
         assertThat(result).isEqualTo(resultDTO);
+
+        ArgumentCaptor<EnterpriseConfiguration> captor = ArgumentCaptor.forClass(EnterpriseConfiguration.class);
+        verify(enterpriseConfigurationRepository).save(captor.capture());
+        assertThat(captor.getValue().isActive()).isTrue();
+        assertThat(captor.getValue().getEnterprise()).isEqualTo(enterprise);
+        assertThat(captor.getValue().getMaxAmountRestauration()).isEqualTo(500.0);
+        assertThat(captor.getValue().getMaxAmountMarket()).isEqualTo(300.0);
+        assertThat(captor.getValue().getMaxAmountGasStation()).isEqualTo(200.0);
+        assertThat(captor.getValue().getMaxAmountTelephony()).isEqualTo(100.0);
+        assertThat(captor.getValue().getEnterprisePercentage()).isEqualTo(60);
+        assertThat(captor.getValue().getEmployeePercentage()).isEqualTo(40);
+    }
+
+    @Test
+    void createEnterpriseConfiguration_throwsWhenEnterpriseNotFound() {
+        var createDTO = mock(EnterpriseConfigurationCreateDTO.class);
+        when(createDTO.enterpriseId()).thenReturn(99L);
+        when(enterpriseRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> enterpriseConfigurationService.createEnterpriseConfiguration(createDTO))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void updateEnterpriseConfiguration_throwsWhenNotFound() {
         when(enterpriseConfigurationRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> enterpriseConfigurationService.updateEnterpriseConfiguration(mock(EnterpriseConfigurationDTO.class), 99L))
+        assertThatThrownBy(() -> enterpriseConfigurationService.updateEnterpriseConfiguration(mock(EnterpriseConfigurationUpdateDTO.class), 99L))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void updateEnterpriseConfiguration_updatesAllFieldsWhenProvided() {
-        var dto = mock(EnterpriseConfigurationDTO.class);
-        var enterprise = new Enterprise();
-        when(dto.enterprise()).thenReturn(enterprise);
+        var dto = mock(EnterpriseConfigurationUpdateDTO.class);
         when(dto.maxAmountRestauration()).thenReturn(500.0);
         when(dto.maxAmountMarket()).thenReturn(300.0);
         when(dto.maxAmountGasStation()).thenReturn(200.0);
@@ -84,7 +118,6 @@ class EnterpriseConfigurationServiceImplTest {
         var result = enterpriseConfigurationService.updateEnterpriseConfiguration(dto, 1L);
 
         assertThat(result).isEqualTo(resultDTO);
-        assertThat(existing.getEnterprise()).isEqualTo(enterprise);
         assertThat(existing.getMaxAmountRestauration()).isEqualTo(500.0);
         assertThat(existing.getMaxAmountMarket()).isEqualTo(300.0);
         assertThat(existing.getMaxAmountGasStation()).isEqualTo(200.0);
@@ -96,18 +129,22 @@ class EnterpriseConfigurationServiceImplTest {
 
     @Test
     void updateEnterpriseConfiguration_keepsExistingFieldsWhenDtoFieldsNull() {
-        /*Mockito's default answer for an unstubbed boxed-type accessor (Double/Boolean) is
+        /*Mockito's default answer for an unstubbed boxed-type accessor (Double/Integer/Boolean) is
           the zero value, not null, so these need to be stubbed explicitly to exercise the
           "field not provided" branch*/
-        var dto = mock(EnterpriseConfigurationDTO.class);
+        var dto = mock(EnterpriseConfigurationUpdateDTO.class);
         when(dto.maxAmountRestauration()).thenReturn(null);
         when(dto.maxAmountMarket()).thenReturn(null);
         when(dto.maxAmountGasStation()).thenReturn(null);
         when(dto.maxAmountTelephony()).thenReturn(null);
+        when(dto.enterprisePercentage()).thenReturn(null);
+        when(dto.employeePercentage()).thenReturn(null);
         when(dto.active()).thenReturn(null);
 
         var existing = new EnterpriseConfiguration();
         existing.setMaxAmountRestauration(999.0);
+        existing.setEnterprisePercentage(70);
+        existing.setEmployeePercentage(30);
         existing.setActive(true);
         var saved = new EnterpriseConfiguration();
         var resultDTO = mock(EnterpriseConfigurationDTO.class);
@@ -120,6 +157,8 @@ class EnterpriseConfigurationServiceImplTest {
 
         assertThat(result).isEqualTo(resultDTO);
         assertThat(existing.getMaxAmountRestauration()).isEqualTo(999.0);
+        assertThat(existing.getEnterprisePercentage()).isEqualTo(70);
+        assertThat(existing.getEmployeePercentage()).isEqualTo(30);
         assertThat(existing.isActive()).isTrue();
     }
 

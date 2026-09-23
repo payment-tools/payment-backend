@@ -40,7 +40,7 @@ class CashierControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/cashier")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"role\":\"CASHIER\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"role\":\"CASHIER\",\"salesId\":1}"))
                 .andExpect(status().isCreated());
     }
 

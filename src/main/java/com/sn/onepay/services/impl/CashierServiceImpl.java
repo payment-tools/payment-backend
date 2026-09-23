@@ -1,13 +1,17 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.CashierCreateDTO;
 import com.sn.onepay.dto.CashierDTO;
+import com.sn.onepay.dto.CashierUpdateDTO;
 import com.sn.onepay.entity.Cashier;
 import com.sn.onepay.entity.QCashier;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.CashierMapper;
 import com.sn.onepay.repository.CashierRepository;
+import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.CashierService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -29,13 +33,24 @@ import java.util.UUID;
 public class CashierServiceImpl implements CashierService {
 
     final CashierRepository cashierRepository;
+    final SalesRepository salesRepository;
     final CashierMapper cashierMapper;
 
     @Override
-    public CashierDTO createCashier(CashierDTO cashierDTO) {
+    public CashierDTO createCashier(CashierCreateDTO cashierCreateDTO) {
 
-        Cashier cashier = cashierMapper.asEntity(cashierDTO);
+        Sales sales = salesRepository.findById(cashierCreateDTO.salesId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", cashierCreateDTO.salesId()));
+
+        Cashier cashier = new Cashier();
         cashier.setRef(UUID.randomUUID().toString());
+        cashier.setFirstname(cashierCreateDTO.firstname());
+        cashier.setLastname(cashierCreateDTO.lastname());
+        cashier.setUsername(cashierCreateDTO.username());
+        cashier.setEmail(cashierCreateDTO.email());
+        cashier.setPhoneNumber(cashierCreateDTO.phoneNumber());
+        cashier.setRole(cashierCreateDTO.role());
+        cashier.setSales(sales);
         cashier.setActive(true);
         var savedCashier = cashierRepository.save(cashier);
 
@@ -46,19 +61,17 @@ public class CashierServiceImpl implements CashierService {
     }
 
     @Override
-    public CashierDTO updateCashier(CashierDTO cashierDTO, Long cashierId) {
+    public CashierDTO updateCashier(CashierUpdateDTO cashierUpdateDTO, Long cashierId) {
 
         Cashier existing = cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
 
-        if (cashierDTO.ref() != null) existing.setRef(cashierDTO.ref());
-        if (cashierDTO.firstname() != null) existing.setFirstname(cashierDTO.firstname());
-        if (cashierDTO.lastname() != null) existing.setLastname(cashierDTO.lastname());
-        if (cashierDTO.username() != null) existing.setUsername(cashierDTO.username());
-        if (cashierDTO.email() != null) existing.setEmail(cashierDTO.email());
-        if (cashierDTO.phoneNumber() != null) existing.setPhoneNumber(cashierDTO.phoneNumber());
-        if (cashierDTO.role() != null) existing.setRole(cashierDTO.role());
-        if (cashierDTO.sales() != null) existing.setSales(cashierMapper.asEntity(cashierDTO).getSales());
-        if (cashierDTO.active() != null) existing.setActive(cashierDTO.active());
+        if (cashierUpdateDTO.firstname() != null) existing.setFirstname(cashierUpdateDTO.firstname());
+        if (cashierUpdateDTO.lastname() != null) existing.setLastname(cashierUpdateDTO.lastname());
+        if (cashierUpdateDTO.username() != null) existing.setUsername(cashierUpdateDTO.username());
+        if (cashierUpdateDTO.email() != null) existing.setEmail(cashierUpdateDTO.email());
+        if (cashierUpdateDTO.phoneNumber() != null) existing.setPhoneNumber(cashierUpdateDTO.phoneNumber());
+        if (cashierUpdateDTO.role() != null) existing.setRole(cashierUpdateDTO.role());
+        if (cashierUpdateDTO.active() != null) existing.setActive(cashierUpdateDTO.active());
 
         var updatedCashier = cashierRepository.saveAndFlush(existing);
 

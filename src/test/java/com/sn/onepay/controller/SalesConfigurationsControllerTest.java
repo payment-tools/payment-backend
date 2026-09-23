@@ -42,7 +42,7 @@ class SalesConfigurationsControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/salesConfiguration")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"minAmount\":10.0,\"maxAmount\":100.0}"))
+                        .content("{\"salesId\":1,\"minAmount\":10.0,\"maxAmount\":100.0}"))
                 .andExpect(status().isCreated());
     }
 

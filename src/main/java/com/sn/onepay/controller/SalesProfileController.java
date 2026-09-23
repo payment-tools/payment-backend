@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.SalesProfileCreateDTO;
 import com.sn.onepay.dto.SalesProfileDTO;
+import com.sn.onepay.dto.SalesProfileUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.services.SalesProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +50,7 @@ public class SalesProfileController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public SalesProfileDTO createSalesProfile(@Parameter(description = "Sales profile body for creation", required = true) @RequestBody @Valid SalesProfileDTO salesProfile) {
+    public SalesProfileDTO createSalesProfile(@Parameter(description = "Sales profile body for creation", required = true) @RequestBody @Valid SalesProfileCreateDTO salesProfile) {
         return salesProfileService.createSalesProfile(salesProfile);
     }
 
@@ -60,7 +62,7 @@ public class SalesProfileController {
     })
     @PutMapping(value = "/{salesProfileId}")
     @ResponseStatus(HttpStatus.OK)
-    public SalesProfileDTO updateSalesProfile(@Parameter(description = "Sales Profile body to update", required = true) @RequestBody @Valid SalesProfileDTO salesProfile,
+    public SalesProfileDTO updateSalesProfile(@Parameter(description = "Sales Profile body to update", required = true) @RequestBody @Valid SalesProfileUpdateDTO salesProfile,
                                               @Parameter(description = "Sales Profile id to update", required = true) @PathVariable(name = "salesProfileId") Long salesProfileId) {
         return salesProfileService.updateSalesProfile(salesProfile, salesProfileId);
     }

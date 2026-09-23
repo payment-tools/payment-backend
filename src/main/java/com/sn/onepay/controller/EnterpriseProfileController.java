@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.EnterpriseProfileCreateDTO;
 import com.sn.onepay.dto.EnterpriseProfileDTO;
+import com.sn.onepay.dto.EnterpriseProfileUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.services.EnterpriseProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +50,7 @@ public class EnterpriseProfileController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public EnterpriseProfileDTO createEnterpriseProfile(@Parameter(description = "Enterprise profile body for creation", required = true) @RequestBody @Valid EnterpriseProfileDTO enterpriseProfile) {
+    public EnterpriseProfileDTO createEnterpriseProfile(@Parameter(description = "Enterprise profile body for creation", required = true) @RequestBody @Valid EnterpriseProfileCreateDTO enterpriseProfile) {
         return enterpriseProfileService.createEnterpriseProfile(enterpriseProfile);
     }
 
@@ -60,7 +62,7 @@ public class EnterpriseProfileController {
     })
     @PutMapping(value = "/{enterpriseProfileId}")
     @ResponseStatus(HttpStatus.OK)
-    public EnterpriseProfileDTO updateEnterpriseProfile(@Parameter(description = "Enterprise Profile body to update", required = true) @RequestBody @Valid EnterpriseProfileDTO enterpriseProfile,
+    public EnterpriseProfileDTO updateEnterpriseProfile(@Parameter(description = "Enterprise Profile body to update", required = true) @RequestBody @Valid EnterpriseProfileUpdateDTO enterpriseProfile,
                                                         @Parameter(description = "Enterprise Profile id to update", required = true) @PathVariable(name = "enterpriseProfileId") Long enterpriseProfileId) {
         return enterpriseProfileService.updateEnterpriseProfile(enterpriseProfile, enterpriseProfileId);
     }

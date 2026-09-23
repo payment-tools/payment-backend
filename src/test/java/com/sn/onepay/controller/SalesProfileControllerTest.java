@@ -41,7 +41,7 @@ class SalesProfileControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/salesProfile")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Dupont\",\"username\":\"jdup\",\"role\":\"SALES_ADMIN\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Dupont\",\"username\":\"jdup\",\"role\":\"SALES_ADMIN\",\"salesId\":1}"))
                 .andExpect(status().isCreated());
     }
 

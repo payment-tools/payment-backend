@@ -1,6 +1,8 @@
 package com.sn.onepay.services;
 
+import com.sn.onepay.dto.EnterpriseProfileCreateDTO;
 import com.sn.onepay.dto.EnterpriseProfileDTO;
+import com.sn.onepay.dto.EnterpriseProfileUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,9 +11,9 @@ import java.time.LocalDateTime;
 
 public interface EnterpriseProfileService {
 
-    EnterpriseProfileDTO createEnterpriseProfile(EnterpriseProfileDTO enterpriseProfileDTO);
+    EnterpriseProfileDTO createEnterpriseProfile(EnterpriseProfileCreateDTO enterpriseProfileCreateDTO);
 
-    EnterpriseProfileDTO updateEnterpriseProfile(EnterpriseProfileDTO enterpriseProfileDTO, Long enterpriseProfileId);
+    EnterpriseProfileDTO updateEnterpriseProfile(EnterpriseProfileUpdateDTO enterpriseProfileUpdateDTO, Long enterpriseProfileId);
 
     void deleteEnterpriseProfile(Long enterpriseProfileId);
 

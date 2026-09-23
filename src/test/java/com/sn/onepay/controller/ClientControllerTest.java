@@ -40,7 +40,7 @@ class ClientControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/client")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"enterpriseId\":1}"))
                 .andExpect(status().isCreated());
     }
 

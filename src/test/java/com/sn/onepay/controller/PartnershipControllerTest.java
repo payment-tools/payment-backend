@@ -40,7 +40,7 @@ class PartnershipControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/partnership")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"active\":true}"))
+                        .content("{\"salesId\":1,\"enterpriseId\":2}"))
                 .andExpect(status().isCreated());
     }
 

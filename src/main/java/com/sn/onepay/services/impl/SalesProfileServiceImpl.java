@@ -1,13 +1,17 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.SalesProfileCreateDTO;
 import com.sn.onepay.dto.SalesProfileDTO;
+import com.sn.onepay.dto.SalesProfileUpdateDTO;
 import com.sn.onepay.entity.QSalesProfile;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
+import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.SalesProfileService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -28,12 +32,23 @@ import java.time.LocalDateTime;
 public class SalesProfileServiceImpl implements SalesProfileService {
 
     final SalesProfileRepository salesProfileRepository;
+    final SalesRepository salesRepository;
     final SalesProfileMapper salesProfileMapper;
 
     @Override
-    public SalesProfileDTO createSalesProfile(SalesProfileDTO salesProfileDTO) {
+    public SalesProfileDTO createSalesProfile(SalesProfileCreateDTO salesProfileCreateDTO) {
 
-        SalesProfile profile = salesProfileMapper.asEntity(salesProfileDTO);
+        Sales sales = salesRepository.findById(salesProfileCreateDTO.salesId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesProfileCreateDTO.salesId()));
+
+        SalesProfile profile = new SalesProfile();
+        profile.setFirstname(salesProfileCreateDTO.firstname());
+        profile.setLastname(salesProfileCreateDTO.lastname());
+        profile.setUsername(salesProfileCreateDTO.username());
+        profile.setEmail(salesProfileCreateDTO.email());
+        profile.setPhoneNumber(salesProfileCreateDTO.phoneNumber());
+        profile.setRole(salesProfileCreateDTO.role());
+        profile.setSales(sales);
         profile.setActive(true);
         var savedSalesProfile = salesProfileRepository.save(profile);
 
@@ -44,19 +59,17 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     }
 
     @Override
-    public SalesProfileDTO updateSalesProfile(SalesProfileDTO salesProfileDTO, Long salesProfileId) {
+    public SalesProfileDTO updateSalesProfile(SalesProfileUpdateDTO salesProfileUpdateDTO, Long salesProfileId) {
 
         SalesProfile existing = salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
 
-        if (salesProfileDTO.ref() != null) existing.setRef(salesProfileDTO.ref());
-        if (salesProfileDTO.firstname() != null) existing.setFirstname(salesProfileDTO.firstname());
-        if (salesProfileDTO.lastname() != null) existing.setLastname(salesProfileDTO.lastname());
-        if (salesProfileDTO.username() != null) existing.setUsername(salesProfileDTO.username());
-        if (salesProfileDTO.email() != null) existing.setEmail(salesProfileDTO.email());
-        if (salesProfileDTO.phoneNumber() != null) existing.setPhoneNumber(salesProfileDTO.phoneNumber());
-        if (salesProfileDTO.role() != null) existing.setRole(salesProfileDTO.role());
-        if (salesProfileDTO.sales() != null) existing.setSales(salesProfileDTO.sales());
-        if (salesProfileDTO.active() != null) existing.setActive(salesProfileDTO.active());
+        if (salesProfileUpdateDTO.firstname() != null) existing.setFirstname(salesProfileUpdateDTO.firstname());
+        if (salesProfileUpdateDTO.lastname() != null) existing.setLastname(salesProfileUpdateDTO.lastname());
+        if (salesProfileUpdateDTO.username() != null) existing.setUsername(salesProfileUpdateDTO.username());
+        if (salesProfileUpdateDTO.email() != null) existing.setEmail(salesProfileUpdateDTO.email());
+        if (salesProfileUpdateDTO.phoneNumber() != null) existing.setPhoneNumber(salesProfileUpdateDTO.phoneNumber());
+        if (salesProfileUpdateDTO.role() != null) existing.setRole(salesProfileUpdateDTO.role());
+        if (salesProfileUpdateDTO.active() != null) existing.setActive(salesProfileUpdateDTO.active());
 
         var updatedSalesProfile = salesProfileRepository.saveAndFlush(existing);
 
