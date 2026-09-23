@@ -2,6 +2,7 @@ package com.sn.onepay.security;
 
 import com.sn.onepay.controller.PaymentController;
 import com.sn.onepay.dto.PaymentDTO;
+import com.sn.onepay.services.AuditLogService;
 import com.sn.onepay.services.PaymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,9 @@ class SecurityConfigTest {
 
     @MockBean
     JwtDecoder jwtDecoder;
+
+    @MockBean
+    AuditLogService auditLogService;
 
     private static RequestPostProcessor as(String role) {
         return jwt().authorities(new SimpleGrantedAuthority("ROLE_" + role));
@@ -174,6 +178,35 @@ class SecurityConfigTest {
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "*"));
+    }
+
+    @Test
+    void actuatorHealth_requiresSuperAdmin() throws Exception {
+        mockMvc.perform(get("/actuator/health")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/actuator/health").with(as("CLIENT"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(get("/actuator/health").with(as("SUPER_ADMIN"))));
+    }
+
+    @Test
+    void prospectWritesAndReads_requireSuperAdmin() throws Exception {
+        mockMvc.perform(post("/v1/onepay/prospect").with(as("ENTERPRISE_ADMIN"))).andExpect(status().isForbidden());
+        mockMvc.perform(put("/v1/onepay/prospect/1").with(as("SALES_ADMIN"))).andExpect(status().isForbidden());
+        mockMvc.perform(delete("/v1/onepay/prospect/1").with(as("CLIENT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/v1/onepay/prospect").with(as("ENTERPRISE_FINANCE"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(post("/v1/onepay/prospect").with(as("SUPER_ADMIN"))));
+        assertAccessGranted(mockMvc.perform(get("/v1/onepay/prospect").with(as("SUPER_ADMIN"))));
+    }
+
+    @Test
+    void platformUserReads_requireSuperAdmin() throws Exception {
+        mockMvc.perform(get("/v1/onepay/platformUser").with(as("ENTERPRISE_ADMIN"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(get("/v1/onepay/platformUser").with(as("SUPER_ADMIN"))));
+    }
+
+    @Test
+    void auditLogReads_requireSuperAdmin() throws Exception {
+        mockMvc.perform(get("/v1/onepay/auditLog").with(as("ENTERPRISE_FINANCE"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(get("/v1/onepay/auditLog").with(as("SUPER_ADMIN"))));
     }
 
     @Test

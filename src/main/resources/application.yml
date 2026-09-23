@@ -36,6 +36,20 @@ logging:
 server:
   port: 8086
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+info:
+  app:
+    name: OnePay Backend
+    version: 0.0.1-SNAPSHOT
+
 onepay:
   qrcode:
     client:
