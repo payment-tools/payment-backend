@@ -96,19 +96,22 @@ class SecurityConfigTest {
         mockMvc.perform(post("/v1/onepay/client").with(as("CASHIER"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/v1/onepay/subvention").with(as("SALES_ADMIN"))).andExpect(status().isForbidden());
         mockMvc.perform(put("/v1/onepay/employee-group/1").with(as("ENTERPRISE_FINANCE"))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/v1/onepay/enterpriseProfile").with(as("CLIENT"))).andExpect(status().isForbidden());
+        mockMvc.perform(put("/v1/onepay/enterpriseConfiguration/1").with(as("CASHIER"))).andExpect(status().isForbidden());
         assertAccessGranted(mockMvc.perform(post("/v1/onepay/client").with(as("ENTERPRISE_ADMIN"))));
         assertAccessGranted(mockMvc.perform(post("/v1/onepay/subvention").with(as("ENTERPRISE_ADMIN"))));
-        assertAccessGranted(mockMvc.perform(post("/v1/onepay/enterprise-profile").with(as("ENTERPRISE_ADMIN"))));
-        assertAccessGranted(mockMvc.perform(put("/v1/onepay/enterprise-configuration/1").with(as("SUPER_ADMIN"))));
+        assertAccessGranted(mockMvc.perform(post("/v1/onepay/enterpriseProfile").with(as("ENTERPRISE_ADMIN"))));
+        assertAccessGranted(mockMvc.perform(put("/v1/onepay/enterpriseConfiguration/1").with(as("SUPER_ADMIN"))));
     }
 
     @Test
     void salesSideWrites_requireSalesAdmin() throws Exception {
         mockMvc.perform(post("/v1/onepay/cashier").with(as("ENTERPRISE_ADMIN"))).andExpect(status().isForbidden());
-        mockMvc.perform(put("/v1/onepay/sales-configuration/1").with(as("CLIENT"))).andExpect(status().isForbidden());
+        mockMvc.perform(put("/v1/onepay/salesConfiguration/1").with(as("CLIENT"))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/v1/onepay/salesProfile").with(as("CASHIER"))).andExpect(status().isForbidden());
         assertAccessGranted(mockMvc.perform(post("/v1/onepay/cashier").with(as("SALES_ADMIN"))));
-        assertAccessGranted(mockMvc.perform(post("/v1/onepay/sales-profile").with(as("SALES_ADMIN"))));
-        assertAccessGranted(mockMvc.perform(put("/v1/onepay/sales-configuration/1").with(as("SUPER_ADMIN"))));
+        assertAccessGranted(mockMvc.perform(post("/v1/onepay/salesProfile").with(as("SALES_ADMIN"))));
+        assertAccessGranted(mockMvc.perform(put("/v1/onepay/salesConfiguration/1").with(as("SUPER_ADMIN"))));
     }
 
     @Test

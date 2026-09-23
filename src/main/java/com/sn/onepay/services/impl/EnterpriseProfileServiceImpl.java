@@ -1,13 +1,17 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.EnterpriseProfileCreateDTO;
 import com.sn.onepay.dto.EnterpriseProfileDTO;
+import com.sn.onepay.dto.EnterpriseProfileUpdateDTO;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.entity.QEnterpriseProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.EnterpriseProfileMapper;
 import com.sn.onepay.repository.EnterpriseProfileRepository;
+import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.services.EnterpriseProfileService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -28,12 +32,23 @@ import java.time.LocalDateTime;
 public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
 
     final EnterpriseProfileRepository enterpriseProfileRepository;
+    final EnterpriseRepository enterpriseRepository;
     final EnterpriseProfileMapper enterpriseProfileMapper;
 
     @Override
-    public EnterpriseProfileDTO createEnterpriseProfile(EnterpriseProfileDTO enterpriseProfileDTO) {
+    public EnterpriseProfileDTO createEnterpriseProfile(EnterpriseProfileCreateDTO enterpriseProfileCreateDTO) {
 
-        EnterpriseProfile profile = enterpriseProfileMapper.asEntity(enterpriseProfileDTO);
+        Enterprise enterprise = enterpriseRepository.findById(enterpriseProfileCreateDTO.enterpriseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseProfileCreateDTO.enterpriseId()));
+
+        EnterpriseProfile profile = new EnterpriseProfile();
+        profile.setFirstname(enterpriseProfileCreateDTO.firstname());
+        profile.setLastname(enterpriseProfileCreateDTO.lastname());
+        profile.setUsername(enterpriseProfileCreateDTO.username());
+        profile.setEmail(enterpriseProfileCreateDTO.email());
+        profile.setPhoneNumber(enterpriseProfileCreateDTO.phoneNumber());
+        profile.setRole(enterpriseProfileCreateDTO.role());
+        profile.setEnterprise(enterprise);
         profile.setActive(true);
         var savedEnterpriseProfile = enterpriseProfileRepository.save(profile);
 
@@ -44,11 +59,19 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     }
 
     @Override
-    public EnterpriseProfileDTO updateEnterpriseProfile(EnterpriseProfileDTO enterpriseProfileDTO, Long enterpriseProfileId) {
+    public EnterpriseProfileDTO updateEnterpriseProfile(EnterpriseProfileUpdateDTO enterpriseProfileUpdateDTO, Long enterpriseProfileId) {
 
-        enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
+        EnterpriseProfile existing = enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
 
-        var updatedEnterpriseProfile = enterpriseProfileRepository.save(enterpriseProfileMapper.asEntity(enterpriseProfileDTO));
+        if (enterpriseProfileUpdateDTO.firstname() != null) existing.setFirstname(enterpriseProfileUpdateDTO.firstname());
+        if (enterpriseProfileUpdateDTO.lastname() != null) existing.setLastname(enterpriseProfileUpdateDTO.lastname());
+        if (enterpriseProfileUpdateDTO.username() != null) existing.setUsername(enterpriseProfileUpdateDTO.username());
+        if (enterpriseProfileUpdateDTO.email() != null) existing.setEmail(enterpriseProfileUpdateDTO.email());
+        if (enterpriseProfileUpdateDTO.phoneNumber() != null) existing.setPhoneNumber(enterpriseProfileUpdateDTO.phoneNumber());
+        if (enterpriseProfileUpdateDTO.role() != null) existing.setRole(enterpriseProfileUpdateDTO.role());
+        if (enterpriseProfileUpdateDTO.active() != null) existing.setActive(enterpriseProfileUpdateDTO.active());
+
+        var updatedEnterpriseProfile = enterpriseProfileRepository.saveAndFlush(existing);
 
         log.info("Updated Enterprise Profile: {}", updatedEnterpriseProfile);
         log.trace("Updated Enterprise Profile with id: {}", updatedEnterpriseProfile.getId());
@@ -112,5 +135,19 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
 
         Page<EnterpriseProfile> result = enterpriseProfileRepository.findAll(builder, pageable);
         return result.map(enterpriseProfileMapper::asDTO);
+    }
+
+    @Override
+    public EnterpriseProfileDTO getMyProfile(String username) {
+
+        EnterpriseProfile profile = enterpriseProfileRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise Profile", "username", username));
+
+        return enterpriseProfileMapper.asDTO(profile);
+    }
+
+    @Override
+    public EnterpriseProfileDTO getEnterpriseProfileById(Long id) {
+        return enterpriseProfileMapper.asDTO(enterpriseProfileRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Enterprise Profile", "ID", id)));
     }
 }

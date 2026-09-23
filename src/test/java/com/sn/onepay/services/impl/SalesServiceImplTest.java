@@ -49,6 +49,7 @@ class SalesServiceImplTest {
 
         var result = salesService.createSales(dto);
         assertThat(entity.isActive()).isTrue();
+        assertThat(entity.getRef()).isNotBlank();
         assertThat(result).isEqualTo(resultDTO);
     }
 
@@ -61,19 +62,54 @@ class SalesServiceImplTest {
     }
 
     @Test
-    void updateSales_savesWhenFound() {
+    void updateSales_updatesAllFieldsWhenProvided() {
         var dto = mock(SalesDTO.class);
+        when(dto.ref()).thenReturn("REF1");
+        when(dto.name()).thenReturn("RestaurantX");
+        when(dto.address()).thenReturn("Dakar");
+        when(dto.type()).thenReturn(Modules.RESTAURATION);
+        when(dto.active()).thenReturn(true);
+
         var existing = new Sales();
-        var updated = new Sales();
+        var saved = new Sales();
         var resultDTO = mock(SalesDTO.class);
 
         when(salesRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(salesMapper.asEntity(dto)).thenReturn(updated);
-        when(salesRepository.saveAndFlush(updated)).thenReturn(updated);
-        when(salesMapper.asDTO(updated)).thenReturn(resultDTO);
+        when(salesRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(salesMapper.asDTO(saved)).thenReturn(resultDTO);
 
         var result = salesService.updateSales(dto, 1L);
+
         assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getRef()).isEqualTo("REF1");
+        assertThat(existing.getName()).isEqualTo("RestaurantX");
+        assertThat(existing.getAddress()).isEqualTo("Dakar");
+        assertThat(existing.getType()).isEqualTo(Modules.RESTAURATION);
+        assertThat(existing.isActive()).isTrue();
+    }
+
+    @Test
+    void updateSales_keepsExistingFieldsWhenDtoFieldsNull() {
+        /*Mockito's default answer for an unstubbed Boolean accessor is false, not null,
+          so it needs to be stubbed explicitly to exercise the "field not provided" branch*/
+        var dto = mock(SalesDTO.class);
+        when(dto.active()).thenReturn(null);
+
+        var existing = new Sales();
+        existing.setName("Original");
+        existing.setActive(true);
+        var saved = new Sales();
+        var resultDTO = mock(SalesDTO.class);
+
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(salesRepository.saveAndFlush(existing)).thenReturn(saved);
+        when(salesMapper.asDTO(saved)).thenReturn(resultDTO);
+
+        var result = salesService.updateSales(dto, 1L);
+
+        assertThat(result).isEqualTo(resultDTO);
+        assertThat(existing.getName()).isEqualTo("Original");
+        assertThat(existing.isActive()).isTrue();
     }
 
     @Test
@@ -121,5 +157,25 @@ class SalesServiceImplTest {
                 LocalDateTime.now().minusDays(1), LocalDateTime.now(), Pageable.unpaged());
 
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getSalesById_returnsMappedDTOWhenFound() {
+        var entity = new Sales();
+        var resultDTO = mock(SalesDTO.class);
+
+        when(salesRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(salesMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = salesService.getSalesById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getSalesById_throwsWhenNotFound() {
+        when(salesRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> salesService.getSalesById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

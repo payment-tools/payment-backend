@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.SalesConfigurationsCreateDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
+import com.sn.onepay.dto.SalesConfigurationsUpdateDTO;
 import com.sn.onepay.services.SalesConfigurationsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +47,7 @@ public class SalesConfigurationsController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public SalesConfigurationsDTO createSalesConfiguration(@Parameter(description = "Sales configuration body for creation", required = true) @RequestBody @Valid SalesConfigurationsDTO salesConfigurations) {
+    public SalesConfigurationsDTO createSalesConfiguration(@Parameter(description = "Sales configuration body for creation", required = true) @RequestBody @Valid SalesConfigurationsCreateDTO salesConfigurations) {
         return salesConfigurationsService.createSalesConfigurations(salesConfigurations);
     }
 
@@ -57,7 +59,7 @@ public class SalesConfigurationsController {
     })
     @PutMapping(value = "/{salesConfigurationsId}")
     @ResponseStatus(HttpStatus.OK)
-    public SalesConfigurationsDTO updateSalesConfigurations(@Parameter(description = "Sales Configurations body to update", required = true) @RequestBody @Valid SalesConfigurationsDTO salesConfigurations,
+    public SalesConfigurationsDTO updateSalesConfigurations(@Parameter(description = "Sales Configurations body to update", required = true) @RequestBody @Valid SalesConfigurationsUpdateDTO salesConfigurations,
                                                             @Parameter(description = "Sales Configurations id to update", required = true) @PathVariable(name = "salesConfigurationsId") Long salesConfigurationsId) {
         return salesConfigurationsService.updateSalesConfigurations(salesConfigurations, salesConfigurationsId);
     }
@@ -77,6 +79,18 @@ public class SalesConfigurationsController {
                                                                         @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                                         Pageable pageable) {
         return salesConfigurationsService.getSalesConfigurationsByFilters(id, salesId, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get a sales configuration by id", description = "This endpoint returns a single sales configuration by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{salesConfigurationsId}")
+    @ResponseStatus(HttpStatus.OK)
+    public SalesConfigurationsDTO getSalesConfigurationsById(@Parameter(description = "Sales configurations id", required = true) @PathVariable(name = "salesConfigurationsId") Long salesConfigurationsId) {
+        return salesConfigurationsService.getSalesConfigurationsById(salesConfigurationsId);
     }
 
     @Operation(summary = "Delete a sales Configurations by id", description = "This endpoint is for deleting sales Configurations by id")

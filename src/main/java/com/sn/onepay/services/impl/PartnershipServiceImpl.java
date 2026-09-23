@@ -1,14 +1,20 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.PartnershipCreateDTO;
 import com.sn.onepay.dto.PartnershipDTO;
+import com.sn.onepay.dto.PartnershipUpdateDTO;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.QPartnership;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PartnershipMapper;
+import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.repository.PartnershipRepository;
+import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.PartnershipService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -21,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -31,19 +38,29 @@ public class PartnershipServiceImpl implements PartnershipService {
 
     final PartnershipRepository partnershipRepository;
     final PartnershipMapper partnershipMapper;
+    final EnterpriseRepository enterpriseRepository;
+    final SalesRepository salesRepository;
 
 
     @Override
-    public PartnershipDTO createPartnership(PartnershipDTO partnershipDTO) {
+    public PartnershipDTO createPartnership(PartnershipCreateDTO partnershipCreateDTO) {
+
+        Enterprise enterprise = enterpriseRepository.findById(partnershipCreateDTO.enterpriseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", partnershipCreateDTO.enterpriseId()));
+        Sales sales = salesRepository.findById(partnershipCreateDTO.salesId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", partnershipCreateDTO.salesId()));
 
         /*Check if partnership already exist*/
-        if(Objects.nonNull(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(partnershipDTO.sales().id(), partnershipDTO.enterprise().id())))
-            throw new ResourceAlreadyExistException("Partnership", partnershipDTO);
+        if(Objects.nonNull(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(sales.getId(), enterprise.getId())))
+            throw new ResourceAlreadyExistException("Partnership", partnershipCreateDTO);
 
         /*Check if partnership is allowed*/
-        if(partnershipDTO.enterprise().enrolledModules().contains(partnershipDTO.sales().type())){
+        if(enterprise.getEnrolledModules() != null && enterprise.getEnrolledModules().contains(sales.getType())){
 
-            Partnership partnership = partnershipMapper.asEntity(partnershipDTO);
+            Partnership partnership = new Partnership();
+            partnership.setRef(UUID.randomUUID().toString());
+            partnership.setEnterprise(enterprise);
+            partnership.setSales(sales);
             partnership.setActive(true);
             var savedPartnership = partnershipRepository.save(partnership);
 
@@ -58,11 +75,19 @@ public class PartnershipServiceImpl implements PartnershipService {
     }
 
     @Override
-    public PartnershipDTO updatePartnership(PartnershipDTO partnershipDTO, Long partnershipId) {
+    public PartnershipDTO updatePartnership(PartnershipUpdateDTO partnershipUpdateDTO, Long partnershipId) {
 
-        partnershipRepository.findById(partnershipId).orElseThrow( () -> new ResourceNotFoundException("Partnership", "ID", partnershipId));
+        Partnership existing = partnershipRepository.findById(partnershipId).orElseThrow( () -> new ResourceNotFoundException("Partnership", "ID", partnershipId));
 
-        var updatedPartnership = partnershipRepository.saveAndFlush(partnershipMapper.asEntity(partnershipDTO));
+        if (partnershipUpdateDTO.salesId() != null)
+            existing.setSales(salesRepository.findById(partnershipUpdateDTO.salesId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", partnershipUpdateDTO.salesId())));
+        if (partnershipUpdateDTO.enterpriseId() != null)
+            existing.setEnterprise(enterpriseRepository.findById(partnershipUpdateDTO.enterpriseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", partnershipUpdateDTO.enterpriseId())));
+        if (partnershipUpdateDTO.active() != null) existing.setActive(partnershipUpdateDTO.active());
+
+        var updatedPartnership = partnershipRepository.saveAndFlush(existing);
 
         log.info("Updated Partnership: {}", updatedPartnership);
         log.trace("Updated Partnership with id: {}", updatedPartnership.getId());
@@ -118,5 +143,10 @@ public class PartnershipServiceImpl implements PartnershipService {
     @Override
     public PartnershipDTO getPartnershipsBySalesIdAndEnterpriseId(Long salesId, Long enterpriseId) {
             return partnershipMapper.asDTO(partnershipRepository.findPartnershipBySalesIdAndEnterpriseId(salesId, enterpriseId));
+    }
+
+    @Override
+    public PartnershipDTO getPartnershipById(Long id) {
+        return partnershipMapper.asDTO(partnershipRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Partnership", "ID", id)));
     }
 }

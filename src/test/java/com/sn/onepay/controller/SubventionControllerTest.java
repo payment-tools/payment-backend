@@ -72,6 +72,14 @@ class SubventionControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getSubventionById_returns200() throws Exception {
+        when(subventionService.getSubventionById(1L)).thenReturn(mock(SubventionDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/subvention/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteSubvention_returns200() throws Exception {
         doNothing().when(subventionService).deleteSubvention(anyLong());
 

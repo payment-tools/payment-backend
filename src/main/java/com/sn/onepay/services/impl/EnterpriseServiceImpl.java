@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -35,6 +36,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     public EnterpriseDTO createEnterprise(EnterpriseDTO enterpriseDTO) {
 
         Enterprise enterprise = enterpriseMapper.asEntity(enterpriseDTO);
+        enterprise.setRef(UUID.randomUUID().toString());
         enterprise.setActualQuota(0L);
         enterprise.setActive(true);
 
@@ -49,9 +51,17 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     @Override
     public EnterpriseDTO updateEnterprise(EnterpriseDTO enterpriseDTO, Long enterpriseId) {
 
-        enterpriseRepository.findById(enterpriseId).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseId));
+        Enterprise existing = enterpriseRepository.findById(enterpriseId).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseId));
 
-        var updatedEnterprise = enterpriseRepository.saveAndFlush(enterpriseMapper.asEntity(enterpriseDTO));
+        if (enterpriseDTO.ref() != null) existing.setRef(enterpriseDTO.ref());
+        if (enterpriseDTO.name() != null) existing.setName(enterpriseDTO.name());
+        if (enterpriseDTO.maxQuota() != null) existing.setMaxQuota(enterpriseDTO.maxQuota());
+        if (enterpriseDTO.actualQuota() != null) existing.setActualQuota(enterpriseDTO.actualQuota());
+        if (enterpriseDTO.address() != null) existing.setAddress(enterpriseDTO.address());
+        if (enterpriseDTO.enrolledModules() != null) existing.setEnrolledModules(enterpriseDTO.enrolledModules());
+        if (enterpriseDTO.active() != null) existing.setActive(enterpriseDTO.active());
+
+        var updatedEnterprise = enterpriseRepository.saveAndFlush(existing);
 
         log.info("Updated Enterprise: {}", updatedEnterprise);
         log.trace("Updated Enterprise with id: {}", updatedEnterprise.getId());
@@ -114,5 +124,10 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 
         Page<Enterprise> result = enterpriseRepository.findAll(builder, pageable);
         return result.map(enterpriseMapper::asDTO);
+    }
+
+    @Override
+    public EnterpriseDTO getEnterpriseById(Long id) {
+        return enterpriseMapper.asDTO(enterpriseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", id)));
     }
 }

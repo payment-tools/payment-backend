@@ -148,6 +148,11 @@ public class SubventionServiceImpl implements SubventionService {
         return result.map(subventionMapper::asDTO);
     }
 
+    @Override
+    public SubventionDTO getSubventionById(Long id) {
+        return subventionMapper.asDTO(subventionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Subvention", "ID", id)));
+    }
+
     private void validatePercentages(Double employeePercent, Double employerPercent) {
 
         if (employeePercent == null || employerPercent == null) {

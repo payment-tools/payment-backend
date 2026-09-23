@@ -3,6 +3,7 @@ package com.sn.onepay.services.impl;
 import com.sn.onepay.dto.BillsDTO;
 import com.sn.onepay.entity.Bills;
 import com.sn.onepay.enumeration.BillStatus;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.BillsMapper;
 import com.sn.onepay.repository.BillsRepository;
@@ -93,6 +94,43 @@ class BillsServiceImplTest {
         assertThat(existing.getPeriod()).isEqualTo("2026-07");
         assertThat(existing.isActive()).isFalse();
         assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void updateBills_validatesPaidBill() {
+        var dto = mock(BillsDTO.class);
+        when(dto.billStatus()).thenReturn(BillStatus.VALIDATED);
+
+        var existing = new Bills();
+        existing.setBillStatus(BillStatus.PAYED);
+        var updated = new Bills();
+        var resultDTO = mock(BillsDTO.class);
+
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(billsRepository.saveAndFlush(existing)).thenReturn(updated);
+        when(billsMapper.asDTO(updated)).thenReturn(resultDTO);
+
+        var result = billsService.updateBills(dto, 1L);
+
+        assertThat(existing.getBillStatus()).isEqualTo(BillStatus.VALIDATED);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void updateBills_throwsWhenValidatingUnpaidBill() {
+        var dto = mock(BillsDTO.class);
+        when(dto.billStatus()).thenReturn(BillStatus.VALIDATED);
+
+        var existing = new Bills();
+        existing.setBillStatus(BillStatus.UNPAYED);
+
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> billsService.updateBills(dto, 1L))
+                .isInstanceOf(ObjectValidationException.class);
+
+        assertThat(existing.getBillStatus()).isEqualTo(BillStatus.UNPAYED);
+        verify(billsRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -190,5 +228,25 @@ class BillsServiceImplTest {
                 null, "", null, null, "", null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getBillsById_returnsMappedDTOWhenFound() {
+        var entity = new Bills();
+        var resultDTO = mock(BillsDTO.class);
+
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(billsMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = billsService.getBillsById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getBillsById_throwsWhenNotFound() {
+        when(billsRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> billsService.getBillsById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

@@ -351,4 +351,24 @@ class SubventionServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
+
+    @Test
+    void getSubventionById_returnsMappedDTOWhenFound() {
+        var entity = new Subvention();
+        var resultDTO = mock(SubventionDTO.class);
+
+        when(subventionRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(subventionMapper.asDTO(entity)).thenReturn(resultDTO);
+
+        var result = subventionService.getSubventionById(1L);
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getSubventionById_throwsWhenNotFound() {
+        when(subventionRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> subventionService.getSubventionById(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 }

@@ -1,12 +1,16 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.SalesConfigurationsCreateDTO;
 import com.sn.onepay.dto.SalesConfigurationsDTO;
+import com.sn.onepay.dto.SalesConfigurationsUpdateDTO;
 import com.sn.onepay.entity.QSalesConfigurations;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesConfigurations;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesConfigurationsMapper;
 import com.sn.onepay.repository.SalesConfigurationsRepository;
+import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.SalesConfigurationsService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -27,12 +31,19 @@ import java.time.LocalDateTime;
 public class SalesConfigurationsServiceImpl implements SalesConfigurationsService {
 
     final SalesConfigurationsRepository salesConfigurationsRepository;
+    final SalesRepository salesRepository;
     final SalesConfigurationsMapper salesConfigurationsMapper;
 
     @Override
-    public SalesConfigurationsDTO createSalesConfigurations(SalesConfigurationsDTO salesConfigurationsDTO) {
+    public SalesConfigurationsDTO createSalesConfigurations(SalesConfigurationsCreateDTO salesConfigurationsCreateDTO) {
 
-        SalesConfigurations salesConfigurations = salesConfigurationsMapper.asEntity(salesConfigurationsDTO);
+        Sales sales = salesRepository.findById(salesConfigurationsCreateDTO.salesId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesConfigurationsCreateDTO.salesId()));
+
+        SalesConfigurations salesConfigurations = new SalesConfigurations();
+        salesConfigurations.setSales(sales);
+        salesConfigurations.setMinAmount(salesConfigurationsCreateDTO.minAmount());
+        salesConfigurations.setMaxAmount(salesConfigurationsCreateDTO.maxAmount());
         salesConfigurations.setActive(true);
 
         var savedSalesConfigurations = salesConfigurationsRepository.save(salesConfigurations);
@@ -45,11 +56,15 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     }
 
     @Override
-    public SalesConfigurationsDTO updateSalesConfigurations(SalesConfigurationsDTO salesConfigurationsDTO, Long salesConfigurationsId) {
+    public SalesConfigurationsDTO updateSalesConfigurations(SalesConfigurationsUpdateDTO salesConfigurationsUpdateDTO, Long salesConfigurationsId) {
 
-        salesConfigurationsRepository.findById(salesConfigurationsId).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", salesConfigurationsId));
+        SalesConfigurations existing = salesConfigurationsRepository.findById(salesConfigurationsId).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", salesConfigurationsId));
 
-        var updatedSalesConfigurations = salesConfigurationsRepository.saveAndFlush(salesConfigurationsMapper.asEntity(salesConfigurationsDTO));
+        if (salesConfigurationsUpdateDTO.minAmount() != null) existing.setMinAmount(salesConfigurationsUpdateDTO.minAmount());
+        if (salesConfigurationsUpdateDTO.maxAmount() != null) existing.setMaxAmount(salesConfigurationsUpdateDTO.maxAmount());
+        if (salesConfigurationsUpdateDTO.active() != null) existing.setActive(salesConfigurationsUpdateDTO.active());
+
+        var updatedSalesConfigurations = salesConfigurationsRepository.saveAndFlush(existing);
 
         log.info("Sales configurations updated: {}", updatedSalesConfigurations);
         log.trace("Sales configurations updated with id: {}", updatedSalesConfigurations.getId());
@@ -101,5 +116,10 @@ public class SalesConfigurationsServiceImpl implements SalesConfigurationsServic
     @Override
     public SalesConfigurationsDTO getSalesConfigurationsBySalesId(Long salesId) {
         return salesConfigurationsRepository.getSalesConfigurationsBySalesId(salesId) ;
+    }
+
+    @Override
+    public SalesConfigurationsDTO getSalesConfigurationsById(Long id) {
+        return salesConfigurationsMapper.asDTO(salesConfigurationsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sales configurations", "ID", id)));
     }
 }

@@ -5,6 +5,7 @@ import com.sn.onepay.dto.BillsDTO;
 import com.sn.onepay.entity.Bills;
 import com.sn.onepay.entity.QBills;
 import com.sn.onepay.enumeration.BillStatus;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.BillsMapper;
 import com.sn.onepay.repository.BillsRepository;
@@ -54,7 +55,12 @@ public class BillsServiceImpl implements BillsService {
         if (billsDTO.startDate() != null) existing.setStartDate(billsDTO.startDate());
         if (billsDTO.endDate() != null) existing.setEndDate(billsDTO.endDate());
         if (billsDTO.totalAmount() != null) existing.setTotalAmount(billsDTO.totalAmount());
-        if (billsDTO.billStatus() != null) existing.setBillStatus(billsDTO.billStatus());
+        if (billsDTO.billStatus() != null) {
+            if (billsDTO.billStatus() == BillStatus.VALIDATED && existing.getBillStatus() != BillStatus.PAYED) {
+                throw new ObjectValidationException("Une facture ne peut être validée que si elle est déjà payée");
+            }
+            existing.setBillStatus(billsDTO.billStatus());
+        }
         if (billsDTO.period() != null) existing.setPeriod(billsDTO.period());
         if (billsDTO.active() != null) existing.setActive(billsDTO.active());
 
@@ -117,5 +123,10 @@ public class BillsServiceImpl implements BillsService {
 
         Page<Bills> result = billsRepository.findAll(builder, pageable);
         return result.map(billsMapper::asDTO);
+    }
+
+    @Override
+    public BillsDTO getBillsById(Long id) {
+        return billsMapper.asDTO(billsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Bills", "ID", id)));
     }
 }

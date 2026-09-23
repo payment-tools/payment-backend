@@ -84,6 +84,18 @@ public class EmployeeGroupController {
         return employeeGroupService.getEmployeeGroupsByFilters(id, ref, name, enterpriseId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get an employee group by id", description = "This endpoint returns a single employee group by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{employeeGroupId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EmployeeGroupDTO getEmployeeGroupById(@Parameter(description = "Employee group id", required = true) @PathVariable(name = "employeeGroupId") Long employeeGroupId) {
+        return employeeGroupService.getEmployeeGroupById(employeeGroupId);
+    }
+
     @Operation(summary = "Delete an employee group by id", description = "This endpoint is for deleting an employee group by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

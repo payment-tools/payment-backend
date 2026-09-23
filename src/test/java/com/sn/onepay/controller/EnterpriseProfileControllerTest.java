@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
@@ -40,7 +41,7 @@ class EnterpriseProfileControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/enterpriseProfile")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"role\":\"ENTERPRISE_ADMIN\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"role\":\"ENTERPRISE_ADMIN\",\"enterpriseId\":1}"))
                 .andExpect(status().isCreated());
     }
 
@@ -60,6 +61,32 @@ class EnterpriseProfileControllerTest extends BaseControllerTest {
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/v1/onepay/enterpriseProfile"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getMyProfile_resolvesUsernameFromJwt() {
+        /*@AuthenticationPrincipal isn't resolved through MockMvc with security filters
+          disabled (this test slice's convention) - the controller's claim-extraction logic
+          is exercised directly instead*/
+        var resultDTO = mock(EnterpriseProfileDTO.class);
+        when(enterpriseProfileService.getMyProfile("jdoe")).thenReturn(resultDTO);
+        var jwt = org.springframework.security.oauth2.jwt.Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .claim("preferred_username", "jdoe")
+                .build();
+
+        var controller = new EnterpriseProfileController(enterpriseProfileService);
+        var result = controller.getMyProfile(jwt);
+
+        assertThat(result).isEqualTo(resultDTO);
+    }
+
+    @Test
+    void getEnterpriseProfileById_returns200() throws Exception {
+        when(enterpriseProfileService.getEnterpriseProfileById(1L)).thenReturn(mock(EnterpriseProfileDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/enterpriseProfile/1"))
                 .andExpect(status().isOk());
     }
 

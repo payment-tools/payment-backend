@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.PartnershipCreateDTO;
 import com.sn.onepay.dto.PartnershipDTO;
+import com.sn.onepay.dto.PartnershipUpdateDTO;
 import com.sn.onepay.services.PartnershipService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +47,7 @@ public class PartnershipController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public PartnershipDTO createPartnership(@Parameter(description = "Partnership body for creation", required = true) @RequestBody @Valid PartnershipDTO partnership) {
+    public PartnershipDTO createPartnership(@Parameter(description = "Partnership body for creation", required = true) @RequestBody @Valid PartnershipCreateDTO partnership) {
         return partnershipService.createPartnership(partnership);
     }
 
@@ -57,7 +59,7 @@ public class PartnershipController {
     })
     @PutMapping(value = "/{partnershipId}")
     @ResponseStatus(HttpStatus.OK)
-    public PartnershipDTO updatePartnership(@Parameter(description = "Partnership body to update", required = true) @RequestBody @Valid PartnershipDTO partnership,
+    public PartnershipDTO updatePartnership(@Parameter(description = "Partnership body to update", required = true) @RequestBody @Valid PartnershipUpdateDTO partnership,
                                             @Parameter(description = "Partnership id to update", required = true) @PathVariable(name = "partnershipId") Long partnershipId) {
         return partnershipService.updatePartnership(partnership, partnershipId);
     }
@@ -81,6 +83,18 @@ public class PartnershipController {
             Pageable pageable
     ) {
         return partnershipService.getPartnershipsByFilters(id, ref, salesId, enterpriseId, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get a partnership by id", description = "This endpoint returns a single partnership by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{partnershipId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PartnershipDTO getPartnershipById(@Parameter(description = "Partnership id", required = true) @PathVariable(name = "partnershipId") Long partnershipId) {
+        return partnershipService.getPartnershipById(partnershipId);
     }
 
     @Operation(summary = "Delete a partnership by id", description = "This endpoint is for deleting partnership by id")

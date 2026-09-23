@@ -22,7 +22,6 @@ public record PartnershipDTO(
         EnterpriseDTO enterprise,
 
         @Schema(name = "active", description = "Whether the partnership is active")
-        @NotNull(message = "Active can not be null")
         Boolean active,
 
         @Schema(name = "creationDate", description = "Partnership date of creation")

@@ -40,7 +40,7 @@ class PartnershipControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/partnership")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"sales\":{\"id\":1,\"type\":\"RESTAURATION\"},\"enterprise\":{\"id\":2,\"name\":\"Corp\",\"maxQuota\":100},\"active\":true}"))
+                        .content("{\"salesId\":1,\"enterpriseId\":2}"))
                 .andExpect(status().isCreated());
     }
 
@@ -60,6 +60,14 @@ class PartnershipControllerTest extends BaseControllerTest {
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/v1/onepay/partnership"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getPartnershipById_returns200() throws Exception {
+        when(partnershipService.getPartnershipById(1L)).thenReturn(mock(PartnershipDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/partnership/1"))
                 .andExpect(status().isOk());
     }
 

@@ -1,6 +1,7 @@
 package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.PaymentDTO;
+import com.sn.onepay.dto.PaymentMonthlySumDTO;
 import com.sn.onepay.enumeration.Modules;
 import com.sn.onepay.services.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -85,6 +87,18 @@ public class PaymentController {
         return paymentService.getPaymentByFilters(id, ref, clientId, cashierId, amount, active, module, paymentDate, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a payment by id", description = "This endpoint returns a single payment by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{paymentId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PaymentDTO getPaymentById(@Parameter(description = "Payment id", required = true) @PathVariable(name = "paymentId") Long paymentId) {
+        return paymentService.getPaymentById(paymentId);
+    }
+
     @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client, optionally restricted to a module")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),
@@ -98,6 +112,18 @@ public class PaymentController {
         return module == null
                 ? paymentService.getSumOfAllPaymentsByClientId(clientId)
                 : paymentService.getSumOfAllPaymentsByClientIdAndModule(clientId, module);
+    }
+
+    @Operation(summary = "Get the monthly consumption of an enterprise, broken down by module", description = "Returns, for each of the last N months, the sum of active payments per module for the given enterprise")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/sum-by-month")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PaymentMonthlySumDTO> getSumByMonth(@Parameter(description = "Enterprise id", required = true) @RequestParam Long enterpriseId,
+                                                     @Parameter(description = "Number of months to look back, including the current one (default 12)") @RequestParam(required = false, defaultValue = "12") Integer months) {
+        return paymentService.getSumByMonth(enterpriseId, months);
     }
 
     @Operation(summary = "Delete a payment by id", description = "This endpoint is for deleting payment by id")

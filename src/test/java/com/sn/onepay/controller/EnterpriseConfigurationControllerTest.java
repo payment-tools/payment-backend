@@ -42,7 +42,7 @@ class EnterpriseConfigurationControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/enterpriseConfiguration")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"enterprisePercentage\":60,\"employeePercentage\":40}"))
+                        .content("{\"enterpriseId\":1,\"enterprisePercentage\":60,\"employeePercentage\":40}"))
                 .andExpect(status().isCreated());
     }
 
@@ -74,6 +74,14 @@ class EnterpriseConfigurationControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk());
 
         verify(enterpriseConfigurationService).getEnterpriseConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void getEnterpriseConfigurationById_returns200() throws Exception {
+        when(enterpriseConfigurationService.getEnterpriseConfigurationById(1L)).thenReturn(mock(EnterpriseConfigurationDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/enterpriseConfiguration/1"))
+                .andExpect(status().isOk());
     }
 
     @Test

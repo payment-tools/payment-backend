@@ -42,7 +42,7 @@ class SalesConfigurationsControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/salesConfiguration")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"minAmount\":10.0,\"maxAmount\":100.0}"))
+                        .content("{\"salesId\":1,\"minAmount\":10.0,\"maxAmount\":100.0}"))
                 .andExpect(status().isCreated());
     }
 
@@ -74,6 +74,14 @@ class SalesConfigurationsControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk());
 
         verify(salesConfigurationsService).getSalesConfigurationsByFilters(any(), eq(7L), any(), any(), any(), any());
+    }
+
+    @Test
+    void getSalesConfigurationsById_returns200() throws Exception {
+        when(salesConfigurationsService.getSalesConfigurationsById(1L)).thenReturn(mock(SalesConfigurationsDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/salesConfiguration/1"))
+                .andExpect(status().isOk());
     }
 
     @Test

@@ -72,6 +72,14 @@ class EmployeeGroupControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void getEmployeeGroupById_returns200() throws Exception {
+        when(employeeGroupService.getEmployeeGroupById(1L)).thenReturn(mock(EmployeeGroupDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/employee-group/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void deleteEmployeeGroup_returns200() throws Exception {
         doNothing().when(employeeGroupService).deleteEmployeeGroup(anyLong());
 

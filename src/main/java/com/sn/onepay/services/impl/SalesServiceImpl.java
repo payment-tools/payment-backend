@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -35,6 +36,7 @@ public class SalesServiceImpl implements SalesService {
     public SalesDTO createSales(SalesDTO salesDTO) {
 
         Sales sales = salesMapper.asEntity(salesDTO);
+        sales.setRef(UUID.randomUUID().toString());
         sales.setActive(true);
 
         var savedSales = salesRepository.save(sales);
@@ -49,9 +51,15 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public SalesDTO updateSales(SalesDTO salesDTO, Long salesId) {
 
-        salesRepository.findById(salesId).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesId));
+        Sales existing = salesRepository.findById(salesId).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesId));
 
-        var updatedSales = salesRepository.saveAndFlush(salesMapper.asEntity(salesDTO));
+        if (salesDTO.ref() != null) existing.setRef(salesDTO.ref());
+        if (salesDTO.name() != null) existing.setName(salesDTO.name());
+        if (salesDTO.address() != null) existing.setAddress(salesDTO.address());
+        if (salesDTO.type() != null) existing.setType(salesDTO.type());
+        if (salesDTO.active() != null) existing.setActive(salesDTO.active());
+
+        var updatedSales = salesRepository.saveAndFlush(existing);
 
         log.info("Sales updated: {}", updatedSales);
         log.debug("Sales updated with id: {}", updatedSales.getId());
@@ -107,5 +115,10 @@ public class SalesServiceImpl implements SalesService {
         Page<Sales> result = salesRepository.findAll(builder, pageable);
 
         return result.map(salesMapper::asDTO);
+    }
+
+    @Override
+    public SalesDTO getSalesById(Long id) {
+        return salesMapper.asDTO(salesRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", id)));
     }
 }

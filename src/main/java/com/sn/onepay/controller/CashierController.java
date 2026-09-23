@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.CashierCreateDTO;
 import com.sn.onepay.dto.CashierDTO;
+import com.sn.onepay.dto.CashierUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.services.CashierService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +48,7 @@ public class CashierController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public CashierDTO createCashier(@Parameter(description = "Cashier body for creation", required = true) @RequestBody @Valid CashierDTO cashier) {
+    public CashierDTO createCashier(@Parameter(description = "Cashier body for creation", required = true) @RequestBody @Valid CashierCreateDTO cashier) {
         return cashierService.createCashier(cashier);
     }
 
@@ -58,7 +60,7 @@ public class CashierController {
     })
     @PutMapping(value = "/{cashierId}")
     @ResponseStatus(HttpStatus.OK)
-    public CashierDTO updateCashier(@Parameter(description = "Cashier body to update", required = true) @RequestBody @Valid CashierDTO cashier,
+    public CashierDTO updateCashier(@Parameter(description = "Cashier body to update", required = true) @RequestBody @Valid CashierUpdateDTO cashier,
                                     @Parameter(description = "Cashier id to update", required = true) @PathVariable(name = "cashierId") Long cashierId) {
         return cashierService.updateCashier(cashier, cashierId);
     }
@@ -87,6 +89,18 @@ public class CashierController {
             Pageable pageable
     ) {
         return cashierService.getCashiersByFilter(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get a cashier by id", description = "This endpoint returns a single cashier by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{cashierId}")
+    @ResponseStatus(HttpStatus.OK)
+    public CashierDTO getCashierById(@Parameter(description = "Cashier id", required = true) @PathVariable(name = "cashierId") Long cashierId) {
+        return cashierService.getCashierById(cashierId);
     }
 
     @Operation(summary = "Delete a cashier by id", description = "This endpoint is for deleting cashier by id")

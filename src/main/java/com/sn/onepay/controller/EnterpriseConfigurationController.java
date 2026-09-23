@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.EnterpriseConfigurationCreateDTO;
 import com.sn.onepay.dto.EnterpriseConfigurationDTO;
+import com.sn.onepay.dto.EnterpriseConfigurationUpdateDTO;
 import com.sn.onepay.services.EnterpriseConfigurationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +47,7 @@ public class EnterpriseConfigurationController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public EnterpriseConfigurationDTO createEnterpriseConfiguration(@Parameter(description = "Enterprise configuration body for creation", required = true) @RequestBody @Valid EnterpriseConfigurationDTO enterpriseConfiguration) {
+    public EnterpriseConfigurationDTO createEnterpriseConfiguration(@Parameter(description = "Enterprise configuration body for creation", required = true) @RequestBody @Valid EnterpriseConfigurationCreateDTO enterpriseConfiguration) {
         return enterpriseConfigurationService.createEnterpriseConfiguration(enterpriseConfiguration);
     }
 
@@ -57,7 +59,7 @@ public class EnterpriseConfigurationController {
     })
     @PutMapping(value = "/{enterpriseConfigurationId}")
     @ResponseStatus(HttpStatus.OK)
-    public EnterpriseConfigurationDTO updateEnterpriseConfiguration(@Parameter(description = "Enterprise Configuration body to update", required = true) @RequestBody @Valid EnterpriseConfigurationDTO enterpriseConfiguration,
+    public EnterpriseConfigurationDTO updateEnterpriseConfiguration(@Parameter(description = "Enterprise Configuration body to update", required = true) @RequestBody @Valid EnterpriseConfigurationUpdateDTO enterpriseConfiguration,
                                                                     @Parameter(description = "Enterprise Configuration id to update", required = true) @PathVariable(name = "enterpriseConfigurationId") Long enterpriseConfigurationId) {
         return enterpriseConfigurationService.updateEnterpriseConfiguration(enterpriseConfiguration, enterpriseConfigurationId);
     }
@@ -85,6 +87,18 @@ public class EnterpriseConfigurationController {
             Pageable pageable
     ) {
         return enterpriseConfigurationService.getEnterpriseConfigurationsByFilters(id, enterpriseId, maxAmountRestauration, maxAmountMarket, maxAmountGasStation, maxAmountTelephony, enterprisePercentage, employeePercentage, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get an enterprise configuration by id", description = "This endpoint returns a single enterprise configuration by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{enterpriseConfigurationId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EnterpriseConfigurationDTO getEnterpriseConfigurationById(@Parameter(description = "Enterprise configuration id", required = true) @PathVariable(name = "enterpriseConfigurationId") Long enterpriseConfigurationId) {
+        return enterpriseConfigurationService.getEnterpriseConfigurationById(enterpriseConfigurationId);
     }
 
     @Operation(summary = "Delete a enterprise Configuration by id", description = "This endpoint is for deleting enterprise Configuration by id")

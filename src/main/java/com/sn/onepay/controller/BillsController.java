@@ -86,6 +86,18 @@ public class BillsController {
         return billsService.getBillsByFilters(id, ref, partnershipId, billStatus, period, active, startDate, endDate, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a bill by id", description = "This endpoint returns a single bill by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{billsId}")
+    @ResponseStatus(HttpStatus.OK)
+    public BillsDTO getBillsById(@Parameter(description = "Bills id", required = true) @PathVariable(name = "billsId") Long billsId) {
+        return billsService.getBillsById(billsId);
+    }
+
     @Operation(summary = "Delete a bill by id", description = "This endpoint is for deleting a bill by id (logical deletion)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

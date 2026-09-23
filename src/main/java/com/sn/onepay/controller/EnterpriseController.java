@@ -91,6 +91,18 @@ public class EnterpriseController {
         return enterpriseService.getEnterprisesByFilters(id, ref, name, maxQuota, actualQuota, address, enrolledModules, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get an enterprise by id", description = "This endpoint returns a single enterprise by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{enterpriseId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EnterpriseDTO getEnterpriseById(@Parameter(description = "Enterprise id", required = true) @PathVariable(name = "enterpriseId") Long enterpriseId) {
+        return enterpriseService.getEnterpriseById(enterpriseId);
+    }
+
     @Operation(summary = "Delete a enterprise by id", description = "This endpoint is for deleting enterprise by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

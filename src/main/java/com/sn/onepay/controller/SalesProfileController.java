@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.SalesProfileCreateDTO;
 import com.sn.onepay.dto.SalesProfileDTO;
+import com.sn.onepay.dto.SalesProfileUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.services.SalesProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,7 +50,7 @@ public class SalesProfileController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public SalesProfileDTO createSalesProfile(@Parameter(description = "Sales profile body for creation", required = true) @RequestBody @Valid SalesProfileDTO salesProfile) {
+    public SalesProfileDTO createSalesProfile(@Parameter(description = "Sales profile body for creation", required = true) @RequestBody @Valid SalesProfileCreateDTO salesProfile) {
         return salesProfileService.createSalesProfile(salesProfile);
     }
 
@@ -58,7 +62,7 @@ public class SalesProfileController {
     })
     @PutMapping(value = "/{salesProfileId}")
     @ResponseStatus(HttpStatus.OK)
-    public SalesProfileDTO updateSalesProfile(@Parameter(description = "Sales Profile body to update", required = true) @RequestBody @Valid SalesProfileDTO salesProfile,
+    public SalesProfileDTO updateSalesProfile(@Parameter(description = "Sales Profile body to update", required = true) @RequestBody @Valid SalesProfileUpdateDTO salesProfile,
                                               @Parameter(description = "Sales Profile id to update", required = true) @PathVariable(name = "salesProfileId") Long salesProfileId) {
         return salesProfileService.updateSalesProfile(salesProfile, salesProfileId);
     }
@@ -85,6 +89,30 @@ public class SalesProfileController {
                                                           @Parameter(description = "Filter records modified before this date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime modificationDate,
                                                           Pageable pageable) {
         return salesProfileService.getSalesProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, salesId, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get a sales profile by id", description = "This endpoint returns a single sales profile by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{salesProfileId}")
+    @ResponseStatus(HttpStatus.OK)
+    public SalesProfileDTO getSalesProfileById(@Parameter(description = "Sales profile id", required = true) @PathVariable(name = "salesProfileId") Long salesProfileId) {
+        return salesProfileService.getSalesProfileById(salesProfileId);
+    }
+
+    @Operation(summary = "Get the profile of the currently authenticated user", description = "Resolves the sales profile (and its sales point) from the caller's JWT, no parameter needed")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "No sales profile for this user"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public SalesProfileDTO getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+        return salesProfileService.getMyProfile(jwt.getClaimAsString("preferred_username"));
     }
 
     @Operation(summary = "Delete a sales Profile by id", description = "This endpoint is for deleting sales Profile by id")

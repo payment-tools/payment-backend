@@ -1,13 +1,17 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.SalesProfileCreateDTO;
 import com.sn.onepay.dto.SalesProfileDTO;
+import com.sn.onepay.dto.SalesProfileUpdateDTO;
 import com.sn.onepay.entity.QSalesProfile;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
+import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.SalesProfileService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -28,12 +32,23 @@ import java.time.LocalDateTime;
 public class SalesProfileServiceImpl implements SalesProfileService {
 
     final SalesProfileRepository salesProfileRepository;
+    final SalesRepository salesRepository;
     final SalesProfileMapper salesProfileMapper;
 
     @Override
-    public SalesProfileDTO createSalesProfile(SalesProfileDTO salesProfileDTO) {
+    public SalesProfileDTO createSalesProfile(SalesProfileCreateDTO salesProfileCreateDTO) {
 
-        SalesProfile profile = salesProfileMapper.asEntity(salesProfileDTO);
+        Sales sales = salesRepository.findById(salesProfileCreateDTO.salesId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesProfileCreateDTO.salesId()));
+
+        SalesProfile profile = new SalesProfile();
+        profile.setFirstname(salesProfileCreateDTO.firstname());
+        profile.setLastname(salesProfileCreateDTO.lastname());
+        profile.setUsername(salesProfileCreateDTO.username());
+        profile.setEmail(salesProfileCreateDTO.email());
+        profile.setPhoneNumber(salesProfileCreateDTO.phoneNumber());
+        profile.setRole(salesProfileCreateDTO.role());
+        profile.setSales(sales);
         profile.setActive(true);
         var savedSalesProfile = salesProfileRepository.save(profile);
 
@@ -44,11 +59,19 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     }
 
     @Override
-    public SalesProfileDTO updateSalesProfile(SalesProfileDTO salesProfileDTO, Long salesProfileId) {
+    public SalesProfileDTO updateSalesProfile(SalesProfileUpdateDTO salesProfileUpdateDTO, Long salesProfileId) {
 
-        salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
+        SalesProfile existing = salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
 
-        var updatedSalesProfile = salesProfileRepository.save(salesProfileMapper.asEntity(salesProfileDTO));
+        if (salesProfileUpdateDTO.firstname() != null) existing.setFirstname(salesProfileUpdateDTO.firstname());
+        if (salesProfileUpdateDTO.lastname() != null) existing.setLastname(salesProfileUpdateDTO.lastname());
+        if (salesProfileUpdateDTO.username() != null) existing.setUsername(salesProfileUpdateDTO.username());
+        if (salesProfileUpdateDTO.email() != null) existing.setEmail(salesProfileUpdateDTO.email());
+        if (salesProfileUpdateDTO.phoneNumber() != null) existing.setPhoneNumber(salesProfileUpdateDTO.phoneNumber());
+        if (salesProfileUpdateDTO.role() != null) existing.setRole(salesProfileUpdateDTO.role());
+        if (salesProfileUpdateDTO.active() != null) existing.setActive(salesProfileUpdateDTO.active());
+
+        var updatedSalesProfile = salesProfileRepository.saveAndFlush(existing);
 
         log.info("Sales profile updated: {}", updatedSalesProfile);
         log.trace("Sales profile updated with id: {}", updatedSalesProfile.getId());
@@ -113,5 +136,19 @@ public class SalesProfileServiceImpl implements SalesProfileService {
 
         Page<SalesProfile> result = salesProfileRepository.findAll(builder, pageable);
         return result.map(salesProfileMapper::asDTO);
+    }
+
+    @Override
+    public SalesProfileDTO getMyProfile(String username) {
+
+        SalesProfile profile = salesProfileRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("SalesProfile", "username", username));
+
+        return salesProfileMapper.asDTO(profile);
+    }
+
+    @Override
+    public SalesProfileDTO getSalesProfileById(Long id) {
+        return salesProfileMapper.asDTO(salesProfileRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("SalesProfile", "ID", id)));
     }
 }

@@ -40,7 +40,7 @@ class ClientControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/client")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"status\":\"ACTIVE\"}"))
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"enterpriseId\":1}"))
                 .andExpect(status().isCreated());
     }
 
@@ -60,6 +60,14 @@ class ClientControllerTest extends BaseControllerTest {
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/v1/onepay/client"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getClientById_returns200() throws Exception {
+        when(clientService.getClientById(1L)).thenReturn(mock(ClientDTO.class));
+
+        mockMvc.perform(get("/v1/onepay/client/1"))
                 .andExpect(status().isOk());
     }
 

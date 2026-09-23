@@ -1,6 +1,8 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.EnterpriseProfileCreateDTO;
 import com.sn.onepay.dto.EnterpriseProfileDTO;
+import com.sn.onepay.dto.EnterpriseProfileUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.services.EnterpriseProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,7 +50,7 @@ public class EnterpriseProfileController {
     })
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public EnterpriseProfileDTO createEnterpriseProfile(@Parameter(description = "Enterprise profile body for creation", required = true) @RequestBody @Valid EnterpriseProfileDTO enterpriseProfile) {
+    public EnterpriseProfileDTO createEnterpriseProfile(@Parameter(description = "Enterprise profile body for creation", required = true) @RequestBody @Valid EnterpriseProfileCreateDTO enterpriseProfile) {
         return enterpriseProfileService.createEnterpriseProfile(enterpriseProfile);
     }
 
@@ -58,7 +62,7 @@ public class EnterpriseProfileController {
     })
     @PutMapping(value = "/{enterpriseProfileId}")
     @ResponseStatus(HttpStatus.OK)
-    public EnterpriseProfileDTO updateEnterpriseProfile(@Parameter(description = "Enterprise Profile body to update", required = true) @RequestBody @Valid EnterpriseProfileDTO enterpriseProfile,
+    public EnterpriseProfileDTO updateEnterpriseProfile(@Parameter(description = "Enterprise Profile body to update", required = true) @RequestBody @Valid EnterpriseProfileUpdateDTO enterpriseProfile,
                                                         @Parameter(description = "Enterprise Profile id to update", required = true) @PathVariable(name = "enterpriseProfileId") Long enterpriseProfileId) {
         return enterpriseProfileService.updateEnterpriseProfile(enterpriseProfile, enterpriseProfileId);
     }
@@ -87,6 +91,30 @@ public class EnterpriseProfileController {
             Pageable pageable
     ) {
         return enterpriseProfileService.getEnterpriseProfilesByFilters(id, ref, firstname, lastname, username, email, phoneNumber, role, enterpriseId, active, creationDate, modificationDate, pageable);
+    }
+
+    @Operation(summary = "Get an enterprise profile by id", description = "This endpoint returns a single enterprise profile by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{enterpriseProfileId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EnterpriseProfileDTO getEnterpriseProfileById(@Parameter(description = "Enterprise profile id", required = true) @PathVariable(name = "enterpriseProfileId") Long enterpriseProfileId) {
+        return enterpriseProfileService.getEnterpriseProfileById(enterpriseProfileId);
+    }
+
+    @Operation(summary = "Get the profile of the currently authenticated user", description = "Resolves the enterprise profile (and its enterprise) from the caller's JWT, no parameter needed")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "No enterprise profile for this user"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    public EnterpriseProfileDTO getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+        return enterpriseProfileService.getMyProfile(jwt.getClaimAsString("preferred_username"));
     }
 
     @Operation(summary = "Delete a enterprise Profile by id", description = "This endpoint is for deleting enterprise Profile by id")

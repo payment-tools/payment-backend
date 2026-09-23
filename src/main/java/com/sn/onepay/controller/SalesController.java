@@ -83,6 +83,18 @@ public class SalesController {
         return salesService.getSalesByFilters(id, ref, name, type, address, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a sales point by id", description = "This endpoint returns a single sales point by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{salesId}")
+    @ResponseStatus(HttpStatus.OK)
+    public SalesDTO getSalesById(@Parameter(description = "Sales id", required = true) @PathVariable(name = "salesId") Long salesId) {
+        return salesService.getSalesById(salesId);
+    }
+
     @Operation(summary = "Delete a sales by id", description = "This endpoint is for deleting sales by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),

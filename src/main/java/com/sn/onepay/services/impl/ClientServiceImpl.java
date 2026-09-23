@@ -1,13 +1,17 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.ClientCreateDTO;
 import com.sn.onepay.dto.ClientDTO;
+import com.sn.onepay.dto.ClientUpdateDTO;
 import com.sn.onepay.entity.Client;
+import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.QClient;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
+import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.services.ClientService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -19,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -28,12 +33,24 @@ import java.time.LocalDateTime;
 public class ClientServiceImpl implements ClientService {
 
     final ClientRepository clientRepository;
+    final EnterpriseRepository enterpriseRepository;
     final ClientMapper clientMapper;
 
     @Override
-    public ClientDTO createClient(ClientDTO clientDTO) {
+    public ClientDTO createClient(ClientCreateDTO clientCreateDTO) {
 
-        Client client = clientMapper.asEntity(clientDTO);
+        Enterprise enterprise = enterpriseRepository.findById(clientCreateDTO.enterpriseId())
+                .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", clientCreateDTO.enterpriseId()));
+
+        Client client = new Client();
+        client.setRef(UUID.randomUUID().toString());
+        client.setFirstname(clientCreateDTO.firstname());
+        client.setLastname(clientCreateDTO.lastname());
+        client.setUsername(clientCreateDTO.username());
+        client.setEmail(clientCreateDTO.email());
+        client.setPhoneNumber(clientCreateDTO.phoneNumber());
+        client.setRole(clientCreateDTO.role());
+        client.setEnterprise(enterprise);
         client.setActive(true);
         var savedClient = clientRepository.save(client);
 
@@ -45,11 +62,19 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ClientDTO updateClient(ClientDTO clientDTO, Long clientId) {
+    public ClientDTO updateClient(ClientUpdateDTO clientUpdateDTO, Long clientId) {
 
-        clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
+        Client existing = clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
 
-        var updatedClient = clientRepository.saveAndFlush(clientMapper.asEntity(clientDTO));
+        if (clientUpdateDTO.firstname() != null) existing.setFirstname(clientUpdateDTO.firstname());
+        if (clientUpdateDTO.lastname() != null) existing.setLastname(clientUpdateDTO.lastname());
+        if (clientUpdateDTO.username() != null) existing.setUsername(clientUpdateDTO.username());
+        if (clientUpdateDTO.email() != null) existing.setEmail(clientUpdateDTO.email());
+        if (clientUpdateDTO.phoneNumber() != null) existing.setPhoneNumber(clientUpdateDTO.phoneNumber());
+        if (clientUpdateDTO.role() != null) existing.setRole(clientUpdateDTO.role());
+        if (clientUpdateDTO.active() != null) existing.setActive(clientUpdateDTO.active());
+
+        var updatedClient = clientRepository.saveAndFlush(existing);
 
         log.info("Updated client: {}", updatedClient);
         log.trace("Updated client with id: {}", updatedClient.getId());
@@ -115,5 +140,10 @@ public class ClientServiceImpl implements ClientService {
         Page<Client> result = clientRepository.findAll(builder, pageable);
 
         return result.map(clientMapper::asDTO);
+    }
+
+    @Override
+    public ClientDTO getClientById(Long id) {
+        return clientMapper.asDTO(clientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client", "ID", id)));
     }
 }

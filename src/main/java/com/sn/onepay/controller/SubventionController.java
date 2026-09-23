@@ -86,6 +86,18 @@ public class SubventionController {
         return subventionService.getSubventionsByFilters(id, ref, employeePercent, employerPercent, partnershipId, employeeGroupId, active, creationDate, modificationDate, pageable);
     }
 
+    @Operation(summary = "Get a subvention by id", description = "This endpoint returns a single subvention by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{subventionId}")
+    @ResponseStatus(HttpStatus.OK)
+    public SubventionDTO getSubventionById(@Parameter(description = "Subvention id", required = true) @PathVariable(name = "subventionId") Long subventionId) {
+        return subventionService.getSubventionById(subventionId);
+    }
+
     @Operation(summary = "Delete a subvention by id", description = "This endpoint is for deleting a subvention by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),
