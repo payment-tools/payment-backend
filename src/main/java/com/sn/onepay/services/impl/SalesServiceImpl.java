@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -35,6 +36,7 @@ public class SalesServiceImpl implements SalesService {
     public SalesDTO createSales(SalesDTO salesDTO) {
 
         Sales sales = salesMapper.asEntity(salesDTO);
+        sales.setRef(UUID.randomUUID().toString());
         sales.setActive(true);
 
         var savedSales = salesRepository.save(sales);

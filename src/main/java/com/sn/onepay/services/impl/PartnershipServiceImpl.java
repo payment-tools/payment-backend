@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -56,7 +57,7 @@ public class PartnershipServiceImpl implements PartnershipService {
         if(enterprise.getEnrolledModules() != null && enterprise.getEnrolledModules().contains(sales.getType())){
 
             Partnership partnership = new Partnership();
-            partnership.setRef(partnershipDTO.ref());
+            partnership.setRef(UUID.randomUUID().toString());
             partnership.setEnterprise(enterprise);
             partnership.setSales(sales);
             partnership.setActive(true);

@@ -53,6 +53,7 @@ class CashierServiceImplTest {
 
         assertThat(result).isEqualTo(resultDTO);
         assertThat(entity.isActive()).isTrue();
+        assertThat(entity.getRef()).isNotBlank();
     }
 
     @Test

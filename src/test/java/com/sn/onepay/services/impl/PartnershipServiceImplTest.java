@@ -137,7 +137,6 @@ class PartnershipServiceImplTest {
     @Test
     void createPartnership_happyPath() {
         var dto = buildPartnershipDTO(1L, 2L);
-        when(dto.ref()).thenReturn("REF1");
         var sales = buildSales(1L, Modules.RESTAURATION);
         var enterprise = buildEnterprise(2L, List.of(Modules.RESTAURATION));
         var saved = new Partnership();
@@ -156,7 +155,7 @@ class PartnershipServiceImplTest {
         ArgumentCaptor<Partnership> captor = ArgumentCaptor.forClass(Partnership.class);
         verify(partnershipRepository).save(captor.capture());
         assertThat(captor.getValue().isActive()).isTrue();
-        assertThat(captor.getValue().getRef()).isEqualTo("REF1");
+        assertThat(captor.getValue().getRef()).isNotBlank();
         assertThat(captor.getValue().getSales()).isEqualTo(sales);
         assertThat(captor.getValue().getEnterprise()).isEqualTo(enterprise);
     }

@@ -49,6 +49,7 @@ class SalesServiceImplTest {
 
         var result = salesService.createSales(dto);
         assertThat(entity.isActive()).isTrue();
+        assertThat(entity.getRef()).isNotBlank();
         assertThat(result).isEqualTo(resultDTO);
     }
 

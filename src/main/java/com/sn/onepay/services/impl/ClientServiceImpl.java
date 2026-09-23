@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -34,6 +35,7 @@ public class ClientServiceImpl implements ClientService {
     public ClientDTO createClient(ClientDTO clientDTO) {
 
         Client client = clientMapper.asEntity(clientDTO);
+        client.setRef(UUID.randomUUID().toString());
         client.setActive(true);
         var savedClient = clientRepository.save(client);
 

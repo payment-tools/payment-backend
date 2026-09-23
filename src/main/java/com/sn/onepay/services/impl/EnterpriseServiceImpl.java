@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -35,6 +36,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     public EnterpriseDTO createEnterprise(EnterpriseDTO enterpriseDTO) {
 
         Enterprise enterprise = enterpriseMapper.asEntity(enterpriseDTO);
+        enterprise.setRef(UUID.randomUUID().toString());
         enterprise.setActualQuota(0L);
         enterprise.setActive(true);
 

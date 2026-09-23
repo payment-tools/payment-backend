@@ -51,6 +51,7 @@ class EnterpriseServiceImplTest {
 
         assertThat(entity.getActualQuota()).isEqualTo(0L);
         assertThat(entity.isActive()).isTrue();
+        assertThat(entity.getRef()).isNotBlank();
         assertThat(result).isEqualTo(resultDTO);
         verify(enterpriseRepository).save(entity);
     }

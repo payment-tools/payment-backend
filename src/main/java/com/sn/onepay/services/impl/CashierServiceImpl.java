@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -34,6 +35,7 @@ public class CashierServiceImpl implements CashierService {
     public CashierDTO createCashier(CashierDTO cashierDTO) {
 
         Cashier cashier = cashierMapper.asEntity(cashierDTO);
+        cashier.setRef(UUID.randomUUID().toString());
         cashier.setActive(true);
         var savedCashier = cashierRepository.save(cashier);
 
