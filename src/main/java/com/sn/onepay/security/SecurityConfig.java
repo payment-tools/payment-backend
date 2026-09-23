@@ -67,6 +67,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/v1/onepay/bills/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_FINANCE, SALES_FINANCE)
                         .requestMatchers(HttpMethod.DELETE, "/v1/onepay/bills/**").hasAnyRole(SUPER_ADMIN, ENTERPRISE_FINANCE, SALES_FINANCE)
 
+                        // Console plateforme SUPER_ADMIN : supervision technique (Actuator)
+                        .requestMatchers(HttpMethod.GET, "/actuator", "/actuator/**").hasRole(SUPER_ADMIN)
+
                         // Lectures (GET) et QR codes : tout utilisateur authentifié
                         .anyRequest().authenticated()
                 )

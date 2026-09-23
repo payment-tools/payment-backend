@@ -177,6 +177,13 @@ class SecurityConfigTest {
     }
 
     @Test
+    void actuatorHealth_requiresSuperAdmin() throws Exception {
+        mockMvc.perform(get("/actuator/health")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/actuator/health").with(as("CLIENT"))).andExpect(status().isForbidden());
+        assertAccessGranted(mockMvc.perform(get("/actuator/health").with(as("SUPER_ADMIN"))));
+    }
+
+    @Test
     void realmRolesFromJwtClaims_grantAccessThroughConverter() throws Exception {
         doNothing().when(paymentService).deletePayment(anyLong());
 
