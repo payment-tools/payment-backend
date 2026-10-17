@@ -1,5 +1,6 @@
 package com.sn.onepay.security;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+
+                        // Première connexion : l'utilisateur n'a pas encore de jeton, le mot de passe temporaire fait foi
+                        .requestMatchers(HttpMethod.POST, "/v1/onepay/auth/first-password").permitAll()
+                        // Rendu des erreurs (ex. 400 de validation) : sinon la redirection interne vers /error
+                        // est rejetée en 401 pour un appel public
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 
                         // Plateforme : entreprises, commerces et partenariats gérés par le SUPER_ADMIN uniquement
                         .requestMatchers(HttpMethod.POST, "/v1/onepay/enterprise/**", "/v1/onepay/sales/**", "/v1/onepay/partnership/**").hasRole(SUPER_ADMIN)
