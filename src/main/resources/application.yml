@@ -57,3 +57,11 @@ onepay:
       purge-interval-ms: ${QRCODE_CLIENT_PURGE_INTERVAL_MS:300000}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+  keycloak:
+    # API d'administration (premier mot de passe) via le compte de service onepay-backend
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+    realm: ${KEYCLOAK_REALM:onepay}
+    admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:onepay-backend}
+    # Valeur de dev uniquement (realm local) : à surcharger hors poste de développement
+    admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:onepay-backend-dev-secret}
+    login-client-id: ${KEYCLOAK_LOGIN_CLIENT_ID:onepay-mobile}

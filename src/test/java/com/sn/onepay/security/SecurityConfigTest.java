@@ -80,6 +80,18 @@ class SecurityConfigTest {
     }
 
     @Test
+    void firstPasswordChange_isAccessibleWithoutToken() throws Exception {
+        assertAccessGranted(mockMvc.perform(post("/v1/onepay/auth/first-password")
+                .contentType(MediaType.APPLICATION_JSON).content("{}")));
+    }
+
+    @Test
+    void otherAuthRoutes_stillRequireToken() throws Exception {
+        mockMvc.perform(get("/v1/onepay/auth/first-password"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void enterpriseWrites_requireSuperAdmin() throws Exception {
         mockMvc.perform(post("/v1/onepay/enterprise").with(as("ENTERPRISE_ADMIN"))).andExpect(status().isForbidden());
         mockMvc.perform(put("/v1/onepay/enterprise/1").with(as("CLIENT"))).andExpect(status().isForbidden());

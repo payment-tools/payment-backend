@@ -1,5 +1,6 @@
 package com.sn.onepay.exceptions;
 
+import com.sn.onepay.keycloak.KeycloakUnavailableException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,6 +32,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleResourceAlreadyExist(ResourceAlreadyExistException exception) {
         log.info("Resource already exists: {}", exception.getMessage());
+        return new ErrorResponse(exception.getMessage());
+    }
+
+    @ExceptionHandler(KeycloakUnavailableException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ErrorResponse handleKeycloakUnavailable(KeycloakUnavailableException exception) {
+        log.warn("Keycloak unavailable: {}", exception.getMessage());
         return new ErrorResponse(exception.getMessage());
     }
 }
