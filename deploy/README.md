@@ -1,6 +1,6 @@
 # Déploiement UAT sur Render
 
-Blueprint : [`render.yaml`](../render.yaml) — Postgres + Keycloak 23.0.7 + payment-backend, région Frankfurt, branche `develop`.
+Blueprint : [`render.yaml`](../render.yaml) — Postgres + Keycloak 23.0.7 + payment-backend + pgAdmin, région Frankfurt, branche `develop`.
 
 ## Première mise en place
 
@@ -11,7 +11,8 @@ Blueprint : [`render.yaml`](../render.yaml) — Postgres + Keycloak 23.0.7 + pay
    - `KEYCLOAK_SERVER_URL` : `https://<url keycloak>`
 
    L'URL Keycloak est normalement `onepay-keycloak-uat.onrender.com`. Si Render ajoute un suffixe (nom déjà pris), corriger ces deux variables sur le service backend puis redéployer.
-3. Console d'admin Keycloak : `https://<url keycloak>/admin`, utilisateur `admin`, mot de passe = `KEYCLOAK_ADMIN_PASSWORD` (généré, visible dans Environment du service Keycloak).
+3. pgAdmin : `https://<url pgadmin>`, utilisateur `admin@onepay.sn`, mot de passe = `PGADMIN_DEFAULT_PASSWORD` (généré). Voir le [README](../README.md#4-base-de-données-pgadmin).
+4. Console d'admin Keycloak : `https://<url keycloak>/admin`, utilisateur `admin`, mot de passe = `KEYCLOAK_ADMIN_PASSWORD` (généré, visible dans Environment du service Keycloak).
 
 ## À savoir
 
