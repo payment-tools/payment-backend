@@ -105,28 +105,3 @@ services:
         fromDatabase: { name: onepay-uat-db, property: database }
       - key: DB_USER
         fromDatabase: { name: onepay-uat-db, property: user }
-
-  - type: web
-    name: onepay-pgadmin-uat
-    runtime: docker
-    plan: free
-    region: frankfurt
-    branch: develop
-    dockerfilePath: ./deploy/pgadmin/Dockerfile
-    dockerContext: ./deploy/pgadmin
-    envVars:
-      - key: PORT
-        value: "80"
-      # Identifiant de connexion à pgAdmin (doit avoir un format d'e-mail)
-      - key: PGADMIN_DEFAULT_EMAIL
-        value: admin@onepay.sn
-      - key: PGADMIN_DEFAULT_PASSWORD
-        generateValue: true
-      - key: DB_HOST
-        fromDatabase: { name: onepay-uat-db, property: host }
-      - key: DB_PORT
-        fromDatabase: { name: onepay-uat-db, property: port }
-      - key: DB_NAME
-        fromDatabase: { name: onepay-uat-db, property: database }
-      - key: DB_USER
-        fromDatabase: { name: onepay-uat-db, property: user }
