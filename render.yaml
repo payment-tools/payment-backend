@@ -91,7 +91,7 @@ services:
     dockerContext: ./deploy/pgadmin
     envVars:
       - key: PORT
-        value: "80"
+        value: "8080"
       # Identifiant de connexion à pgAdmin (doit avoir un format d'e-mail)
       - key: PGADMIN_DEFAULT_EMAIL
         value: admin@onepay.sn
