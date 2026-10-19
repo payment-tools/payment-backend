@@ -1,0 +1,243 @@
+{
+  "realm": "onepay",
+  "enabled": true,
+  "displayName": "OnePay",
+  "loginTheme": "onepay",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "SUPER_ADMIN",
+        "description": "Administrateur plateforme : entreprises, commerces, partenariats"
+      },
+      {
+        "name": "ENTERPRISE_ADMIN",
+        "description": "Administrateur entreprise : clients, groupes, subventions, configurations"
+      },
+      {
+        "name": "ENTERPRISE_FINANCE",
+        "description": "Finance entreprise : consommations, paiements, validation factures"
+      },
+      {
+        "name": "SALES_ADMIN",
+        "description": "Administrateur commerce : caissiers, configurations point de vente"
+      },
+      {
+        "name": "SALES_FINANCE",
+        "description": "Finance commerce : transactions, validation factures"
+      },
+      {
+        "name": "CLIENT",
+        "description": "Employé : paiements par QR code"
+      },
+      {
+        "name": "CASHIER",
+        "description": "Caissier : encaissement et annulation des paiements"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "onepay-client",
+      "name": "OnePay Back-Office (Angular)",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:4200",
+      "baseUrl": "http://localhost:4200",
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "${FRONTEND_URL:http://localhost:4200}/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "${FRONTEND_URL:http://localhost:4200}"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200/*##${FRONTEND_URL:http://localhost:4200}/*"
+      }
+    },
+    {
+      "clientId": "onepay-mobile",
+      "name": "OnePay Mobile (Flutter)",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "com.sn.onepay://oauthredirect"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "com.sn.onepay://oauthredirect"
+      }
+    },
+    {
+      "clientId": "onepay-backend",
+      "name": "OnePay backend (compte de service)",
+      "description": "Compte de service de payment-backend : API d'administration Keycloak (premier mot de passe).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KC_BACKEND_CLIENT_SECRET}",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "super.admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Super",
+      "lastName": "Admin",
+      "email": "super.admin@onepay.sn",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${UAT_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "username": "enterprise.admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Entreprise",
+      "lastName": "Admin",
+      "email": "enterprise.admin@onepay.sn",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${UAT_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ENTERPRISE_ADMIN"
+      ]
+    },
+    {
+      "username": "enterprise.finance",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Entreprise",
+      "lastName": "Finance",
+      "email": "enterprise.finance@onepay.sn",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${UAT_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ENTERPRISE_FINANCE"
+      ]
+    },
+    {
+      "username": "sales.admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Commerce",
+      "lastName": "Admin",
+      "email": "sales.admin@onepay.sn",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${UAT_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SALES_ADMIN"
+      ]
+    },
+    {
+      "username": "sales.finance",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Commerce",
+      "lastName": "Finance",
+      "email": "sales.finance@onepay.sn",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${UAT_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SALES_FINANCE"
+      ]
+    },
+    {
+      "username": "client.test",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Employe",
+      "lastName": "Test",
+      "email": "client.test@onepay.sn",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${UAT_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLIENT"
+      ]
+    },
+    {
+      "username": "cashier.test",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Caissier",
+      "lastName": "Test",
+      "email": "cashier.test@onepay.sn",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${UAT_USERS_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CASHIER"
+      ]
+    },
+    {
+      "username": "service-account-onepay-backend",
+      "enabled": true,
+      "serviceAccountClientId": "onepay-backend",
+      "clientRoles": {
+        "realm-management": [
+          "view-users",
+          "manage-users"
+        ]
+      }
+    }
+  ]
+}

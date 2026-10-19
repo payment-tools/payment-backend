@@ -34,7 +34,7 @@ logging:
     org.hibernate.type.descriptor.sql: trace
 
 server:
-  port: 8086
+  port: ${PORT:8086}
 
 management:
   endpoints:
