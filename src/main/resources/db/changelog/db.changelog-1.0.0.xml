@@ -771,4 +771,44 @@
     <changeSet id="1.0.0-cashier-phonenumber-not-null" author="mouhamed">
         <addNotNullConstraint tableName="cashier" columnName="phonenumber" columnDataType="varchar(100)"/>
     </changeSet>
+
+    <!-- Hibernate 6 stocke dans jpa_sequence le DERNIER id utilisé (hibernate.id.generator.stored_last_used=true par défaut) :
+         compteur = MAX(id), ou 0 pour une table vide → le premier id est 1.
+         Corrige 1.0.0-sync-jpa-sequence (MAX(id) + 1) et les initialisations à 1, qui faisaient démarrer les id à 2. -->
+    <changeSet id="1.0.0-reset-jpa-sequence-to-last-used" author="mouhamed">
+        <sql splitStatements="true">
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SalesId', COALESCE(MAX(salesid), 0) FROM sales
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EnterpriseId', COALESCE(MAX(enterpriseid), 0) FROM enterprise
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'CashierId', COALESCE(MAX(cashierid), 0) FROM cashier
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'ClientId', COALESCE(MAX(clientid), 0) FROM client
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EnterpriseConfigurationId', COALESCE(MAX(enterpriseconfigurationid), 0) FROM enterpriseconfiguration
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EnterpriseProfileId', COALESCE(MAX(enterpriseprofileid), 0) FROM enterpriseprofile
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'PartnershipId', COALESCE(MAX(partnershipid), 0) FROM partnership
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'PaymentId', COALESCE(MAX(paymentid), 0) FROM payment
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SalesConfigurationsId', COALESCE(MAX(salesconfigurationsid), 0) FROM salesconfigurations
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SalesProfileId', COALESCE(MAX(salesprofileid), 0) FROM salesprofile
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'BillsId', COALESCE(MAX(billsid), 0) FROM bills
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EmployeeGroupId', COALESCE(MAX(employeegroupid), 0) FROM employeegroup
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SubventionId', COALESCE(MAX(subventionid), 0) FROM subvention
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'QRCodeClientId', COALESCE(MAX(qrcodeclientid), 0) FROM qrcodeclient
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'ProspectId', COALESCE(MAX(prospectid), 0) FROM prospect
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'AuditLogId', COALESCE(MAX(auditlogid), 0) FROM auditlog
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
+        </sql>
+    </changeSet>
 </databaseChangeLog>
