@@ -26,6 +26,8 @@ Déploiement décrit dans [`deploy/README.md`](deploy/README.md) (blueprint [`re
 
 Les comptes existent dans Keycloak, mais la base UAT est vide : il faut créer les entités métier rattachées à ces comptes, depuis le frontend web, **dans cet ordre** :
 
+> Le jeu de données de démo (`db/data/insert-data.sql`) n'est chargé qu'en local (contexte Liquibase `dev`, par défaut). Le profil `uat` utilise le contexte `uat` : la base UAT démarre vide. Pour changer de contexte en local : `LIQUIBASE_CONTEXTS`.
+
 1. Connecté en `super.admin` :
    1. une **entreprise** (avec au moins un module, ex. RESTAURATION) ;
    2. un **commerce** (type = un module de l'entreprise) ;
@@ -111,3 +113,6 @@ pgAdmin tourne sur Render et accède à la base par le réseau privé : **aucune
 | 409 « Un compte de connexion existe déjà… » à la création | Un compte Keycloak porte déjà ce username (avec un autre rôle) ou cet e-mail : choisir un autre username/e-mail |
 | Écran « rôle non pris en charge » / profil introuvable | Profil métier (employé, caissier, profil) absent ou username différent du compte Keycloak — voir étape 1 |
 | `Invalid redirect uri` sur le login web | Front servi ailleurs que `http://localhost:4200` : ajouter l'URL dans le client `onepay-client` (console Keycloak) |
+| 400 à la création d'un employé, caissier ou profil | Téléphone absent ou hors format sénégalais : 9 chiffres commençant par 7 (`771234567`, `77 123 45 67` ou `+221 77 123 45 67`) |
+| 409 « … déjà utilisé par un autre compte » | Username, e-mail ou téléphone déjà pris par un compte, tous types confondus (employé, caissier, profils) |
+| Le backend ne démarre plus après déploiement (Liquibase, `phonenumber` de `cashier`) | Un caissier existant n'a pas de téléphone : le renseigner (pgAdmin) puis redéployer |

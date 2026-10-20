@@ -1,6 +1,7 @@
 package com.sn.onepay.entity;
 
 import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.utils.PhoneNumbers;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -43,6 +44,11 @@ public class EnterpriseProfile {
 
     @Column(name = "PhoneNumber", nullable = false, unique = true)
     String phoneNumber;
+
+    /*Enregistré sous la forme 771234567 (sans indicatif ni espaces), cf. PhoneNumbers*/
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = PhoneNumbers.normalize(phoneNumber);
+    }
 
     @Column(name = "Role", nullable = false)
     @Enumerated(EnumType.STRING)

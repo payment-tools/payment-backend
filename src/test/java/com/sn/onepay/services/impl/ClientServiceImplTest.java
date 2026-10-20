@@ -13,6 +13,9 @@ import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EnterpriseRepository;
+import com.sn.onepay.utils.AccountUniquenessChecker;
+import com.sn.onepay.enumeration.PlatformUserType;
+import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,6 +49,9 @@ class ClientServiceImplTest {
 
     @Mock
     KeycloakAccountService keycloakAccountService;
+
+    @Mock
+    AccountUniquenessChecker accountUniquenessChecker;
 
     @InjectMocks
     ClientServiceImpl clientService;
@@ -298,5 +304,25 @@ class ClientServiceImplTest {
                 .hasMessageContaining("rôle");
         verify(clientRepository, never()).saveAndFlush(any());
         verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void createClient_rejectsWhenAccountFieldAlreadyUsed() {
+        var dto = new ClientCreateDTO("Jean", "Dupont", "jdupont", "jean@mail.com", "771234567", Roles.CLIENT, 1L);
+        doThrow(new ResourceAlreadyExistException("Ce numéro de téléphone est déjà utilisé par un autre compte : 771234567"))
+                .when(accountUniquenessChecker).checkAvailable(PlatformUserType.CLIENT, null, "jdupont", "jean@mail.com", "771234567");
+
+        assertThatThrownBy(() -> clientService.createClient(dto)).isInstanceOf(ResourceAlreadyExistException.class);
+        verify(clientRepository, never()).save(any());
+    }
+
+    @Test
+    void updateClient_checksUniquenessExcludingItself() {
+        var dto = new ClientUpdateDTO(null, null, null, "new@mail.com", "+221 70 000 00 00", null, null);
+        doThrow(new ResourceAlreadyExistException("Cet e-mail est déjà utilisé par un autre compte : new@mail.com"))
+                .when(accountUniquenessChecker).checkAvailable(PlatformUserType.CLIENT, 7L, null, "new@mail.com", "+221 70 000 00 00");
+
+        assertThatThrownBy(() -> clientService.updateClient(dto, 7L)).isInstanceOf(ResourceAlreadyExistException.class);
+        verify(clientRepository, never()).saveAndFlush(any());
     }
 }
