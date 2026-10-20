@@ -80,6 +80,19 @@ services:
         fromService: { type: web, name: onepay-keycloak-uat, envVarKey: KC_BACKEND_CLIENT_SECRET }
       - key: CORS_ALLOWED_ORIGINS
         value: "*"
+      # E-mail des identifiants à la création d'un compte : API HTTP Brevo (SMTP bloqué sur Render gratuit)
+      - key: MAIL_PROVIDER
+        value: brevo
+      - key: BREVO_API_KEY
+        sync: false
+      # Expéditeur vérifié dans Brevo (Senders & IP)
+      - key: MAIL_FROM_EMAIL
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: OnePay+
+      # Lien de connexion indiqué dans l'e-mail (back-office)
+      - key: MAIL_LOGIN_URL
+        value: http://localhost:4200
 
   - type: web
     name: onepay-pgadmin-uat

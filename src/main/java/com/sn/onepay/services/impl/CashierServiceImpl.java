@@ -9,6 +9,8 @@ import com.sn.onepay.entity.QCashier;
 import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
+import com.sn.onepay.keycloak.AccountFields;
+import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.CashierMapper;
 import com.sn.onepay.repository.CashierRepository;
 import com.sn.onepay.repository.SalesRepository;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -35,6 +38,7 @@ public class CashierServiceImpl implements CashierService {
     final CashierRepository cashierRepository;
     final SalesRepository salesRepository;
     final CashierMapper cashierMapper;
+    final KeycloakAccountService keycloakAccountService;
 
     @Override
     public CashierDTO createCashier(CashierCreateDTO cashierCreateDTO) {
@@ -49,10 +53,11 @@ public class CashierServiceImpl implements CashierService {
         cashier.setUsername(cashierCreateDTO.username());
         cashier.setEmail(cashierCreateDTO.email());
         cashier.setPhoneNumber(cashierCreateDTO.phoneNumber());
-        cashier.setRole(cashierCreateDTO.role());
+        cashier.setRole(KeycloakAccountService.requireRole(cashierCreateDTO.role(), Roles.CASHIER, Set.of(Roles.CASHIER)));
         cashier.setSales(sales);
         cashier.setActive(true);
         var savedCashier = cashierRepository.save(cashier);
+        keycloakAccountService.createAccount(new AccountFields(cashier.getUsername(), cashier.getEmail(), cashier.getFirstname(), cashier.getLastname(), cashier.getRole(), cashier.isActive()));
 
         log.info("Created new cashier: {}", savedCashier);
         log.trace("Saved new cashier with id: {}", savedCashier.getId());
@@ -64,6 +69,7 @@ public class CashierServiceImpl implements CashierService {
     public CashierDTO updateCashier(CashierUpdateDTO cashierUpdateDTO, Long cashierId) {
 
         Cashier existing = cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
+        AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
 
         if (cashierUpdateDTO.firstname() != null) existing.setFirstname(cashierUpdateDTO.firstname());
         if (cashierUpdateDTO.lastname() != null) existing.setLastname(cashierUpdateDTO.lastname());
@@ -73,7 +79,11 @@ public class CashierServiceImpl implements CashierService {
         if (cashierUpdateDTO.role() != null) existing.setRole(cashierUpdateDTO.role());
         if (cashierUpdateDTO.active() != null) existing.setActive(cashierUpdateDTO.active());
 
+        AccountFields after = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
+        KeycloakAccountService.checkUpdatable(before, after);
+
         var updatedCashier = cashierRepository.saveAndFlush(existing);
+        keycloakAccountService.updateAccount(before, after);
 
         log.info("Updated cashier: {}", updatedCashier);
         log.trace("Updated cashier with id: {}", updatedCashier.getId());
@@ -87,6 +97,7 @@ public class CashierServiceImpl implements CashierService {
         Cashier cashier = cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
         cashier.setActive(false);
         cashierRepository.saveAndFlush(cashier);
+        keycloakAccountService.disableAccount(cashier.getUsername());
 
         log.info("Deleted cashier: {}", cashierId);
         log.trace("Deleted cashier with id: {}", cashierId);

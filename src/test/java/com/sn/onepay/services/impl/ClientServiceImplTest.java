@@ -6,7 +6,10 @@ import com.sn.onepay.dto.ClientUpdateDTO;
 import com.sn.onepay.entity.Client;
 import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
+import com.sn.onepay.keycloak.AccountFields;
+import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EnterpriseRepository;
@@ -40,6 +43,9 @@ class ClientServiceImplTest {
 
     @Mock
     ClientMapper clientMapper;
+
+    @Mock
+    KeycloakAccountService keycloakAccountService;
 
     @InjectMocks
     ClientServiceImpl clientService;
@@ -78,6 +84,9 @@ class ClientServiceImplTest {
         assertThat(captor.getValue().getPhoneNumber()).isEqualTo("770000000");
         assertThat(captor.getValue().getRole()).isEqualTo(Roles.CLIENT);
         assertThat(captor.getValue().getEnterprise()).isEqualTo(enterprise);
+
+        verify(keycloakAccountService).createAccount(
+                new AccountFields("jdupont", "jean@mail.com", "Jean", "Dupont", Roles.CLIENT, true));
     }
 
     @Test
@@ -110,6 +119,8 @@ class ClientServiceImplTest {
         when(dto.active()).thenReturn(true);
 
         var existing = new Client();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.CLIENT);
         var saved = new Client();
         var resultDTO = mock(ClientDTO.class);
 
@@ -127,6 +138,10 @@ class ClientServiceImplTest {
         assertThat(existing.getPhoneNumber()).isEqualTo("770000000");
         assertThat(existing.getRole()).isEqualTo(Roles.CLIENT);
         assertThat(existing.isActive()).isTrue();
+
+        verify(keycloakAccountService).updateAccount(
+                new AccountFields("jdupont", null, null, null, Roles.CLIENT, false),
+                new AccountFields("jdupont", "jean@mail.com", "Jean", "Dupont", Roles.CLIENT, true));
     }
 
     @Test
@@ -164,6 +179,7 @@ class ClientServiceImplTest {
     @Test
     void deleteClient_setsActiveToFalse() {
         var client = new Client();
+        client.setUsername("jdupont");
         when(clientRepository.findById(1L)).thenReturn(Optional.of(client));
         when(clientRepository.saveAndFlush(client)).thenReturn(client);
 
@@ -171,6 +187,7 @@ class ClientServiceImplTest {
 
         assertThat(client.isActive()).isFalse();
         verify(clientRepository).saveAndFlush(client);
+        verify(keycloakAccountService).disableAccount("jdupont");
     }
 
     @Test
@@ -219,5 +236,67 @@ class ClientServiceImplTest {
 
         assertThatThrownBy(() -> clientService.getClientById(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void createClient_usesDefaultRoleWhenNotProvided() {
+        var createDTO = mock(ClientCreateDTO.class);
+        when(createDTO.username()).thenReturn("jdupont");
+        when(createDTO.role()).thenReturn(null);
+        when(createDTO.enterpriseId()).thenReturn(2L);
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(new Enterprise()));
+        when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        clientService.createClient(createDTO);
+
+        ArgumentCaptor<Client> captor = ArgumentCaptor.forClass(Client.class);
+        verify(clientRepository).save(captor.capture());
+        assertThat(captor.getValue().getRole()).isEqualTo(Roles.CLIENT);
+    }
+
+    @Test
+    void createClient_rejectsRoleOfAnotherAccountType() {
+        var createDTO = mock(ClientCreateDTO.class);
+        when(createDTO.role()).thenReturn(Roles.CASHIER);
+        when(createDTO.enterpriseId()).thenReturn(2L);
+        when(enterpriseRepository.findById(2L)).thenReturn(Optional.of(new Enterprise()));
+
+        assertThatThrownBy(() -> clientService.createClient(createDTO))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("CASHIER");
+        verify(clientRepository, never()).save(any());
+        verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void updateClient_rejectsUsernameChange() {
+        var dto = mock(ClientUpdateDTO.class);
+        when(dto.username()).thenReturn("autre.username");
+        var existing = new Client();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.CLIENT);
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> clientService.updateClient(dto, 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("username");
+        verify(clientRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void updateClient_rejectsRoleChange() {
+        var dto = mock(ClientUpdateDTO.class);
+        when(dto.role()).thenReturn(Roles.CASHIER);
+        var existing = new Client();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.CLIENT);
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> clientService.updateClient(dto, 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("rôle");
+        verify(clientRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(keycloakAccountService);
     }
 }

@@ -6,7 +6,10 @@ import com.sn.onepay.dto.CashierUpdateDTO;
 import com.sn.onepay.entity.Cashier;
 import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
+import com.sn.onepay.keycloak.AccountFields;
+import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.CashierMapper;
 import com.sn.onepay.repository.CashierRepository;
 import com.sn.onepay.repository.SalesRepository;
@@ -40,6 +43,9 @@ class CashierServiceImplTest {
 
     @Mock
     CashierMapper cashierMapper;
+
+    @Mock
+    KeycloakAccountService keycloakAccountService;
 
     @InjectMocks
     CashierServiceImpl cashierService;
@@ -78,6 +84,9 @@ class CashierServiceImplTest {
         assertThat(captor.getValue().getPhoneNumber()).isEqualTo("770000000");
         assertThat(captor.getValue().getRole()).isEqualTo(Roles.CASHIER);
         assertThat(captor.getValue().getSales()).isEqualTo(sales);
+
+        verify(keycloakAccountService).createAccount(
+                new AccountFields("jdupont", "jean@mail.com", "Jean", "Dupont", Roles.CASHIER, true));
     }
 
     @Test
@@ -110,6 +119,8 @@ class CashierServiceImplTest {
         when(dto.active()).thenReturn(true);
 
         var existing = new Cashier();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.CASHIER);
         var saved = new Cashier();
         var resultDTO = mock(CashierDTO.class);
 
@@ -127,6 +138,10 @@ class CashierServiceImplTest {
         assertThat(existing.getPhoneNumber()).isEqualTo("770000000");
         assertThat(existing.getRole()).isEqualTo(Roles.CASHIER);
         assertThat(existing.isActive()).isTrue();
+
+        verify(keycloakAccountService).updateAccount(
+                new AccountFields("jdupont", null, null, null, Roles.CASHIER, false),
+                new AccountFields("jdupont", "jean@mail.com", "Jean", "Dupont", Roles.CASHIER, true));
     }
 
     @Test
@@ -164,6 +179,7 @@ class CashierServiceImplTest {
     @Test
     void deleteCashier_setsActiveToFalse() {
         var cashier = new Cashier();
+        cashier.setUsername("jdupont");
         when(cashierRepository.findById(1L)).thenReturn(Optional.of(cashier));
         when(cashierRepository.saveAndFlush(cashier)).thenReturn(cashier);
 
@@ -171,6 +187,7 @@ class CashierServiceImplTest {
 
         assertThat(cashier.isActive()).isFalse();
         verify(cashierRepository).saveAndFlush(cashier);
+        verify(keycloakAccountService).disableAccount("jdupont");
     }
 
     @Test
@@ -232,5 +249,67 @@ class CashierServiceImplTest {
 
         assertThatThrownBy(() -> cashierService.getCashierById(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void createCashier_usesDefaultRoleWhenNotProvided() {
+        var createDTO = mock(CashierCreateDTO.class);
+        when(createDTO.username()).thenReturn("jdupont");
+        when(createDTO.role()).thenReturn(null);
+        when(createDTO.salesId()).thenReturn(2L);
+        when(salesRepository.findById(2L)).thenReturn(Optional.of(new Sales()));
+        when(cashierRepository.save(any(Cashier.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        cashierService.createCashier(createDTO);
+
+        ArgumentCaptor<Cashier> captor = ArgumentCaptor.forClass(Cashier.class);
+        verify(cashierRepository).save(captor.capture());
+        assertThat(captor.getValue().getRole()).isEqualTo(Roles.CASHIER);
+    }
+
+    @Test
+    void createCashier_rejectsRoleOfAnotherAccountType() {
+        var createDTO = mock(CashierCreateDTO.class);
+        when(createDTO.role()).thenReturn(Roles.CLIENT);
+        when(createDTO.salesId()).thenReturn(2L);
+        when(salesRepository.findById(2L)).thenReturn(Optional.of(new Sales()));
+
+        assertThatThrownBy(() -> cashierService.createCashier(createDTO))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("CLIENT");
+        verify(cashierRepository, never()).save(any());
+        verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void updateCashier_rejectsUsernameChange() {
+        var dto = mock(CashierUpdateDTO.class);
+        when(dto.username()).thenReturn("autre.username");
+        var existing = new Cashier();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.CASHIER);
+        when(cashierRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> cashierService.updateCashier(dto, 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("username");
+        verify(cashierRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void updateCashier_rejectsRoleChange() {
+        var dto = mock(CashierUpdateDTO.class);
+        when(dto.role()).thenReturn(Roles.CLIENT);
+        var existing = new Cashier();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.CASHIER);
+        when(cashierRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> cashierService.updateCashier(dto, 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("rôle");
+        verify(cashierRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(keycloakAccountService);
     }
 }

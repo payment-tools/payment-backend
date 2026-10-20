@@ -1,10 +1,12 @@
 package com.sn.onepay.keycloak;
 
 import com.sn.onepay.exceptions.ObjectValidationException;
+import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -12,12 +14,16 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.net.URI;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /*Client minimal de l'API REST Keycloak, authentifié par le compte de service onepay-backend
-  (client confidentiel, rôles realm-management view-users + manage-users)*/
+  (client confidentiel, rôles realm-management view-users + manage-users ; pas de view-realm :
+  les rôles sont lus via les role-mappings de l'utilisateur)*/
 @Slf4j
 @Component
 public class KeycloakAdminClient {
@@ -31,6 +37,12 @@ public class KeycloakAdminClient {
     }
 
     public enum PasswordCheck {VALID, INVALID, ACCOUNT_NOT_READY}
+
+    public record NewUser(String username, String email, String firstName, String lastName, String temporaryPassword) {
+    }
+
+    record RoleRepresentation(String id, String name) {
+    }
 
     private final RestClient restClient;
     private final String realm;
@@ -58,6 +70,110 @@ public class KeycloakAdminClient {
                 .retrieve()
                 .body(KeycloakUser[].class));
         return users == null || users.length == 0 ? Optional.empty() : Optional.of(users[0]);
+    }
+
+    /*Crée un compte actif avec un mot de passe temporaire (=> action requise UPDATE_PASSWORD) ; renvoie son id*/
+    public String createUser(NewUser newUser) {
+        Map<String, Object> representation = Map.of(
+                "username", newUser.username(),
+                "email", newUser.email(),
+                "firstName", newUser.firstName() == null ? "" : newUser.firstName(),
+                "lastName", newUser.lastName() == null ? "" : newUser.lastName(),
+                "enabled", true,
+                "emailVerified", true,
+                "credentials", List.of(Map.of("type", "password", "value", newUser.temporaryPassword(), "temporary", true)));
+        ResponseEntity<Void> response;
+        try {
+            response = restClient.post()
+                    .uri("/admin/realms/{realm}/users", realm)
+                    .header(HttpHeaders.AUTHORIZATION, bearer())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(representation)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException.Conflict exception) {
+            Map<?, ?> body = exception.getResponseBodyAs(Map.class);
+            String detail = body == null ? null : (String) body.get("errorMessage");
+            throw new ResourceAlreadyExistException(detail != null && detail.contains("email")
+                    ? "Un compte de connexion existe déjà avec cet email : " + newUser.email()
+                    : "Un compte de connexion existe déjà avec ce username : " + newUser.username());
+        } catch (RestClientException exception) {
+            throw unavailable(exception);
+        }
+        URI location = response.getHeaders().getLocation();
+        if (location == null) {
+            throw new KeycloakUnavailableException("Identifiant du compte créé absent de la réponse Keycloak", null);
+        }
+        String path = location.getPath();
+        return path.substring(path.lastIndexOf('/') + 1);
+    }
+
+    /*Noms des rôles realm directement assignés à l'utilisateur*/
+    public List<String> getRealmRoles(String userId) {
+        RoleRepresentation[] roles = call(() -> restClient.get()
+                .uri("/admin/realms/{realm}/users/{id}/role-mappings/realm", realm, userId)
+                .header(HttpHeaders.AUTHORIZATION, bearer())
+                .retrieve()
+                .body(RoleRepresentation[].class));
+        return roles == null ? List.of() : Arrays.stream(roles).map(RoleRepresentation::name).toList();
+    }
+
+    /*Assigne un rôle realm ; sans effet s'il est déjà assigné. La représentation du rôle est lue dans
+      la liste des rôles assignables à l'utilisateur (GET /roles/{name} exigerait view-realm)*/
+    public void assignRealmRole(String userId, String roleName) {
+        RoleRepresentation[] available = call(() -> restClient.get()
+                .uri("/admin/realms/{realm}/users/{id}/role-mappings/realm/available", realm, userId)
+                .header(HttpHeaders.AUTHORIZATION, bearer())
+                .retrieve()
+                .body(RoleRepresentation[].class));
+        Optional<RoleRepresentation> role = available == null ? Optional.empty()
+                : Arrays.stream(available).filter(candidate -> roleName.equals(candidate.name())).findFirst();
+        if (role.isEmpty()) {
+            if (getRealmRoles(userId).contains(roleName)) {
+                return;
+            }
+            throw new KeycloakUnavailableException("Rôle realm introuvable dans Keycloak : " + roleName, null);
+        }
+        call(() -> restClient.post()
+                .uri("/admin/realms/{realm}/users/{id}/role-mappings/realm", realm, userId)
+                .header(HttpHeaders.AUTHORIZATION, bearer())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(List.of(role.get()))
+                .retrieve()
+                .toBodilessEntity());
+    }
+
+    /*Mise à jour partielle des informations de profil et de l'état du compte (champs null ignorés)*/
+    public void updateUser(String userId, String email, String firstName, String lastName, Boolean enabled) {
+        Map<String, Object> representation = new HashMap<>();
+        if (email != null) representation.put("email", email);
+        if (firstName != null) representation.put("firstName", firstName);
+        if (lastName != null) representation.put("lastName", lastName);
+        if (enabled != null) representation.put("enabled", enabled);
+        if (representation.isEmpty()) {
+            return;
+        }
+        try {
+            restClient.put()
+                    .uri("/admin/realms/{realm}/users/{id}", realm, userId)
+                    .header(HttpHeaders.AUTHORIZATION, bearer())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(representation)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException.Conflict exception) {
+            throw new ResourceAlreadyExistException("Un compte de connexion existe déjà avec cet email : " + email);
+        } catch (RestClientException exception) {
+            throw unavailable(exception);
+        }
+    }
+
+    public void deleteUser(String userId) {
+        call(() -> restClient.delete()
+                .uri("/admin/realms/{realm}/users/{id}", realm, userId)
+                .header(HttpHeaders.AUTHORIZATION, bearer())
+                .retrieve()
+                .toBodilessEntity());
     }
 
     /*Mise à jour partielle : Keycloak ne modifie que les champs présents dans la représentation*/
