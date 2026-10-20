@@ -6,7 +6,10 @@ import com.sn.onepay.dto.SalesProfileUpdateDTO;
 import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
+import com.sn.onepay.keycloak.AccountFields;
+import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
 import com.sn.onepay.repository.SalesRepository;
@@ -40,6 +43,9 @@ class SalesProfileServiceImplTest {
 
     @Mock
     SalesProfileMapper salesProfileMapper;
+
+    @Mock
+    KeycloakAccountService keycloakAccountService;
 
     @InjectMocks
     SalesProfileServiceImpl salesProfileService;
@@ -77,6 +83,9 @@ class SalesProfileServiceImplTest {
         assertThat(captor.getValue().getPhoneNumber()).isEqualTo("770000000");
         assertThat(captor.getValue().getRole()).isEqualTo(Roles.SALES_ADMIN);
         assertThat(captor.getValue().getSales()).isEqualTo(sales);
+
+        verify(keycloakAccountService).createAccount(
+                new AccountFields("jdupont", "jean@mail.com", "Jean", "Dupont", Roles.SALES_ADMIN, true));
     }
 
     @Test
@@ -109,6 +118,8 @@ class SalesProfileServiceImplTest {
         when(dto.active()).thenReturn(true);
 
         var existing = new SalesProfile();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.SALES_ADMIN);
         var saved = new SalesProfile();
         var resultDTO = mock(SalesProfileDTO.class);
 
@@ -126,6 +137,10 @@ class SalesProfileServiceImplTest {
         assertThat(existing.getPhoneNumber()).isEqualTo("770000000");
         assertThat(existing.getRole()).isEqualTo(Roles.SALES_ADMIN);
         assertThat(existing.isActive()).isTrue();
+
+        verify(keycloakAccountService).updateAccount(
+                new AccountFields("jdupont", null, null, null, Roles.SALES_ADMIN, false),
+                new AccountFields("jdupont", "jean@mail.com", "Jean", "Dupont", Roles.SALES_ADMIN, true));
     }
 
     @Test
@@ -163,6 +178,7 @@ class SalesProfileServiceImplTest {
     @Test
     void deleteSalesProfile_setsActiveToFalse() {
         var profile = new SalesProfile();
+        profile.setUsername("jdupont");
         when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(profile));
         when(salesProfileRepository.saveAndFlush(profile)).thenReturn(profile);
 
@@ -170,6 +186,7 @@ class SalesProfileServiceImplTest {
 
         assertThat(profile.isActive()).isFalse();
         verify(salesProfileRepository).saveAndFlush(profile);
+        verify(keycloakAccountService).disableAccount("jdupont");
     }
 
     @Test
@@ -238,5 +255,64 @@ class SalesProfileServiceImplTest {
 
         assertThatThrownBy(() -> salesProfileService.getSalesProfileById(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void createSalesProfile_rejectsMissingRole() {
+        var createDTO = mock(SalesProfileCreateDTO.class);
+        when(createDTO.role()).thenReturn(null);
+        when(createDTO.salesId()).thenReturn(2L);
+        when(salesRepository.findById(2L)).thenReturn(Optional.of(new Sales()));
+
+        assertThatThrownBy(() -> salesProfileService.createSalesProfile(createDTO))
+                .isInstanceOf(ObjectValidationException.class);
+        verify(salesProfileRepository, never()).save(any());
+        verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void createSalesProfile_rejectsRoleOfAnotherAccountType() {
+        var createDTO = mock(SalesProfileCreateDTO.class);
+        when(createDTO.role()).thenReturn(Roles.ENTERPRISE_ADMIN);
+        when(createDTO.salesId()).thenReturn(2L);
+        when(salesRepository.findById(2L)).thenReturn(Optional.of(new Sales()));
+
+        assertThatThrownBy(() -> salesProfileService.createSalesProfile(createDTO))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("ENTERPRISE_ADMIN");
+        verify(salesProfileRepository, never()).save(any());
+        verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void updateSalesProfile_rejectsUsernameChange() {
+        var dto = mock(SalesProfileUpdateDTO.class);
+        when(dto.username()).thenReturn("autre.username");
+        var existing = new SalesProfile();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.SALES_ADMIN);
+        when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> salesProfileService.updateSalesProfile(dto, 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("username");
+        verify(salesProfileRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void updateSalesProfile_rejectsRoleChange() {
+        var dto = mock(SalesProfileUpdateDTO.class);
+        when(dto.role()).thenReturn(Roles.ENTERPRISE_ADMIN);
+        var existing = new SalesProfile();
+        existing.setUsername("jdupont");
+        existing.setRole(Roles.SALES_ADMIN);
+        when(salesProfileRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> salesProfileService.updateSalesProfile(dto, 1L))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessageContaining("rôle");
+        verify(salesProfileRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(keycloakAccountService);
     }
 }

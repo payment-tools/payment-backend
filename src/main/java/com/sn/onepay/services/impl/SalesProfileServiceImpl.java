@@ -9,6 +9,8 @@ import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
+import com.sn.onepay.keycloak.AccountFields;
+import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
 import com.sn.onepay.repository.SalesRepository;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -34,6 +37,7 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     final SalesProfileRepository salesProfileRepository;
     final SalesRepository salesRepository;
     final SalesProfileMapper salesProfileMapper;
+    final KeycloakAccountService keycloakAccountService;
 
     @Override
     public SalesProfileDTO createSalesProfile(SalesProfileCreateDTO salesProfileCreateDTO) {
@@ -47,10 +51,11 @@ public class SalesProfileServiceImpl implements SalesProfileService {
         profile.setUsername(salesProfileCreateDTO.username());
         profile.setEmail(salesProfileCreateDTO.email());
         profile.setPhoneNumber(salesProfileCreateDTO.phoneNumber());
-        profile.setRole(salesProfileCreateDTO.role());
+        profile.setRole(KeycloakAccountService.requireRole(salesProfileCreateDTO.role(), null, Set.of(Roles.SALES_ADMIN, Roles.SALES_FINANCE)));
         profile.setSales(sales);
         profile.setActive(true);
         var savedSalesProfile = salesProfileRepository.save(profile);
+        keycloakAccountService.createAccount(new AccountFields(profile.getUsername(), profile.getEmail(), profile.getFirstname(), profile.getLastname(), profile.getRole(), profile.isActive()));
 
         log.info("Sales profile saved: {}", savedSalesProfile);
         log.trace("Sales profile saved with id: {}", savedSalesProfile.getId());
@@ -62,6 +67,7 @@ public class SalesProfileServiceImpl implements SalesProfileService {
     public SalesProfileDTO updateSalesProfile(SalesProfileUpdateDTO salesProfileUpdateDTO, Long salesProfileId) {
 
         SalesProfile existing = salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
+        AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
 
         if (salesProfileUpdateDTO.firstname() != null) existing.setFirstname(salesProfileUpdateDTO.firstname());
         if (salesProfileUpdateDTO.lastname() != null) existing.setLastname(salesProfileUpdateDTO.lastname());
@@ -71,7 +77,11 @@ public class SalesProfileServiceImpl implements SalesProfileService {
         if (salesProfileUpdateDTO.role() != null) existing.setRole(salesProfileUpdateDTO.role());
         if (salesProfileUpdateDTO.active() != null) existing.setActive(salesProfileUpdateDTO.active());
 
+        AccountFields after = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
+        KeycloakAccountService.checkUpdatable(before, after);
+
         var updatedSalesProfile = salesProfileRepository.saveAndFlush(existing);
+        keycloakAccountService.updateAccount(before, after);
 
         log.info("Sales profile updated: {}", updatedSalesProfile);
         log.trace("Sales profile updated with id: {}", updatedSalesProfile.getId());
@@ -85,6 +95,7 @@ public class SalesProfileServiceImpl implements SalesProfileService {
         SalesProfile profile = salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
         profile.setActive(false);
         salesProfileRepository.saveAndFlush(profile);
+        keycloakAccountService.disableAccount(profile.getUsername());
 
         log.info("Sales profile deleted with id: {}", salesProfileId);
         log.trace("Sales profile deleted with id: {}", salesProfileId);

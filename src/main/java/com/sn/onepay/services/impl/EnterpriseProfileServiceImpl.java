@@ -9,6 +9,8 @@ import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.entity.QEnterpriseProfile;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
+import com.sn.onepay.keycloak.AccountFields;
+import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.EnterpriseProfileMapper;
 import com.sn.onepay.repository.EnterpriseProfileRepository;
 import com.sn.onepay.repository.EnterpriseRepository;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -34,6 +37,7 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     final EnterpriseProfileRepository enterpriseProfileRepository;
     final EnterpriseRepository enterpriseRepository;
     final EnterpriseProfileMapper enterpriseProfileMapper;
+    final KeycloakAccountService keycloakAccountService;
 
     @Override
     public EnterpriseProfileDTO createEnterpriseProfile(EnterpriseProfileCreateDTO enterpriseProfileCreateDTO) {
@@ -47,10 +51,11 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
         profile.setUsername(enterpriseProfileCreateDTO.username());
         profile.setEmail(enterpriseProfileCreateDTO.email());
         profile.setPhoneNumber(enterpriseProfileCreateDTO.phoneNumber());
-        profile.setRole(enterpriseProfileCreateDTO.role());
+        profile.setRole(KeycloakAccountService.requireRole(enterpriseProfileCreateDTO.role(), null, Set.of(Roles.ENTERPRISE_ADMIN, Roles.ENTERPRISE_FINANCE)));
         profile.setEnterprise(enterprise);
         profile.setActive(true);
         var savedEnterpriseProfile = enterpriseProfileRepository.save(profile);
+        keycloakAccountService.createAccount(new AccountFields(profile.getUsername(), profile.getEmail(), profile.getFirstname(), profile.getLastname(), profile.getRole(), profile.isActive()));
 
         log.info("Created Enterprise Profile: {}", savedEnterpriseProfile);
         log.trace("Created Enterprise Profile with id: {}", savedEnterpriseProfile.getId());
@@ -62,6 +67,7 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
     public EnterpriseProfileDTO updateEnterpriseProfile(EnterpriseProfileUpdateDTO enterpriseProfileUpdateDTO, Long enterpriseProfileId) {
 
         EnterpriseProfile existing = enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
+        AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
 
         if (enterpriseProfileUpdateDTO.firstname() != null) existing.setFirstname(enterpriseProfileUpdateDTO.firstname());
         if (enterpriseProfileUpdateDTO.lastname() != null) existing.setLastname(enterpriseProfileUpdateDTO.lastname());
@@ -71,7 +77,11 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
         if (enterpriseProfileUpdateDTO.role() != null) existing.setRole(enterpriseProfileUpdateDTO.role());
         if (enterpriseProfileUpdateDTO.active() != null) existing.setActive(enterpriseProfileUpdateDTO.active());
 
+        AccountFields after = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
+        KeycloakAccountService.checkUpdatable(before, after);
+
         var updatedEnterpriseProfile = enterpriseProfileRepository.saveAndFlush(existing);
+        keycloakAccountService.updateAccount(before, after);
 
         log.info("Updated Enterprise Profile: {}", updatedEnterpriseProfile);
         log.trace("Updated Enterprise Profile with id: {}", updatedEnterpriseProfile.getId());
@@ -85,6 +95,7 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
         EnterpriseProfile profile = enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
         profile.setActive(false);
         enterpriseProfileRepository.saveAndFlush(profile);
+        keycloakAccountService.disableAccount(profile.getUsername());
 
         log.info("Deleted Enterprise Profile: {}", enterpriseProfileId);
         log.trace("Deleted Enterprise Profile with id: {}", enterpriseProfileId);

@@ -34,7 +34,30 @@ Les comptes existent dans Keycloak, mais la base UAT est vide : il faut créer l
 2. Connecté en `enterprise.admin` : la **configuration entreprise** (plafonds par module) puis un **employé** avec le username `client.test`.
 3. Connecté en `sales.admin` : la **configuration du point de vente** (montants min/max) puis un **caissier** avec le username `cashier.test`.
 
-> Le username saisi dans le back-office doit être identique au compte Keycloak : c'est lui qui relie le token de connexion au profil métier (endpoints `/me`, app mobile). Pour un nouvel utilisateur, créer aussi son compte (et son rôle realm) dans la console Keycloak.
+> Pour les comptes de test ci-dessus, le username saisi doit être identique au compte Keycloak existant : la fiche est alors simplement **rattachée** à ce compte (aucun e-mail). Pour tout autre utilisateur, le compte Keycloak est **créé automatiquement** (voir ci-dessous).
+
+### Comptes de connexion créés automatiquement
+
+Créer un employé, un caissier, un profil entreprise ou un profil commerce (back-office ou API) crée aussi son **compte Keycloak** :
+
+- même username et e-mail que la fiche, rôle realm correspondant (`CLIENT`, `CASHIER`, `ENTERPRISE_ADMIN`/`ENTERPRISE_FINANCE`, `SALES_ADMIN`/`SALES_FINANCE`) ;
+- **mot de passe temporaire envoyé par e-mail** à l'adresse de la fiche — l'utilisateur choisit son mot de passe définitif à la première connexion ;
+- modification de l'e-mail, du prénom ou du nom → reportée dans Keycloak ; suppression (logique) → compte **désactivé** ; réactivation (`active: true`) → compte réactivé ;
+- le **username et le rôle ne sont plus modifiables** après création (422) : ils relient la fiche à son compte et en fixent les droits ;
+- un profil entreprise n'accepte que `ENTERPRISE_ADMIN`/`ENTERPRISE_FINANCE`, un profil commerce que `SALES_ADMIN`/`SALES_FINANCE` (422 sinon) ; un employé est toujours `CLIENT`, un caissier toujours `CASHIER` ;
+- si un compte Keycloak existe déjà avec ce username : rattaché s'il a déjà ce rôle, sinon refus (409) — une création de fiche ne peut jamais élever les droits d'un compte existant ;
+- si l'enregistrement en base échoue, le compte Keycloak créé est supprimé ; si seul l'e-mail échoue, la fiche et le compte sont conservés (erreur dans les logs) : réinitialiser alors le mot de passe depuis la console Keycloak (Users → Credentials → Reset password, *Temporary* activé).
+
+#### Configurer l'envoi d'e-mails (Brevo, gratuit)
+
+Render bloque le SMTP sur les services gratuits : l'envoi passe par l'**API HTTP de Brevo** (300 e-mails/jour gratuits).
+
+1. Créer un compte sur [brevo.com](https://www.brevo.com).
+2. **Senders, Domains & Dedicated IPs → Senders → Add a sender** : ajouter l'adresse d'expédition (ex. votre Gmail) et la valider via le lien reçu.
+3. **SMTP & API → API Keys → Generate a new API key**.
+4. Sur Render, service `onepay-backend-uat` → **Environment** : `BREVO_API_KEY` = la clé, `MAIL_FROM_EMAIL` = l'expéditeur validé à l'étape 2 (`MAIL_PROVIDER` vaut déjà `brevo`). Optionnel : `MAIL_LOGIN_URL` = URL du back-office indiquée dans l'e-mail.
+
+Sans configuration (`MAIL_PROVIDER=none`, valeur par défaut en local), les comptes sont créés mais aucun e-mail n'est envoyé (le mot de passe temporaire n'est jamais écrit dans les logs).
 
 ### 2. Frontend web (`payment-frontend`) en local contre l'UAT
 
@@ -84,5 +107,7 @@ pgAdmin tourne sur Render et accède à la base par le réseau privé : **aucune
 | Timeout / chargement infini au premier appel | Services endormis : attendre le réveil (voir plus haut) |
 | 401 sur tous les appels avec un token valide | `KEYCLOAK_ISSUER_URI` du backend ≠ URL Keycloak réelle (`https://…/realms/onepay`) |
 | 403 | Rôle non autorisé pour cette action (matrice dans `SecurityConfig`) |
+| E-mail d'identifiants non reçu | Vérifier les spams, puis les logs backend (`Failed to send credentials e-mail`) : clé `BREVO_API_KEY` invalide ou `MAIL_FROM_EMAIL` non validé dans Brevo. Réinitialiser le mot de passe depuis la console Keycloak |
+| 409 « Un compte de connexion existe déjà… » à la création | Un compte Keycloak porte déjà ce username (avec un autre rôle) ou cet e-mail : choisir un autre username/e-mail |
 | Écran « rôle non pris en charge » / profil introuvable | Profil métier (employé, caissier, profil) absent ou username différent du compte Keycloak — voir étape 1 |
 | `Invalid redirect uri` sur le login web | Front servi ailleurs que `http://localhost:4200` : ajouter l'URL dans le client `onepay-client` (console Keycloak) |

@@ -9,6 +9,8 @@ import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.QClient;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
+import com.sn.onepay.keycloak.AccountFields;
+import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EnterpriseRepository;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -35,6 +38,7 @@ public class ClientServiceImpl implements ClientService {
     final ClientRepository clientRepository;
     final EnterpriseRepository enterpriseRepository;
     final ClientMapper clientMapper;
+    final KeycloakAccountService keycloakAccountService;
 
     @Override
     public ClientDTO createClient(ClientCreateDTO clientCreateDTO) {
@@ -49,10 +53,11 @@ public class ClientServiceImpl implements ClientService {
         client.setUsername(clientCreateDTO.username());
         client.setEmail(clientCreateDTO.email());
         client.setPhoneNumber(clientCreateDTO.phoneNumber());
-        client.setRole(clientCreateDTO.role());
+        client.setRole(KeycloakAccountService.requireRole(clientCreateDTO.role(), Roles.CLIENT, Set.of(Roles.CLIENT)));
         client.setEnterprise(enterprise);
         client.setActive(true);
         var savedClient = clientRepository.save(client);
+        keycloakAccountService.createAccount(new AccountFields(client.getUsername(), client.getEmail(), client.getFirstname(), client.getLastname(), client.getRole(), client.isActive()));
 
         log.info("Created new client: {}", savedClient);
         log.trace("Created new client with id: {}", savedClient.getId());
@@ -65,6 +70,7 @@ public class ClientServiceImpl implements ClientService {
     public ClientDTO updateClient(ClientUpdateDTO clientUpdateDTO, Long clientId) {
 
         Client existing = clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
+        AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
 
         if (clientUpdateDTO.firstname() != null) existing.setFirstname(clientUpdateDTO.firstname());
         if (clientUpdateDTO.lastname() != null) existing.setLastname(clientUpdateDTO.lastname());
@@ -74,7 +80,11 @@ public class ClientServiceImpl implements ClientService {
         if (clientUpdateDTO.role() != null) existing.setRole(clientUpdateDTO.role());
         if (clientUpdateDTO.active() != null) existing.setActive(clientUpdateDTO.active());
 
+        AccountFields after = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());
+        KeycloakAccountService.checkUpdatable(before, after);
+
         var updatedClient = clientRepository.saveAndFlush(existing);
+        keycloakAccountService.updateAccount(before, after);
 
         log.info("Updated client: {}", updatedClient);
         log.trace("Updated client with id: {}", updatedClient.getId());
@@ -88,6 +98,7 @@ public class ClientServiceImpl implements ClientService {
         Client client = clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
         client.setActive(false);
         clientRepository.saveAndFlush(client);
+        keycloakAccountService.disableAccount(client.getUsername());
 
         log.info("Deleted client: {}", clientId);
         log.trace("Deleted client with id: {}", clientId);
