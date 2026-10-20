@@ -26,6 +26,8 @@ Déploiement décrit dans [`deploy/README.md`](deploy/README.md) (blueprint [`re
 
 Les comptes existent dans Keycloak, mais la base UAT est vide : il faut créer les entités métier rattachées à ces comptes, depuis le frontend web, **dans cet ordre** :
 
+> Le jeu de données de démo (`db/data/insert-data.sql`) n'est chargé qu'en local (contexte Liquibase `dev`, par défaut). Le profil `uat` utilise le contexte `uat` : la base UAT démarre vide. Pour changer de contexte en local : `LIQUIBASE_CONTEXTS`.
+
 1. Connecté en `super.admin` :
    1. une **entreprise** (avec au moins un module, ex. RESTAURATION) ;
    2. un **commerce** (type = un module de l'entreprise) ;

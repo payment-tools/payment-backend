@@ -486,7 +486,9 @@
         </insert>
     </changeSet>
 
-    <changeSet id="1.0.0-drop-insert" author="mouha">
+    <!-- Jeu de données de démo : base locale de développement uniquement (contexte "dev", cf. spring.liquibase.contexts).
+         Le contexte ne change pas le checksum : les bases où ce changeset est déjà passé restent valides. -->
+    <changeSet id="1.0.0-drop-insert" author="mouha" context="dev">
         <sqlFile path="../data/insert-data.sql"
                  relativeToChangelogFile="true"
                  splitStatements="true"
@@ -723,5 +725,58 @@
             <column name="seq_key" value="AuditLogId"/>
             <column name="seq_value" valueNumeric="1"/>
         </insert>
+    </changeSet>
+
+    <!-- Compteurs d'id (@TableGenerator) : une ligne par entité, au moins MAX(id) + 1.
+         Lignes insérées hors API (jeu de démo, scripts) → sinon "duplicate key" aux premières créations. -->
+    <changeSet id="1.0.0-sync-jpa-sequence" author="mouhamed">
+        <sql splitStatements="true">
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SalesId', COALESCE(MAX(salesid), 0) + 1 FROM sales
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EnterpriseId', COALESCE(MAX(enterpriseid), 0) + 1 FROM enterprise
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'CashierId', COALESCE(MAX(cashierid), 0) + 1 FROM cashier
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'ClientId', COALESCE(MAX(clientid), 0) + 1 FROM client
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EnterpriseConfigurationId', COALESCE(MAX(enterpriseconfigurationid), 0) + 1 FROM enterpriseconfiguration
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EnterpriseProfileId', COALESCE(MAX(enterpriseprofileid), 0) + 1 FROM enterpriseprofile
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'PartnershipId', COALESCE(MAX(partnershipid), 0) + 1 FROM partnership
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'PaymentId', COALESCE(MAX(paymentid), 0) + 1 FROM payment
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SalesConfigurationsId', COALESCE(MAX(salesconfigurationsid), 0) + 1 FROM salesconfigurations
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SalesProfileId', COALESCE(MAX(salesprofileid), 0) + 1 FROM salesprofile
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'BillsId', COALESCE(MAX(billsid), 0) + 1 FROM bills
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'EmployeeGroupId', COALESCE(MAX(employeegroupid), 0) + 1 FROM employeegroup
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'SubventionId', COALESCE(MAX(subventionid), 0) + 1 FROM subvention
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'QRCodeClientId', COALESCE(MAX(qrcodeclientid), 0) + 1 FROM qrcodeclient
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'ProspectId', COALESCE(MAX(prospectid), 0) + 1 FROM prospect
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+            INSERT INTO jpa_sequence (seq_key, seq_value) SELECT 'AuditLogId', COALESCE(MAX(auditlogid), 0) + 1 FROM auditlog
+                ON CONFLICT (seq_key) DO UPDATE SET seq_value = GREATEST(jpa_sequence.seq_value, EXCLUDED.seq_value);
+        </sql>
+    </changeSet>
+
+    <!-- Téléphone facultatif partout (comme cashier et les DTO) ; une chaîne vide devient NULL
+         pour ne pas heurter la contrainte d'unicité -->
+    <changeSet id="1.0.0-optional-phonenumber" author="mouhamed">
+        <dropNotNullConstraint tableName="client" columnName="phonenumber" columnDataType="varchar(100)"/>
+        <dropNotNullConstraint tableName="enterpriseprofile" columnName="phonenumber" columnDataType="varchar(100)"/>
+        <dropNotNullConstraint tableName="salesprofile" columnName="phonenumber" columnDataType="varchar(100)"/>
+        <sql>
+            UPDATE client SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
+            UPDATE cashier SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
+            UPDATE enterpriseprofile SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
+            UPDATE salesprofile SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
+        </sql>
     </changeSet>
 </databaseChangeLog>

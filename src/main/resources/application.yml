@@ -14,6 +14,8 @@ spring:
   liquibase:
     change-log: classpath:db.changelog-master.xml
     enabled: true
+    # "dev" charge aussi le jeu de données de démo (db/data/insert-data.sql)
+    contexts: ${LIQUIBASE_CONTEXTS:dev}
 
   security:
     oauth2:

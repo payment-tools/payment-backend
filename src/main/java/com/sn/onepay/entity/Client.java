@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -43,6 +44,12 @@ public class Client {
 
     @Column(name = "PhoneNumber", unique = true)
     String phoneNumber;
+
+    /*Facultatif : une valeur vide est enregistrée NULL, sinon deux fiches sans téléphone
+      se heurteraient à la contrainte d'unicité*/
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = StringUtils.hasText(phoneNumber) ? phoneNumber.trim() : null;
+    }
 
     @Column(name = "Role", nullable = false)
     @Enumerated(EnumType.STRING)

@@ -8,6 +8,10 @@ spring:
     hikari:
       maximum-pool-size: 5
 
+  liquibase:
+    # Pas de jeu de données de démo en UAT : la base démarre vide
+    contexts: uat
+
   jpa:
     show-sql: false
 
