@@ -1,6 +1,7 @@
 package com.sn.onepay.entity;
 
 import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.utils.PhoneNumbers;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -21,7 +22,6 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -54,13 +54,12 @@ public class SalesProfile {
     @Column(name = "Email", nullable = false, unique = true)
     String email;
 
-    @Column(name = "PhoneNumber", unique = true)
+    @Column(name = "PhoneNumber", nullable = false, unique = true)
     String phoneNumber;
 
-    /*Facultatif : une valeur vide est enregistrée NULL, sinon deux fiches sans téléphone
-      se heurteraient à la contrainte d'unicité*/
+    /*Enregistré sous la forme 771234567 (sans indicatif ni espaces), cf. PhoneNumbers*/
     public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = StringUtils.hasText(phoneNumber) ? phoneNumber.trim() : null;
+        this.phoneNumber = PhoneNumbers.normalize(phoneNumber);
     }
 
     @Column(name = "Role", nullable = false)

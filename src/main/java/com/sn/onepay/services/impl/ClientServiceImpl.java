@@ -7,6 +7,7 @@ import com.sn.onepay.dto.ClientUpdateDTO;
 import com.sn.onepay.entity.Client;
 import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.QClient;
+import com.sn.onepay.enumeration.PlatformUserType;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.keycloak.AccountFields;
@@ -15,6 +16,7 @@ import com.sn.onepay.mapper.ClientMapper;
 import com.sn.onepay.repository.ClientRepository;
 import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.services.ClientService;
+import com.sn.onepay.utils.AccountUniquenessChecker;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ import java.util.UUID;
 @Transactional
 public class ClientServiceImpl implements ClientService {
 
+    final AccountUniquenessChecker accountUniquenessChecker;
     final ClientRepository clientRepository;
     final EnterpriseRepository enterpriseRepository;
     final ClientMapper clientMapper;
@@ -42,6 +45,8 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientDTO createClient(ClientCreateDTO clientCreateDTO) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.CLIENT, null, clientCreateDTO.username(), clientCreateDTO.email(), clientCreateDTO.phoneNumber());
 
         Enterprise enterprise = enterpriseRepository.findById(clientCreateDTO.enterpriseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", clientCreateDTO.enterpriseId()));
@@ -68,6 +73,8 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientDTO updateClient(ClientUpdateDTO clientUpdateDTO, Long clientId) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.CLIENT, clientId, clientUpdateDTO.username(), clientUpdateDTO.email(), clientUpdateDTO.phoneNumber());
 
         Client existing = clientRepository.findById(clientId).orElseThrow( () -> new ResourceNotFoundException("Client", "ID", clientId));
         AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());

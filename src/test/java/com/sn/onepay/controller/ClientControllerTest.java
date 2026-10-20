@@ -40,7 +40,7 @@ class ClientControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/client")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"enterpriseId\":1}"))
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"phoneNumber\":\"+221 77 123 45 67\",\"role\":\"CLIENT\",\"enterpriseId\":1}"))
                 .andExpect(status().isCreated());
     }
 
@@ -77,5 +77,29 @@ class ClientControllerTest extends BaseControllerTest {
 
         mockMvc.perform(delete("/v1/onepay/client/1"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void createClient_returns400WhenPhoneNumberMissing() throws Exception {
+        mockMvc.perform(post("/v1/onepay/client")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"role\":\"CLIENT\",\"enterpriseId\":1}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createClient_returns400WhenPhoneNumberNotSenegalese() throws Exception {
+        mockMvc.perform(post("/v1/onepay/client")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstname\":\"John\",\"lastname\":\"Doe\",\"username\":\"jdoe\",\"email\":\"jdoe@mail.com\",\"phoneNumber\":\"12345\",\"role\":\"CLIENT\",\"enterpriseId\":1}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateClient_returns400WhenPhoneNumberNotSenegalese() throws Exception {
+        mockMvc.perform(put("/v1/onepay/client/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"phoneNumber\":\"12345\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

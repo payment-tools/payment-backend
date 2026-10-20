@@ -13,6 +13,9 @@ import com.sn.onepay.keycloak.KeycloakAccountService;
 import com.sn.onepay.mapper.EnterpriseProfileMapper;
 import com.sn.onepay.repository.EnterpriseProfileRepository;
 import com.sn.onepay.repository.EnterpriseRepository;
+import com.sn.onepay.utils.AccountUniquenessChecker;
+import com.sn.onepay.enumeration.PlatformUserType;
+import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,6 +49,9 @@ class EnterpriseProfileServiceImplTest {
 
     @Mock
     KeycloakAccountService keycloakAccountService;
+
+    @Mock
+    AccountUniquenessChecker accountUniquenessChecker;
 
     @InjectMocks
     EnterpriseProfileServiceImpl enterpriseProfileService;
@@ -314,5 +320,25 @@ class EnterpriseProfileServiceImplTest {
                 .hasMessageContaining("rôle");
         verify(enterpriseProfileRepository, never()).saveAndFlush(any());
         verifyNoInteractions(keycloakAccountService);
+    }
+
+    @Test
+    void createEnterpriseProfile_rejectsWhenAccountFieldAlreadyUsed() {
+        var dto = new EnterpriseProfileCreateDTO("Jean", "Dupont", "jdupont", "jean@mail.com", "771234567", Roles.ENTERPRISE_ADMIN, 1L);
+        doThrow(new ResourceAlreadyExistException("Ce numéro de téléphone est déjà utilisé par un autre compte : 771234567"))
+                .when(accountUniquenessChecker).checkAvailable(PlatformUserType.ENTERPRISE_PROFILE, null, "jdupont", "jean@mail.com", "771234567");
+
+        assertThatThrownBy(() -> enterpriseProfileService.createEnterpriseProfile(dto)).isInstanceOf(ResourceAlreadyExistException.class);
+        verify(enterpriseProfileRepository, never()).save(any());
+    }
+
+    @Test
+    void updateEnterpriseProfile_checksUniquenessExcludingItself() {
+        var dto = new EnterpriseProfileUpdateDTO(null, null, null, "new@mail.com", "+221 70 000 00 00", null, null);
+        doThrow(new ResourceAlreadyExistException("Cet e-mail est déjà utilisé par un autre compte : new@mail.com"))
+                .when(accountUniquenessChecker).checkAvailable(PlatformUserType.ENTERPRISE_PROFILE, 7L, null, "new@mail.com", "+221 70 000 00 00");
+
+        assertThatThrownBy(() -> enterpriseProfileService.updateEnterpriseProfile(dto, 7L)).isInstanceOf(ResourceAlreadyExistException.class);
+        verify(enterpriseProfileRepository, never()).saveAndFlush(any());
     }
 }

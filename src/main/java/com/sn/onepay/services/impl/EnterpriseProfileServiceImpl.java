@@ -7,6 +7,7 @@ import com.sn.onepay.dto.EnterpriseProfileUpdateDTO;
 import com.sn.onepay.entity.Enterprise;
 import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.entity.QEnterpriseProfile;
+import com.sn.onepay.enumeration.PlatformUserType;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.keycloak.AccountFields;
@@ -15,6 +16,7 @@ import com.sn.onepay.mapper.EnterpriseProfileMapper;
 import com.sn.onepay.repository.EnterpriseProfileRepository;
 import com.sn.onepay.repository.EnterpriseRepository;
 import com.sn.onepay.services.EnterpriseProfileService;
+import com.sn.onepay.utils.AccountUniquenessChecker;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ import java.util.Set;
 @Transactional
 public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
 
+    final AccountUniquenessChecker accountUniquenessChecker;
     final EnterpriseProfileRepository enterpriseProfileRepository;
     final EnterpriseRepository enterpriseRepository;
     final EnterpriseProfileMapper enterpriseProfileMapper;
@@ -41,6 +44,8 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
 
     @Override
     public EnterpriseProfileDTO createEnterpriseProfile(EnterpriseProfileCreateDTO enterpriseProfileCreateDTO) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.ENTERPRISE_PROFILE, null, enterpriseProfileCreateDTO.username(), enterpriseProfileCreateDTO.email(), enterpriseProfileCreateDTO.phoneNumber());
 
         Enterprise enterprise = enterpriseRepository.findById(enterpriseProfileCreateDTO.enterpriseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Enterprise", "ID", enterpriseProfileCreateDTO.enterpriseId()));
@@ -65,6 +70,8 @@ public class EnterpriseProfileServiceImpl implements EnterpriseProfileService {
 
     @Override
     public EnterpriseProfileDTO updateEnterpriseProfile(EnterpriseProfileUpdateDTO enterpriseProfileUpdateDTO, Long enterpriseProfileId) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.ENTERPRISE_PROFILE, enterpriseProfileId, enterpriseProfileUpdateDTO.username(), enterpriseProfileUpdateDTO.email(), enterpriseProfileUpdateDTO.phoneNumber());
 
         EnterpriseProfile existing = enterpriseProfileRepository.findById(enterpriseProfileId).orElseThrow( () -> new ResourceNotFoundException("Enterprise Profile", "ID", enterpriseProfileId));
         AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());

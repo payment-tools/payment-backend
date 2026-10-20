@@ -7,6 +7,7 @@ import com.sn.onepay.dto.SalesProfileUpdateDTO;
 import com.sn.onepay.entity.QSalesProfile;
 import com.sn.onepay.entity.Sales;
 import com.sn.onepay.entity.SalesProfile;
+import com.sn.onepay.enumeration.PlatformUserType;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.keycloak.AccountFields;
@@ -15,6 +16,7 @@ import com.sn.onepay.mapper.SalesProfileMapper;
 import com.sn.onepay.repository.SalesProfileRepository;
 import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.SalesProfileService;
+import com.sn.onepay.utils.AccountUniquenessChecker;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ import java.util.Set;
 @Transactional
 public class SalesProfileServiceImpl implements SalesProfileService {
 
+    final AccountUniquenessChecker accountUniquenessChecker;
     final SalesProfileRepository salesProfileRepository;
     final SalesRepository salesRepository;
     final SalesProfileMapper salesProfileMapper;
@@ -41,6 +44,8 @@ public class SalesProfileServiceImpl implements SalesProfileService {
 
     @Override
     public SalesProfileDTO createSalesProfile(SalesProfileCreateDTO salesProfileCreateDTO) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.SALES_PROFILE, null, salesProfileCreateDTO.username(), salesProfileCreateDTO.email(), salesProfileCreateDTO.phoneNumber());
 
         Sales sales = salesRepository.findById(salesProfileCreateDTO.salesId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", salesProfileCreateDTO.salesId()));
@@ -65,6 +70,8 @@ public class SalesProfileServiceImpl implements SalesProfileService {
 
     @Override
     public SalesProfileDTO updateSalesProfile(SalesProfileUpdateDTO salesProfileUpdateDTO, Long salesProfileId) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.SALES_PROFILE, salesProfileId, salesProfileUpdateDTO.username(), salesProfileUpdateDTO.email(), salesProfileUpdateDTO.phoneNumber());
 
         SalesProfile existing = salesProfileRepository.findById(salesProfileId).orElseThrow( () -> new ResourceNotFoundException("SalesProfile", "ID", salesProfileId));
         AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());

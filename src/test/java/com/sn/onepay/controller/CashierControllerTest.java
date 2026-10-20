@@ -40,7 +40,7 @@ class CashierControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/cashier")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"role\":\"CASHIER\",\"salesId\":1}"))
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"phoneNumber\":\"+221 77 123 45 67\",\"role\":\"CASHIER\",\"salesId\":1}"))
                 .andExpect(status().isCreated());
     }
 
@@ -90,5 +90,29 @@ class CashierControllerTest extends BaseControllerTest {
 
         mockMvc.perform(delete("/v1/onepay/cashier/1"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void createCashier_returns400WhenPhoneNumberMissing() throws Exception {
+        mockMvc.perform(post("/v1/onepay/cashier")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"role\":\"CASHIER\",\"salesId\":1}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createCashier_returns400WhenPhoneNumberNotSenegalese() throws Exception {
+        mockMvc.perform(post("/v1/onepay/cashier")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Pierre\",\"username\":\"jp\",\"email\":\"jp@mail.com\",\"phoneNumber\":\"12345\",\"role\":\"CASHIER\",\"salesId\":1}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateCashier_returns400WhenPhoneNumberNotSenegalese() throws Exception {
+        mockMvc.perform(put("/v1/onepay/cashier/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"phoneNumber\":\"12345\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

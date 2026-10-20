@@ -41,7 +41,7 @@ class SalesProfileControllerTest extends BaseControllerTest {
 
         mockMvc.perform(post("/v1/onepay/salesProfile")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Dupont\",\"username\":\"jdup\",\"role\":\"SALES_ADMIN\",\"salesId\":1}"))
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Dupont\",\"username\":\"jdup\",\"phoneNumber\":\"+221 77 123 45 67\",\"role\":\"SALES_ADMIN\",\"salesId\":1}"))
                 .andExpect(status().isCreated());
     }
 
@@ -96,5 +96,29 @@ class SalesProfileControllerTest extends BaseControllerTest {
 
         mockMvc.perform(delete("/v1/onepay/salesProfile/1"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void createSalesProfile_returns400WhenPhoneNumberMissing() throws Exception {
+        mockMvc.perform(post("/v1/onepay/salesProfile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Dupont\",\"username\":\"jdup\",\"role\":\"SALES_ADMIN\",\"salesId\":1}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createSalesProfile_returns400WhenPhoneNumberNotSenegalese() throws Exception {
+        mockMvc.perform(post("/v1/onepay/salesProfile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstname\":\"Jean\",\"lastname\":\"Dupont\",\"username\":\"jdup\",\"phoneNumber\":\"12345\",\"role\":\"SALES_ADMIN\",\"salesId\":1}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateSalesProfile_returns400WhenPhoneNumberNotSenegalese() throws Exception {
+        mockMvc.perform(put("/v1/onepay/salesProfile/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"phoneNumber\":\"12345\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

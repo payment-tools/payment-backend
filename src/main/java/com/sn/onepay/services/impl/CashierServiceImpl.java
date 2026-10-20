@@ -7,6 +7,7 @@ import com.sn.onepay.dto.CashierUpdateDTO;
 import com.sn.onepay.entity.Cashier;
 import com.sn.onepay.entity.QCashier;
 import com.sn.onepay.entity.Sales;
+import com.sn.onepay.enumeration.PlatformUserType;
 import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.keycloak.AccountFields;
@@ -15,6 +16,7 @@ import com.sn.onepay.mapper.CashierMapper;
 import com.sn.onepay.repository.CashierRepository;
 import com.sn.onepay.repository.SalesRepository;
 import com.sn.onepay.services.CashierService;
+import com.sn.onepay.utils.AccountUniquenessChecker;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ import java.util.UUID;
 @Transactional
 public class CashierServiceImpl implements CashierService {
 
+    final AccountUniquenessChecker accountUniquenessChecker;
     final CashierRepository cashierRepository;
     final SalesRepository salesRepository;
     final CashierMapper cashierMapper;
@@ -42,6 +45,8 @@ public class CashierServiceImpl implements CashierService {
 
     @Override
     public CashierDTO createCashier(CashierCreateDTO cashierCreateDTO) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.CASHIER, null, cashierCreateDTO.username(), cashierCreateDTO.email(), cashierCreateDTO.phoneNumber());
 
         Sales sales = salesRepository.findById(cashierCreateDTO.salesId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sales", "ID", cashierCreateDTO.salesId()));
@@ -67,6 +72,8 @@ public class CashierServiceImpl implements CashierService {
 
     @Override
     public CashierDTO updateCashier(CashierUpdateDTO cashierUpdateDTO, Long cashierId) {
+
+        accountUniquenessChecker.checkAvailable(PlatformUserType.CASHIER, cashierId, cashierUpdateDTO.username(), cashierUpdateDTO.email(), cashierUpdateDTO.phoneNumber());
 
         Cashier existing = cashierRepository.findById(cashierId).orElseThrow( () -> new ResourceNotFoundException("Cashier", "ID", cashierId));
         AccountFields before = new AccountFields(existing.getUsername(), existing.getEmail(), existing.getFirstname(), existing.getLastname(), existing.getRole(), existing.isActive());

@@ -766,17 +766,9 @@
         </sql>
     </changeSet>
 
-    <!-- Téléphone facultatif partout (comme cashier et les DTO) ; une chaîne vide devient NULL
-         pour ne pas heurter la contrainte d'unicité -->
-    <changeSet id="1.0.0-optional-phonenumber" author="mouhamed">
-        <dropNotNullConstraint tableName="client" columnName="phonenumber" columnDataType="varchar(100)"/>
-        <dropNotNullConstraint tableName="enterpriseprofile" columnName="phonenumber" columnDataType="varchar(100)"/>
-        <dropNotNullConstraint tableName="salesprofile" columnName="phonenumber" columnDataType="varchar(100)"/>
-        <sql>
-            UPDATE client SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
-            UPDATE cashier SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
-            UPDATE enterpriseprofile SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
-            UPDATE salesprofile SET phonenumber = NULL WHERE TRIM(phonenumber) = '';
-        </sql>
+    <!-- Téléphone obligatoire sur tous les comptes : cashier était le seul à l'accepter vide.
+         Échoue tant qu'un caissier existant n'a pas de téléphone (données existantes non retouchées). -->
+    <changeSet id="1.0.0-cashier-phonenumber-not-null" author="mouhamed">
+        <addNotNullConstraint tableName="cashier" columnName="phonenumber" columnDataType="varchar(100)"/>
     </changeSet>
 </databaseChangeLog>
