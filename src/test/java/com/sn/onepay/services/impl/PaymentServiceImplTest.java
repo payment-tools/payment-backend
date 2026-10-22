@@ -36,6 +36,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -230,6 +231,32 @@ class PaymentServiceImplTest {
         assertThat(captor.getValue().getEmployerAmount()).isEqualTo(35.0);
         assertThat(captor.getValue().getEmployeeAmount()).isEqualTo(15.0);
         assertThat(captor.getValue().isActive()).isTrue();
+    }
+
+    @Test
+    void createPayment_setsPaymentDateServerSide() {
+        var dto = buildPaymentDTO(Modules.RESTAURATION, 50.0);
+        var entity = new Payment();
+        // Date fournie par le client : ignorée au profit de l'heure serveur.
+        entity.setPaymentDate(LocalDateTime.of(2000, 1, 1, 0, 0));
+        var salesConfig = buildSalesConfig(10.0, 100.0);
+        var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
+        var activePartnership = buildActivePartnership();
+        when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
+        when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
+        when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        stubApplicableSubvention(70.0, 30.0);
+        when(paymentMapper.asEntity(dto)).thenReturn(entity);
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var before = LocalDateTime.now(ZoneOffset.UTC);
+        paymentService.createPayment(dto);
+        var after = LocalDateTime.now(ZoneOffset.UTC);
+
+        ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(captor.capture());
+        assertThat(captor.getValue().getPaymentDate()).isBetween(before, after);
     }
 
     @Test
