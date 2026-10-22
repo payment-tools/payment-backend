@@ -32,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -84,6 +85,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = paymentMapper.asEntity(paymentDTO);
         payment.setActive(true);
+        /*The payment date is set by the server in UTC, never trusted from the client*/
+        payment.setPaymentDate(LocalDateTime.now(ZoneOffset.UTC));
         payment.setEmployerAmount(paymentDTO.amount() * subvention.getEmployerPercent() / 100);
         payment.setEmployeeAmount(paymentDTO.amount() * subvention.getEmployeePercent() / 100);
 
