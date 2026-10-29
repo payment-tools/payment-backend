@@ -148,13 +148,23 @@ input.pf-c-form-control {
   font: inherit;
   font-size: 14.5px;
   color: var(--op-ink-900);
-  background: white;
+  /* background-color et non le raccourci background : il remettrait background-repeat à "repeat"
+     et l'icône d'erreur PatternFly se répéterait sur toute la largeur du champ */
+  background-color: white;
   transition: border-color .15s;
 }
 input:focus {
   outline: none;
   border-color: var(--op-primary-500);
   box-shadow: 0 0 0 4px var(--op-primary-100);
+}
+
+/* Champ en erreur (identifiants invalides) : bordure rouge, sans l'icône PatternFly.
+ * Sélecteur plus spécifique que .pf-c-form-control[aria-invalid=true] (fond, padding, bordure basse). */
+input.pf-c-form-control[aria-invalid="true"] {
+  background-image: none;
+  border: 1.5px solid var(--op-error);
+  padding: 0 14px;
 }
 
 /* ---- Buttons ---- */
