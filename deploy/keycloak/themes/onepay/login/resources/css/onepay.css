@@ -170,7 +170,10 @@ input.pf-c-form-control[aria-invalid="true"] {
 /* ---- Buttons ---- */
 #kc-form-buttons { margin-top: 22px; }
 
+/* input.pf-c-button.pf-m-primary : le bouton Keycloak est un <input type="submit"> qui porte
+ * les classes PatternFly, dont la règle .pf-c-button.pf-m-primary (fond bleu) l'emporte sur input[type="submit"] */
 input[type="submit"],
+input.pf-c-button.pf-m-primary,
 button.pf-c-button.pf-m-primary,
 .btn-primary {
   width: 100%;
@@ -187,6 +190,7 @@ button.pf-c-button.pf-m-primary,
   transition: background .15s, transform .12s;
 }
 input[type="submit"]:hover,
+input.pf-c-button.pf-m-primary:hover,
 button.pf-c-button.pf-m-primary:hover { background: var(--op-primary-600); }
 input[type="submit"]:active { transform: translateY(1px); }
 input[type="submit"]:disabled { opacity: .6; cursor: default; }
