@@ -116,3 +116,10 @@ pgAdmin tourne sur Render et accède à la base par le réseau privé : **aucune
 | 400 à la création d'un employé, caissier ou profil | Téléphone absent ou hors format sénégalais : 9 chiffres commençant par 7 (`771234567`, `77 123 45 67` ou `+221 77 123 45 67`) |
 | 409 « … déjà utilisé par un autre compte » | Username, e-mail ou téléphone déjà pris par un compte, tous types confondus (employé, caissier, profils) |
 | Le backend ne démarre plus après déploiement (Liquibase, `phonenumber` de `cashier`) | Un caissier existant n'a pas de téléphone : le renseigner (pgAdmin) puis redéployer |
+
+## Règles métier à connaître (front et mobile)
+
+### Cumul consommé : remis à zéro chaque mois
+Le plafond par module (`EnterpriseConfiguration.maxAmount*`) est **mensuel**. Le contrôle fait à chaque paiement et `GET /v1/onepay/payment/sum/{clientId}` (total, ou `?module=`) ne comptent que les paiements actifs du **mois calendaire en cours, en UTC** (heure de Dakar), du 1er à 00:00 au 1er du mois suivant. Aucune donnée n'est supprimée : l'historique reste consultable avec `GET /v1/onepay/payment`.
+
+À adapter côté front et mobile : les libellés qui affichent `/sum` (« Total consommé », jauges par module) désignent maintenant **la consommation du mois**.

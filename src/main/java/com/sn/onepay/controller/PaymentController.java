@@ -99,7 +99,7 @@ public class PaymentController {
         return paymentService.getPaymentById(paymentId);
     }
 
-    @Operation(summary = "Get total consumed amount for a client", description = "Returns the sum of all active payments for a given client, optionally restricted to a module")
+    @Operation(summary = "Get the amount consumed by a client this month", description = "Returns the sum of the client's active payments in the current calendar month (UTC), optionally restricted to a module. The consumption restarts from zero on the 1st of each month.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success"),
             @ApiResponse(responseCode = "404", description = "Client not found"),

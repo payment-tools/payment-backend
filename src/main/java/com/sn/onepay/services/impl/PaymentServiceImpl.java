@@ -31,6 +31,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
@@ -52,6 +54,7 @@ public class PaymentServiceImpl implements PaymentService {
     final QRCodeService qrCodeService;
     final EmployeeGroupRepository employeeGroupRepository;
     final SubventionRepository subventionRepository;
+    final Clock clock;
 
     @Override
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
@@ -149,14 +152,21 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public double getSumOfAllPaymentsByClientIdAndModule(Long clientId, Modules module) {
-        Double sum = paymentRepository.findAllPaymentsByClientIdAndModule(clientId, module.name());
+        LocalDateTime monthStart = currentMonthStart();
+        Double sum = paymentRepository.findAllPaymentsByClientIdAndModule(clientId, module.name(), monthStart, monthStart.plusMonths(1));
         return sum != null ? sum : 0d;
     }
 
     @Override
     public double getSumOfAllPaymentsByClientId(Long clientId) {
-        Double sum = paymentRepository.findSumOfAllActivePaymentsByClientId(clientId);
+        LocalDateTime monthStart = currentMonthStart();
+        Double sum = paymentRepository.findSumOfAllActivePaymentsByClientId(clientId, monthStart, monthStart.plusMonths(1));
         return sum != null ? sum : 0d;
+    }
+
+    /*Le cumul repart de zéro chaque mois : 1er du mois en cours à 00:00 UTC (les dates de paiement sont en UTC)*/
+    private LocalDateTime currentMonthStart() {
+        return LocalDate.now(clock).withDayOfMonth(1).atStartOfDay();
     }
 
     @Override

@@ -17,8 +17,10 @@ public interface PaymentService {
 
     void deletePayment(Long paymentId);
 
+    /*Cumul du mois calendaire en cours (UTC) : le plafond par module est mensuel*/
     double getSumOfAllPaymentsByClientIdAndModule(Long clientId, Modules module);
 
+    /*Cumul du mois calendaire en cours (UTC), tous modules*/
     double getSumOfAllPaymentsByClientId(Long clientId);
 
     Page<PaymentDTO> getPaymentByFilters(Long id, String ref, Long clientId, Long cashierId, Double amount, Boolean active, Modules module, LocalDateTime paymentDate, LocalDateTime creationDate, LocalDateTime modificationDate, Pageable pageable);
