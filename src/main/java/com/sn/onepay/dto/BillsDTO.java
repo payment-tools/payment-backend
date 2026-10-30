@@ -30,8 +30,7 @@ public record BillsDTO(
         @NotNull(message = "Total amount can not be null")
         Double totalAmount,
 
-        @Schema(name = "billStatus", description = "Bills status")
-        @NotNull(message = "Bill status can not be null")
+        @Schema(name = "billStatus", description = "Bill status, read-only: PAYED once both the enterprise and the merchant confirmed the payment (see /payment-confirmation). Ignored on create and update.")
         BillStatus billStatus,
 
         @Schema(name = "period", description = "Billed period label (e.g. 2026-07)")
@@ -40,6 +39,18 @@ public record BillsDTO(
 
         @Schema(name = "active", description = "Whether the bill is active")
         Boolean active,
+
+        @Schema(name = "enterprisePaymentConfirmedBy", description = "Read-only: username of the enterprise finance user who confirmed the payment")
+        String enterprisePaymentConfirmedBy,
+
+        @Schema(name = "enterprisePaymentConfirmedAt", description = "Read-only: date of the enterprise confirmation (UTC)")
+        LocalDateTime enterprisePaymentConfirmedAt,
+
+        @Schema(name = "salesPaymentConfirmedBy", description = "Read-only: username of the merchant finance user who confirmed the payment")
+        String salesPaymentConfirmedBy,
+
+        @Schema(name = "salesPaymentConfirmedAt", description = "Read-only: date of the merchant confirmation (UTC)")
+        LocalDateTime salesPaymentConfirmedAt,
 
         @Schema(name = "creationDate", description = "Bills date of creation")
         LocalDateTime creationDate,

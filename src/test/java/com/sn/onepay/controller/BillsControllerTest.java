@@ -1,5 +1,11 @@
 package com.sn.onepay.controller;
 
+import java.util.Set;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.access.AccessDeniedException;
 import com.sn.onepay.dto.BillDetailsDTO;
 import com.sn.onepay.dto.BillsDTO;
 import com.sn.onepay.enumeration.Modules;
@@ -16,6 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
@@ -106,5 +114,61 @@ class BillsControllerTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.enterprise.name").value("Sonatel"))
                 .andExpect(jsonPath("$.sales.type").value("MARKET"))
                 .andExpect(jsonPath("$.totalAmount").value(12500.0));
+    }
+
+    @Test
+    void confirmPayment_passesUsernameAndRolesOfTheCaller() throws Exception {
+        when(billsService.confirmPayment(eq(1L), eq("ent.finance"), eq(Set.of("ENTERPRISE_FINANCE")))).thenReturn(mock(BillsDTO.class));
+
+        mockMvc.perform(put("/v1/onepay/bills/1/payment-confirmation").principal(authentication("ent.finance", "ROLE_ENTERPRISE_FINANCE")))
+                .andExpect(status().isOk());
+
+        verify(billsService).confirmPayment(1L, "ent.finance", Set.of("ENTERPRISE_FINANCE"));
+    }
+
+    @Test
+    void confirmPayment_returns403ForAnotherOrganisation() throws Exception {
+        when(billsService.confirmPayment(eq(1L), any(), any()))
+                .thenThrow(new AccessDeniedException("Seule la finance de l'entreprise ou du commerce de ce partenariat peut confirmer le paiement de cette facture"));
+
+        mockMvc.perform(put("/v1/onepay/bills/1/payment-confirmation").principal(authentication("other", "ROLE_SALES_FINANCE")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Seule la finance de l'entreprise ou du commerce de ce partenariat peut confirmer le paiement de cette facture"));
+    }
+
+    @Test
+    void cancelPaymentConfirmation_passesUsernameAndRolesOfTheCaller() throws Exception {
+        when(billsService.cancelPaymentConfirmation(eq(1L), eq("sales.finance"), eq(Set.of("SALES_FINANCE")))).thenReturn(mock(BillsDTO.class));
+
+        mockMvc.perform(delete("/v1/onepay/bills/1/payment-confirmation").principal(authentication("sales.finance", "ROLE_SALES_FINANCE")))
+                .andExpect(status().isOk());
+
+        verify(billsService).cancelPaymentConfirmation(1L, "sales.finance", Set.of("SALES_FINANCE"));
+    }
+
+    @Test
+    void confirmPayment_withoutAuthentication_hasNoUserNorRole() throws Exception {
+        when(billsService.confirmPayment(1L, null, Set.of())).thenReturn(mock(BillsDTO.class));
+
+        mockMvc.perform(put("/v1/onepay/bills/1/payment-confirmation"))
+                .andExpect(status().isOk());
+
+        verify(billsService).confirmPayment(1L, null, Set.of());
+    }
+
+    @Test
+    void confirmPayment_principalWithoutJwt_hasNoUsername() throws Exception {
+        when(billsService.confirmPayment(eq(1L), eq(null), any())).thenReturn(mock(BillsDTO.class));
+
+        mockMvc.perform(put("/v1/onepay/bills/1/payment-confirmation")
+                        .principal(new UsernamePasswordAuthenticationToken("someone", "n/a", List.of(new SimpleGrantedAuthority("ROLE_SALES_FINANCE")))))
+                .andExpect(status().isOk());
+
+        verify(billsService).confirmPayment(1L, null, Set.of("SALES_FINANCE"));
+    }
+
+    private static JwtAuthenticationToken authentication(String username, String role) {
+        Jwt jwt = Jwt.withTokenValue("token").header("alg", "none").claim("preferred_username", username).build();
+        return new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority(role)));
     }
 }

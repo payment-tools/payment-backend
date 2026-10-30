@@ -132,6 +132,19 @@ Le plafond par module (`EnterpriseConfiguration.maxAmount*`) est **mensuel**. Le
 
 **PDF de la facture (frontend)** : `GET /v1/onepay/bills/{id}/details` renvoie l'en-tête à imprimer (`ref`, `period`, `startDate`, `endDate`, `billStatus`, `totalAmount`, `enterprise` {`name`, `address`}, `sales` {`name`, `address`, `type`}). Le PDF est généré côté front.
 
+### Paiement d'une facture : confirmé par les deux parties
+Une facture n'a que deux statuts : `UNPAYED` et `PAYED`. Elle passe à **`PAYED` seulement quand l'entreprise ET le commerce du partenariat ont chacun confirmé le paiement**.
+
+- `PUT /v1/onepay/bills/{id}/payment-confirmation` : l'appelant confirme pour sa partie.
+  - **`ENTERPRISE_FINANCE` de l'entreprise du partenariat** : confirmation côté entreprise.
+  - **`SALES_FINANCE` du commerce du partenariat** : confirmation côté commerce.
+  - Toute autre personne reçoit **403** : autre organisation, admin, `SUPER_ADMIN`, profil inactif.
+  - La facture renvoyée indique qui a confirmé et quand : `enterprisePaymentConfirmedBy`/`At` et `salesPaymentConfirmedBy`/`At`.
+  - Confirmer deux fois ne change rien.
+- `DELETE /v1/onepay/bills/{id}/payment-confirmation` : l'appelant retire sa confirmation, **tant que l'autre partie n'a pas confirmé**. Une fois la facture `PAYED`, plus de retour arrière (**422**).
+- Une facture est toujours créée `UNPAYED`, par le job mensuel comme par `POST /bills` : le statut envoyé est ignoré. `PUT /bills/{id}` ne modifie plus le statut.
+- À brancher côté `payment-frontend` : un bouton « Marquer comme payée » / « Annuler » par partie dans la liste et la fiche des factures, et l'affichage des deux confirmations.
+
 ### Import Excel des employés
 `POST /v1/onepay/client/import` (multipart : `file`, et `enterpriseId` pour le SUPER_ADMIN) crée un employé (rôle `CLIENT`) par ligne d'un fichier **`.xlsx`**.
 

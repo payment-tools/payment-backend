@@ -5,31 +5,42 @@ import com.sn.onepay.dto.BillsDTO;
 import com.sn.onepay.dto.PartnershipDTO;
 import com.sn.onepay.entity.Bills;
 import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.entity.EnterpriseProfile;
 import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.Sales;
+import com.sn.onepay.entity.SalesProfile;
 import com.sn.onepay.enumeration.BillStatus;
 import com.sn.onepay.enumeration.Modules;
+import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.BillsMapper;
 import com.sn.onepay.repository.BillsRepository;
+import com.sn.onepay.repository.EnterpriseProfileRepository;
 import com.sn.onepay.repository.PartnershipRepository;
 import com.sn.onepay.repository.PaymentRepository;
+import com.sn.onepay.repository.SalesProfileRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,6 +62,15 @@ class BillsServiceImplTest {
 
     @Mock
     PaymentRepository paymentRepository;
+
+    @Mock
+    EnterpriseProfileRepository enterpriseProfileRepository;
+
+    @Mock
+    SalesProfileRepository salesProfileRepository;
+
+    @Spy
+    Clock clock = Clock.fixed(Instant.parse("2026-11-05T09:30:00Z"), ZoneOffset.UTC);
 
     @InjectMocks
     BillsServiceImpl billsService;
@@ -74,6 +94,27 @@ class BillsServiceImplTest {
     }
 
     @Test
+    void createBills_alwaysStartsUnpaidWithoutConfirmation() {
+        var dto = mock(BillsDTO.class);
+        var entity = new Bills();
+        entity.setBillStatus(BillStatus.PAYED);
+        entity.setEnterprisePaymentConfirmedBy("someone");
+        entity.setEnterprisePaymentConfirmedAt(LocalDateTime.now());
+        entity.setSalesPaymentConfirmedBy("someone");
+        entity.setSalesPaymentConfirmedAt(LocalDateTime.now());
+        when(billsMapper.asEntity(dto)).thenReturn(entity);
+        when(billsRepository.save(any(Bills.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        billsService.createBills(dto);
+
+        assertThat(entity.getBillStatus()).isEqualTo(BillStatus.UNPAYED);
+        assertThat(entity.getEnterprisePaymentConfirmedBy()).isNull();
+        assertThat(entity.getEnterprisePaymentConfirmedAt()).isNull();
+        assertThat(entity.getSalesPaymentConfirmedBy()).isNull();
+        assertThat(entity.getSalesPaymentConfirmedAt()).isNull();
+    }
+
+    @Test
     void updateBills_throwsWhenNotFound() {
         when(billsRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -90,7 +131,6 @@ class BillsServiceImplTest {
         when(dto.startDate()).thenReturn(startDate);
         when(dto.endDate()).thenReturn(endDate);
         when(dto.totalAmount()).thenReturn(5000.0);
-        when(dto.billStatus()).thenReturn(BillStatus.PAYED);
         when(dto.period()).thenReturn("2026-07");
         when(dto.active()).thenReturn(false);
 
@@ -108,48 +148,13 @@ class BillsServiceImplTest {
         assertThat(existing.getStartDate()).isEqualTo(startDate);
         assertThat(existing.getEndDate()).isEqualTo(endDate);
         assertThat(existing.getTotalAmount()).isEqualTo(5000.0);
-        assertThat(existing.getBillStatus()).isEqualTo(BillStatus.PAYED);
+        assertThat(existing.getBillStatus()).as("le statut ne change que par /payment-confirmation").isNull();
         assertThat(existing.getPeriod()).isEqualTo("2026-07");
         assertThat(existing.isActive()).isFalse();
         assertThat(result).isEqualTo(resultDTO);
     }
 
-    @Test
-    void updateBills_validatesPaidBill() {
-        var dto = mock(BillsDTO.class);
-        when(dto.billStatus()).thenReturn(BillStatus.VALIDATED);
 
-        var existing = new Bills();
-        existing.setBillStatus(BillStatus.PAYED);
-        var updated = new Bills();
-        var resultDTO = mock(BillsDTO.class);
-
-        when(billsRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(billsRepository.saveAndFlush(existing)).thenReturn(updated);
-        when(billsMapper.asDTO(updated)).thenReturn(resultDTO);
-
-        var result = billsService.updateBills(dto, 1L);
-
-        assertThat(existing.getBillStatus()).isEqualTo(BillStatus.VALIDATED);
-        assertThat(result).isEqualTo(resultDTO);
-    }
-
-    @Test
-    void updateBills_throwsWhenValidatingUnpaidBill() {
-        var dto = mock(BillsDTO.class);
-        when(dto.billStatus()).thenReturn(BillStatus.VALIDATED);
-
-        var existing = new Bills();
-        existing.setBillStatus(BillStatus.UNPAYED);
-
-        when(billsRepository.findById(1L)).thenReturn(Optional.of(existing));
-
-        assertThatThrownBy(() -> billsService.updateBills(dto, 1L))
-                .isInstanceOf(ObjectValidationException.class);
-
-        assertThat(existing.getBillStatus()).isEqualTo(BillStatus.UNPAYED);
-        verify(billsRepository, never()).saveAndFlush(any());
-    }
 
     @Test
     void updateBills_withNullFields_doesNotChangeFields() {
@@ -159,7 +164,6 @@ class BillsServiceImplTest {
         when(dto.startDate()).thenReturn(null);
         when(dto.endDate()).thenReturn(null);
         when(dto.totalAmount()).thenReturn(null);
-        when(dto.billStatus()).thenReturn(null);
         when(dto.period()).thenReturn(null);
         when(dto.active()).thenReturn(null);
 
@@ -398,5 +402,192 @@ class BillsServiceImplTest {
         partnership.setEnterprise(enterprise);
         partnership.setSales(sales);
         return partnership;
+    }
+
+    @Test
+    void confirmPayment_enterpriseSideOnly_staysUnpaid() {
+        var bill = unpaidBill();
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+        when(enterpriseProfileRepository.findByUsername("ent.finance")).thenReturn(Optional.of(enterpriseProfile(10L, Roles.ENTERPRISE_FINANCE, true)));
+        when(billsRepository.saveAndFlush(bill)).thenReturn(bill);
+
+        billsService.confirmPayment(1L, "ent.finance", Set.of("ENTERPRISE_FINANCE"));
+
+        assertThat(bill.getEnterprisePaymentConfirmedBy()).isEqualTo("ent.finance");
+        assertThat(bill.getEnterprisePaymentConfirmedAt()).isEqualTo(LocalDateTime.of(2026, 11, 5, 9, 30));
+        assertThat(bill.getSalesPaymentConfirmedBy()).isNull();
+        assertThat(bill.getBillStatus()).isEqualTo(BillStatus.UNPAYED);
+    }
+
+    @Test
+    void confirmPayment_bothSides_becomesPaid() {
+        var bill = unpaidBill();
+        bill.setEnterprisePaymentConfirmedBy("ent.finance");
+        bill.setEnterprisePaymentConfirmedAt(LocalDateTime.of(2026, 11, 2, 8, 0));
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+        when(salesProfileRepository.findByUsername("sales.finance")).thenReturn(Optional.of(salesProfile(20L, Roles.SALES_FINANCE, true)));
+        when(billsRepository.saveAndFlush(bill)).thenReturn(bill);
+
+        billsService.confirmPayment(1L, "sales.finance", Set.of("SALES_FINANCE"));
+
+        assertThat(bill.getSalesPaymentConfirmedBy()).isEqualTo("sales.finance");
+        assertThat(bill.getSalesPaymentConfirmedAt()).isEqualTo(LocalDateTime.of(2026, 11, 5, 9, 30));
+        assertThat(bill.getBillStatus()).isEqualTo(BillStatus.PAYED);
+    }
+
+    @Test
+    void confirmPayment_twiceBySameSide_keepsFirstConfirmation() {
+        var bill = unpaidBill();
+        bill.setSalesPaymentConfirmedBy("sales.finance");
+        bill.setSalesPaymentConfirmedAt(LocalDateTime.of(2026, 11, 1, 8, 0));
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+        when(salesProfileRepository.findByUsername("other.finance")).thenReturn(Optional.of(salesProfile(20L, Roles.SALES_FINANCE, true)));
+        when(billsRepository.saveAndFlush(bill)).thenReturn(bill);
+
+        billsService.confirmPayment(1L, "other.finance", Set.of("SALES_FINANCE"));
+
+        assertThat(bill.getSalesPaymentConfirmedBy()).isEqualTo("sales.finance");
+        assertThat(bill.getSalesPaymentConfirmedAt()).isEqualTo(LocalDateTime.of(2026, 11, 1, 8, 0));
+        assertThat(bill.getBillStatus()).isEqualTo(BillStatus.UNPAYED);
+    }
+
+    @Test
+    void confirmPayment_enterpriseConfirmingTwice_keepsFirstConfirmation() {
+        var bill = unpaidBill();
+        bill.setEnterprisePaymentConfirmedBy("ent.finance");
+        bill.setEnterprisePaymentConfirmedAt(LocalDateTime.of(2026, 11, 1, 8, 0));
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+        when(enterpriseProfileRepository.findByUsername("ent.finance")).thenReturn(Optional.of(enterpriseProfile(10L, Roles.ENTERPRISE_FINANCE, true)));
+        when(billsRepository.saveAndFlush(bill)).thenReturn(bill);
+
+        billsService.confirmPayment(1L, "ent.finance", Set.of("ENTERPRISE_FINANCE"));
+
+        assertThat(bill.getEnterprisePaymentConfirmedAt()).isEqualTo(LocalDateTime.of(2026, 11, 1, 8, 0));
+        assertThat(bill.getBillStatus()).isEqualTo(BillStatus.UNPAYED);
+    }
+
+    @Test
+    void confirmPayment_rejectsAlreadyPaidBill() {
+        var bill = unpaidBill();
+        bill.setBillStatus(BillStatus.PAYED);
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+
+        assertThatThrownBy(() -> billsService.confirmPayment(1L, "ent.finance", Set.of("ENTERPRISE_FINANCE")))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessage("La facture est déjà payée");
+        verify(billsRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void confirmPayment_rejectsDeletedOrUnknownBill() {
+        var deleted = unpaidBill();
+        deleted.setActive(false);
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(deleted));
+        when(billsRepository.findById(2L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> billsService.confirmPayment(1L, "ent.finance", Set.of("ENTERPRISE_FINANCE"))).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> billsService.confirmPayment(2L, "ent.finance", Set.of("ENTERPRISE_FINANCE"))).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void confirmPayment_rejectsFinanceOfAnotherOrganisationOrRoleOrInactiveProfile() {
+        var bill = unpaidBill();
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+        when(enterpriseProfileRepository.findByUsername("other.enterprise")).thenReturn(Optional.of(enterpriseProfile(99L, Roles.ENTERPRISE_FINANCE, true)));
+        when(enterpriseProfileRepository.findByUsername("ent.admin")).thenReturn(Optional.of(enterpriseProfile(10L, Roles.ENTERPRISE_ADMIN, true)));
+        when(enterpriseProfileRepository.findByUsername("inactive")).thenReturn(Optional.of(enterpriseProfile(10L, Roles.ENTERPRISE_FINANCE, false)));
+        when(enterpriseProfileRepository.findByUsername("no.enterprise")).thenReturn(Optional.of(enterpriseProfile(null, Roles.ENTERPRISE_FINANCE, true)));
+        when(enterpriseProfileRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        when(salesProfileRepository.findByUsername("other.sales")).thenReturn(Optional.of(salesProfile(99L, Roles.SALES_FINANCE, true)));
+        when(salesProfileRepository.findByUsername("sales.admin")).thenReturn(Optional.of(salesProfile(20L, Roles.SALES_ADMIN, true)));
+        when(salesProfileRepository.findByUsername("inactive.sales")).thenReturn(Optional.of(salesProfile(20L, Roles.SALES_FINANCE, false)));
+        when(salesProfileRepository.findByUsername("no.sales")).thenReturn(Optional.of(salesProfile(null, Roles.SALES_FINANCE, true)));
+
+        for (String user : List.of("other.enterprise", "ent.admin", "inactive", "no.enterprise", "unknown")) {
+            assertThatThrownBy(() -> billsService.confirmPayment(1L, user, Set.of("ENTERPRISE_FINANCE"))).isInstanceOf(AccessDeniedException.class);
+        }
+        for (String user : List.of("other.sales", "sales.admin", "inactive.sales", "no.sales")) {
+            assertThatThrownBy(() -> billsService.confirmPayment(1L, user, Set.of("SALES_FINANCE"))).isInstanceOf(AccessDeniedException.class);
+        }
+        assertThatThrownBy(() -> billsService.confirmPayment(1L, "super.admin", Set.of("SUPER_ADMIN")))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Seule la finance de l'entreprise ou du commerce de ce partenariat peut confirmer le paiement de cette facture");
+        verify(billsRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void cancelPaymentConfirmation_removesOnlyTheCallersSide() {
+        var bill = unpaidBill();
+        bill.setEnterprisePaymentConfirmedBy("ent.finance");
+        bill.setEnterprisePaymentConfirmedAt(LocalDateTime.of(2026, 11, 2, 8, 0));
+        bill.setSalesPaymentConfirmedBy(null);
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+        when(enterpriseProfileRepository.findByUsername("ent.finance")).thenReturn(Optional.of(enterpriseProfile(10L, Roles.ENTERPRISE_FINANCE, true)));
+        when(billsRepository.saveAndFlush(bill)).thenReturn(bill);
+
+        billsService.cancelPaymentConfirmation(1L, "ent.finance", Set.of("ENTERPRISE_FINANCE"));
+
+        assertThat(bill.getEnterprisePaymentConfirmedBy()).isNull();
+        assertThat(bill.getEnterprisePaymentConfirmedAt()).isNull();
+        assertThat(bill.getBillStatus()).isEqualTo(BillStatus.UNPAYED);
+    }
+
+    @Test
+    void cancelPaymentConfirmation_salesSide() {
+        var bill = unpaidBill();
+        bill.setSalesPaymentConfirmedBy("sales.finance");
+        bill.setSalesPaymentConfirmedAt(LocalDateTime.of(2026, 11, 2, 8, 0));
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+        when(salesProfileRepository.findByUsername("sales.finance")).thenReturn(Optional.of(salesProfile(20L, Roles.SALES_FINANCE, true)));
+        when(billsRepository.saveAndFlush(bill)).thenReturn(bill);
+
+        billsService.cancelPaymentConfirmation(1L, "sales.finance", Set.of("SALES_FINANCE"));
+
+        assertThat(bill.getSalesPaymentConfirmedBy()).isNull();
+        assertThat(bill.getSalesPaymentConfirmedAt()).isNull();
+    }
+
+    @Test
+    void cancelPaymentConfirmation_rejectsPaidBill() {
+        var bill = unpaidBill();
+        bill.setBillStatus(BillStatus.PAYED);
+        when(billsRepository.findById(1L)).thenReturn(Optional.of(bill));
+
+        assertThatThrownBy(() -> billsService.cancelPaymentConfirmation(1L, "ent.finance", Set.of("ENTERPRISE_FINANCE")))
+                .isInstanceOf(ObjectValidationException.class)
+                .hasMessage("Une facture payée ne peut plus être modifiée");
+        verify(billsRepository, never()).saveAndFlush(any());
+    }
+
+    private static Bills unpaidBill() {
+        var bill = new Bills();
+        bill.setActive(true);
+        bill.setBillStatus(BillStatus.UNPAYED);
+        bill.setPartnership(partnership(1L, 10L, 20L));
+        return bill;
+    }
+
+    private static EnterpriseProfile enterpriseProfile(Long enterpriseId, Roles role, boolean active) {
+        var profile = new EnterpriseProfile();
+        profile.setRole(role);
+        profile.setActive(active);
+        if (enterpriseId != null) {
+            var enterprise = new Enterprise();
+            enterprise.setId(enterpriseId);
+            profile.setEnterprise(enterprise);
+        }
+        return profile;
+    }
+
+    private static SalesProfile salesProfile(Long salesId, Roles role, boolean active) {
+        var profile = new SalesProfile();
+        profile.setRole(role);
+        profile.setActive(active);
+        if (salesId != null) {
+            var sales = new Sales();
+            sales.setId(salesId);
+            profile.setSales(sales);
+        }
+        return profile;
     }
 }
