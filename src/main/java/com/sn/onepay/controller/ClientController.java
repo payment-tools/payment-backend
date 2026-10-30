@@ -2,8 +2,10 @@ package com.sn.onepay.controller;
 
 import com.sn.onepay.dto.ClientCreateDTO;
 import com.sn.onepay.dto.ClientDTO;
+import com.sn.onepay.dto.ClientImportReportDTO;
 import com.sn.onepay.dto.ClientUpdateDTO;
 import com.sn.onepay.enumeration.Roles;
+import com.sn.onepay.services.ClientImportService;
 import com.sn.onepay.services.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +20,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -39,6 +45,7 @@ import java.time.LocalDateTime;
 public class ClientController {
 
     final ClientService clientService;
+    final ClientImportService clientImportService;
 
     @Operation(summary = "Create a new client", description = "This endpoint is for creating a new client")
     @ApiResponses(value = {
@@ -50,6 +57,27 @@ public class ClientController {
     @ResponseStatus(HttpStatus.CREATED)
     public ClientDTO createClient(@Parameter(description = "Client body for creation", required = true) @RequestBody @Valid ClientCreateDTO client) {
         return clientService.createClient(client);
+    }
+
+    @Operation(summary = "Import clients from an Excel file",
+            description = "Reads a .xlsx file whose first row holds the headers Prénom | Nom | Username | Email | Téléphone and creates one client (role CLIENT) per row. "
+                    + "Valid rows are created (Keycloak account + invitation e-mail, as for a single creation), invalid rows are reported with their Excel row number. "
+                    + "ENTERPRISE_ADMIN always imports into its own enterprise; SUPER_ADMIN must provide enterpriseId.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Import report"),
+            @ApiResponse(responseCode = "400", description = "Unreadable file or wrong headers"),
+            @ApiResponse(responseCode = "422", description = "enterpriseId missing for SUPER_ADMIN"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public ClientImportReportDTO importClients(@Parameter(description = "Excel file (.xlsx)", required = true) @RequestParam("file") MultipartFile file,
+                                               @Parameter(description = "Target enterprise (SUPER_ADMIN only, ignored for ENTERPRISE_ADMIN)") @RequestParam(required = false) Long enterpriseId,
+                                               Authentication authentication) {
+        String username = authentication != null && authentication.getPrincipal() instanceof Jwt jwt ? jwt.getClaimAsString("preferred_username") : null;
+        boolean superAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_SUPER_ADMIN".equals(authority.getAuthority()));
+        return clientImportService.importClients(file, enterpriseId, username, superAdmin);
     }
 
     @Operation(summary = "Update a client", description = "This endpoint is for updating a client")
