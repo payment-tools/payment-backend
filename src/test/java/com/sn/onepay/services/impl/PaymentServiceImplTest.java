@@ -12,9 +12,11 @@ import com.sn.onepay.entity.EmployeeGroup;
 import com.sn.onepay.entity.Payment;
 import com.sn.onepay.entity.Subvention;
 import com.sn.onepay.enumeration.Modules;
+import com.sn.onepay.enumeration.NotificationType;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PaymentMapper;
+import com.sn.onepay.notification.PaymentNotificationEvent;
 import com.sn.onepay.repository.EmployeeGroupRepository;
 import com.sn.onepay.repository.PaymentMonthlyModuleSum;
 import com.sn.onepay.repository.PaymentRepository;
@@ -31,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
+import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -83,6 +86,9 @@ class PaymentServiceImplTest {
 
     static final LocalDateTime MONTH_START = LocalDateTime.of(2026, 10, 1, 0, 0);
     static final LocalDateTime NEXT_MONTH_START = LocalDateTime.of(2026, 11, 1, 0, 0);
+
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     PaymentServiceImpl paymentService;
@@ -165,7 +171,7 @@ class PaymentServiceImplTest {
 
         assertThatThrownBy(() -> paymentService.createPayment(dto))
                 .isInstanceOf(ObjectValidationException.class)
-                .hasMessageContaining("non autorisé");
+                .hasMessageContaining("non autorisé");        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -220,6 +226,7 @@ class PaymentServiceImplTest {
         var dto = buildPaymentDTO(Modules.RESTAURATION, 50.0);
         var entity = new Payment();
         var saved = new Payment();
+        saved.setId(42L);
         var resultDTO = mock(PaymentDTO.class);
         var salesConfig = buildSalesConfig(10.0, 100.0);
         var enterpriseConfig = buildEnterpriseConfig(500.0, 500.0, 500.0, 500.0);
@@ -236,6 +243,7 @@ class PaymentServiceImplTest {
 
         var result = paymentService.createPayment(dto);
         assertThat(result).isEqualTo(resultDTO);
+        verify(eventPublisher).publishEvent(new PaymentNotificationEvent(42L, NotificationType.PAYMENT_CREATED));
 
         ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
         verify(paymentRepository).save(captor.capture());
@@ -572,6 +580,7 @@ class PaymentServiceImplTest {
 
         assertThat(payment.isActive()).isFalse();
         verify(paymentRepository).saveAndFlush(payment);
+        verify(eventPublisher).publishEvent(new PaymentNotificationEvent(1L, NotificationType.PAYMENT_CANCELLED));
     }
 
     @Test

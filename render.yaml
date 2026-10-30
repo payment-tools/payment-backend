@@ -93,6 +93,11 @@ services:
       # Lien de connexion indiqué dans l'e-mail (back-office)
       - key: MAIL_LOGIN_URL
         value: http://localhost:4200
+      # Notifications push : passer PUSH_PROVIDER à firebase une fois FIREBASE_CREDENTIALS renseigné
+      - key: PUSH_PROVIDER
+        value: none
+      - key: FIREBASE_CREDENTIALS
+        sync: false
 
   - type: web
     name: onepay-pgadmin-uat

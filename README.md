@@ -141,3 +141,34 @@ Le plafond par module (`EnterpriseConfiguration.maxAmount*`) est **mensuel**. Le
 - Chaque employé créé reçoit son **e-mail d'invitation** (mot de passe temporaire), comme pour une création unitaire. Avec l'offre gratuite Brevo (300 e-mails/jour), les e-mails au-delà de la limite ne partent pas, mais les comptes sont bien créés.
 - Fichier illisible, non `.xlsx` ou en-têtes incorrects : **400** avec un message.
 - Taille maximale du fichier : 1 Mo (limite Spring par défaut, plusieurs milliers de lignes).
+
+### Notifications de paiement (push Firebase + historique)
+À chaque **paiement** et à chaque **annulation**, le client et le caissier reçoivent une notification. Elle est enregistrée en base, pour la cloche, et envoyée en **push** sur leurs téléphones, que l'app soit ouverte ou fermée.
+
+| Destinataire | Paiement | Annulation |
+|---|---|---|
+| Client | « Paiement de 2 500 FCFA chez {commerce} » | « Paiement de 2 500 FCFA chez {commerce} annulé » |
+| Caissier | « Paiement reçu : 2 500 FCFA de {prénom nom} ({entreprise}) » | « Paiement de 2 500 FCFA de {prénom nom} ({entreprise}) annulé » |
+
+**API** (`/v1/onepay/notification`, utilisateur connecté, uniquement ses propres données) :
+- `POST /device-token` `{"token": "<jeton FCM>", "platform": "ANDROID" | "IOS"}` : enregistrer l'appareil (204) ;
+- `DELETE /device-token/{token}` : à la déconnexion (204) ;
+- `GET` (paginé, plus récentes d'abord, `?read=false` pour les non lues) ;
+- `GET /unread-count` : pastille de la cloche ;
+- `PUT /{id}/read` : marquer comme lue (404 si la notification appartient à un autre utilisateur) ;
+- `PUT /read-all` : tout marquer comme lu.
+
+**À faire dans `mobile-app`** :
+1. Ajouter `firebase_core` et `firebase_messaging`, puis configurer Firebase (`flutterfire configure`).
+2. Après la connexion, et dans `onTokenRefresh`, appeler `POST /device-token` avec le jeton FCM et la plateforme.
+3. À la déconnexion, appeler `DELETE /device-token/{token}`.
+4. App ouverte : `FirebaseMessaging.onMessage` affiche la notification (bannière ou snackbar) et rafraîchit la cloche (`/unread-count`). App fermée ou en arrière-plan : le système affiche le push.
+5. Le push contient `data.type`, `data.paymentId` et `data.notificationId`, pour ouvrir le bon écran au tap.
+
+#### Activer le push (Firebase, gratuit)
+1. Créer un projet sur [console.firebase.google.com](https://console.firebase.google.com), puis y ajouter l'app **Android** (`com.sn.onepay`) et l'app **iOS** (bundle `com.sn.onepay`).
+2. **iOS** : dans *Paramètres du projet → Cloud Messaging*, téléverser une **clé APNs** (fichier `.p8`). Elle se crée dans un compte **Apple Developer, payant (99 $/an)**. Sans elle, le push ne fonctionne que sur Android.
+3. *Paramètres du projet → Comptes de service → Générer une nouvelle clé privée* : un fichier JSON est téléchargé. **Ne jamais le committer.**
+4. Sur Render (`onepay-backend-uat` → Environment) : coller le **contenu** du JSON dans `FIREBASE_CREDENTIALS` et passer `PUSH_PROVIDER` à `firebase`.
+
+Sans configuration (`PUSH_PROVIDER=none`, le défaut), les notifications sont seulement enregistrées en base et l'envoi est juste journalisé. Avec `PUSH_PROVIDER=firebase` et `FIREBASE_CREDENTIALS` vide, le backend refuse de démarrer, avec un message explicite.

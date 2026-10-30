@@ -816,4 +816,64 @@
     <changeSet id="1.0.0-bills-unique-partnership-period" author="mouhamed">
         <sql>CREATE UNIQUE INDEX ux_bills_partnership_period_active ON bills (partnershipid, period) WHERE active</sql>
     </changeSet>
+
+    <!-- Notifications de paiement (historique de la cloche) et jetons FCM des appareils mobiles -->
+    <changeSet id="1.0.0-create-notification-devicetoken" author="mouhamed">
+        <createTable tableName="notification">
+            <column name="notificationid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="recipientusername" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="paymentid" type="numeric(20)"/>
+            <column name="read" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+        <createIndex tableName="notification" indexName="ix_notification_recipient">
+            <column name="recipientusername"/>
+            <column name="read"/>
+        </createIndex>
+
+        <createTable tableName="devicetoken">
+            <column name="devicetokenid" type="numeric(20)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token" type="varchar(512)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="platform" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="modificationdate" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </createTable>
+        <createIndex tableName="devicetoken" indexName="ix_devicetoken_username">
+            <column name="username"/>
+        </createIndex>
+
+        <!-- Hibernate stocke le dernier id utilisé : 0 → premier id = 1 -->
+        <insert tableName="jpa_sequence">
+            <column name="seq_key" value="NotificationId"/>
+            <column name="seq_value" valueNumeric="0"/>
+        </insert>
+        <insert tableName="jpa_sequence">
+            <column name="seq_key" value="DeviceTokenId"/>
+            <column name="seq_value" valueNumeric="0"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>
