@@ -131,3 +131,13 @@ Le plafond par module (`EnterpriseConfiguration.maxAmount*`) est **mensuel**. Le
 - Le planning est réglable avec `onepay.bills.cron` (expression cron Spring, en UTC).
 
 **PDF de la facture (frontend)** : `GET /v1/onepay/bills/{id}/details` renvoie l'en-tête à imprimer (`ref`, `period`, `startDate`, `endDate`, `billStatus`, `totalAmount`, `enterprise` {`name`, `address`}, `sales` {`name`, `address`, `type`}). Le PDF est généré côté front.
+
+### Import Excel des employés
+`POST /v1/onepay/client/import` (multipart : `file`, et `enterpriseId` pour le SUPER_ADMIN) crée un employé (rôle `CLIENT`) par ligne d'un fichier **`.xlsx`**.
+
+- **Modèle à générer côté front** : première feuille, ligne 1 = en-têtes exactement `Prénom | Nom | Username | Email | Téléphone` (casse indifférente), une ligne par employé à partir de la ligne 2. Les lignes vides sont ignorées. Le téléphone suit le format sénégalais (`771234567`, `77 123 45 67` ou `+221 77 123 45 67`).
+- **Qui importe où** : un `ENTERPRISE_ADMIN` importe toujours dans **sa** propre entreprise (un `enterpriseId` envoyé est ignoré). Le `SUPER_ADMIN` doit fournir `enterpriseId` (422 sinon). Les autres rôles reçoivent 403.
+- **Lignes valides importées, les autres signalées** : la réponse `200` contient `totalRows`, `created` [{`row`, `id`, `username`}] et `errors` [{`row`, `message`}]. `row` est le numéro de ligne Excel. Les mêmes règles qu'une création unitaire s'appliquent : champs obligatoires, format du téléphone, username/e-mail/téléphone uniques sur tous les comptes.
+- Chaque employé créé reçoit son **e-mail d'invitation** (mot de passe temporaire), comme pour une création unitaire. Avec l'offre gratuite Brevo (300 e-mails/jour), les e-mails au-delà de la limite ne partent pas, mais les comptes sont bien créés.
+- Fichier illisible, non `.xlsx` ou en-têtes incorrects : **400** avec un message.
+- Taille maximale du fichier : 1 Mo (limite Spring par défaut, plusieurs milliers de lignes).

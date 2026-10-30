@@ -21,6 +21,13 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(exception.getMessage());
     }
 
+    @ExceptionHandler(InvalidFileException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidFile(InvalidFileException exception) {
+        log.info("Invalid file rejected: {}", exception.getMessage());
+        return new ErrorResponse(exception.getMessage());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleResourceNotFound(ResourceNotFoundException exception) {
