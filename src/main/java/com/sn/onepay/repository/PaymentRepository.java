@@ -26,6 +26,14 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, Queryds
 
     List<Payment> getAllPaymentsByClientId(Long clientId);
 
+    /*Montant facturé à un partenariat : paiements actifs des employés de l'entreprise chez les caissiers du commerce, sur [from, to[*/
+    @Query(value = "SELECT COALESCE(SUM(p.Amount), 0) FROM Payment p " +
+            "JOIN Client c ON p.ClientId = c.ClientId JOIN Cashier k ON p.CashierId = k.CashierId " +
+            "WHERE p.Active = true AND c.EnterpriseId = :enterpriseId AND k.SalesId = :salesId " +
+            "AND p.PaymentDate >= :from AND p.PaymentDate < :to", nativeQuery = true)
+    Double sumActivePaymentsByEnterpriseAndSales(@Param("enterpriseId") Long enterpriseId, @Param("salesId") Long salesId,
+                                                 @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
     @Query(value = "SELECT TO_CHAR(p.PaymentDate, 'YYYY-MM') AS month, p.Module AS module, COALESCE(SUM(p.Amount), 0) AS totalAmount " +
             "FROM Payment p JOIN Client c ON p.ClientId = c.ClientId " +
             "WHERE c.EnterpriseId = :enterpriseId AND p.Active = true AND p.PaymentDate >= :fromDate " +

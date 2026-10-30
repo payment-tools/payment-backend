@@ -811,4 +811,9 @@
                 ON CONFLICT (seq_key) DO UPDATE SET seq_value = EXCLUDED.seq_value;
         </sql>
     </changeSet>
+
+    <!-- Une seule facture active par partenariat et par mois : protège la génération mensuelle contre les doublons -->
+    <changeSet id="1.0.0-bills-unique-partnership-period" author="mouhamed">
+        <sql>CREATE UNIQUE INDEX ux_bills_partnership_period_active ON bills (partnershipid, period) WHERE active</sql>
+    </changeSet>
 </databaseChangeLog>

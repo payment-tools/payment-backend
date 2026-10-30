@@ -1,5 +1,6 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.BillDetailsDTO;
 import com.sn.onepay.dto.BillsDTO;
 import com.sn.onepay.enumeration.BillStatus;
 import com.sn.onepay.services.BillsService;
@@ -96,6 +97,18 @@ public class BillsController {
     @ResponseStatus(HttpStatus.OK)
     public BillsDTO getBillsById(@Parameter(description = "Bills id", required = true) @PathVariable(name = "billsId") Long billsId) {
         return billsService.getBillsById(billsId);
+    }
+
+    @Operation(summary = "Get the details of a bill", description = "Bill header with the billed enterprise and the merchant of the partnership, used by the frontend to generate the PDF")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/{billsId}/details")
+    @ResponseStatus(HttpStatus.OK)
+    public BillDetailsDTO getBillDetails(@Parameter(description = "Bills id", required = true) @PathVariable(name = "billsId") Long billsId) {
+        return billsService.getBillDetails(billsId);
     }
 
     @Operation(summary = "Delete a bill by id", description = "This endpoint is for deleting a bill by id (logical deletion)")

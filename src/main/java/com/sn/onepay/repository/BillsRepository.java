@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BillsRepository extends JpaRepository<Bills, Long>, QuerydslPredicateExecutor<Bills> {
+
+    boolean existsByPartnership_IdAndPeriodAndActiveTrue(Long partnershipId, String period);
 }

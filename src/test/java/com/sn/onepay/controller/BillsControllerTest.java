@@ -1,6 +1,9 @@
 package com.sn.onepay.controller;
 
+import com.sn.onepay.dto.BillDetailsDTO;
 import com.sn.onepay.dto.BillsDTO;
+import com.sn.onepay.enumeration.Modules;
+import com.sn.onepay.enumeration.BillStatus;
 import com.sn.onepay.services.BillsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BillsController.class)
@@ -89,5 +93,18 @@ class BillsControllerTest extends BaseControllerTest {
 
         mockMvc.perform(delete("/v1/onepay/bills/1"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getBillDetails_returns200() throws Exception {
+        when(billsService.getBillDetails(1L)).thenReturn(new BillDetailsDTO("REF-1", "2026-10", null, null,
+                BillStatus.UNPAYED, 12500.0, new BillDetailsDTO.EnterpriseInfo("Sonatel", "Dakar"),
+                new BillDetailsDTO.SalesInfo("Auchan", "Mermoz", Modules.MARKET)));
+
+        mockMvc.perform(get("/v1/onepay/bills/1/details"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enterprise.name").value("Sonatel"))
+                .andExpect(jsonPath("$.sales.type").value("MARKET"))
+                .andExpect(jsonPath("$.totalAmount").value(12500.0));
     }
 }
