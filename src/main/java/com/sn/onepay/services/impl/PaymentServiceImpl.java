@@ -11,9 +11,11 @@ import com.sn.onepay.entity.Payment;
 import com.sn.onepay.entity.QPayment;
 import com.sn.onepay.entity.Subvention;
 import com.sn.onepay.enumeration.Modules;
+import com.sn.onepay.enumeration.NotificationType;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.PaymentMapper;
+import com.sn.onepay.notification.PaymentNotificationEvent;
 import com.sn.onepay.repository.EmployeeGroupRepository;
 import com.sn.onepay.repository.PaymentRepository;
 import com.sn.onepay.repository.SubventionRepository;
@@ -27,6 +29,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,6 +58,7 @@ public class PaymentServiceImpl implements PaymentService {
     final EmployeeGroupRepository employeeGroupRepository;
     final SubventionRepository subventionRepository;
     final Clock clock;
+    final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
@@ -94,6 +98,8 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setEmployeeAmount(paymentDTO.amount() * subvention.getEmployeePercent() / 100);
 
         Payment savedPayment = paymentRepository.save(payment);
+        /*Client et caissier notifiés après le commit*/
+        eventPublisher.publishEvent(new PaymentNotificationEvent(savedPayment.getId(), NotificationType.PAYMENT_CREATED));
 
         log.info("Payment saved: {}", savedPayment);
         log.trace("Payment saved with id: {}", savedPayment.getId());
@@ -144,6 +150,7 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findById(paymentId).orElseThrow(() ->  new ResourceNotFoundException("Payment", "ID", paymentId));
         payment.setActive(false);
         paymentRepository.saveAndFlush(payment);
+        eventPublisher.publishEvent(new PaymentNotificationEvent(paymentId, NotificationType.PAYMENT_CANCELLED));
 
         log.info("Payment deleted: {}", paymentId);
         log.trace("Payment deleted with id: {}", paymentId);

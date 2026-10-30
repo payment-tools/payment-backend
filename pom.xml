@@ -141,6 +141,30 @@
             <version>5.2.5</version>
         </dependency>
 
+        <!-- Notifications push (Firebase Cloud Messaging) -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.3.0</version>
+            <!-- Seule la messagerie (FCM) est utilisée : Firestore et Cloud Storage alourdiraient le jar de ~50 Mo -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.cloud</groupId>
+                    <artifactId>google-cloud-firestore</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.cloud</groupId>
+                    <artifactId>google-cloud-storage</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Requis par FirebaseOptions, fourni d'habitude via Firestore/Storage exclus ci-dessus (même version que google-http-client) -->
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-jackson2</artifactId>
+            <version>1.44.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>

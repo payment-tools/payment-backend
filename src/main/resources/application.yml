@@ -77,3 +77,9 @@ onepay:
     brevo:
       api-url: ${BREVO_API_URL:https://api.brevo.com}
       api-key: ${BREVO_API_KEY:}
+  push:
+    # none (défaut : notifications seulement en base) | firebase (push FCM vers l'app mobile)
+    provider: ${PUSH_PROVIDER:none}
+    firebase:
+      # Clé de compte de service Firebase (contenu JSON), jamais dans le repo
+      credentials: ${FIREBASE_CREDENTIALS:}
