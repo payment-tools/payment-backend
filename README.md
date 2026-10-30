@@ -123,3 +123,11 @@ pgAdmin tourne sur Render et accède à la base par le réseau privé : **aucune
 Le plafond par module (`EnterpriseConfiguration.maxAmount*`) est **mensuel**. Le contrôle fait à chaque paiement et `GET /v1/onepay/payment/sum/{clientId}` (total, ou `?module=`) ne comptent que les paiements actifs du **mois calendaire en cours, en UTC** (heure de Dakar), du 1er à 00:00 au 1er du mois suivant. Aucune donnée n'est supprimée : l'historique reste consultable avec `GET /v1/onepay/payment`.
 
 À adapter côté front et mobile : les libellés qui affichent `/sum` (« Total consommé », jauges par module) désignent maintenant **la consommation du mois**.
+
+### Factures générées automatiquement chaque mois
+- Le **1er de chaque mois à 00:05 UTC**, le backend crée les factures du mois écoulé : **une par partenariat actif** (entreprise ↔ commerce) ayant des paiements. Le montant est la somme des paiements actifs des employés de l'entreprise chez les caissiers du commerce. La facture est créée avec le statut `UNPAYED`, la période `YYYY-MM` et des dates du 1er à 00:00 au dernier jour à 23:59:59.
+- Un partenariat sans paiement sur le mois n'a pas de facture.
+- La génération peut être relancée sans risque : une seule facture active par partenariat et par mois, garantie aussi en base. Une création manuelle (`POST /v1/onepay/bills`) qui ferait doublon reçoit **409**.
+- Le planning est réglable avec `onepay.bills.cron` (expression cron Spring, en UTC).
+
+**PDF de la facture (frontend)** : `GET /v1/onepay/bills/{id}/details` renvoie l'en-tête à imprimer (`ref`, `period`, `startDate`, `endDate`, `billStatus`, `totalAmount`, `enterprise` {`name`, `address`}, `sales` {`name`, `address`, `type`}). Le PDF est généré côté front.

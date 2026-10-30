@@ -1,14 +1,21 @@
 package com.sn.onepay.services.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.sn.onepay.dto.BillDetailsDTO;
 import com.sn.onepay.dto.BillsDTO;
 import com.sn.onepay.entity.Bills;
+import com.sn.onepay.entity.Enterprise;
+import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.QBills;
+import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.BillStatus;
 import com.sn.onepay.exceptions.ObjectValidationException;
+import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.BillsMapper;
 import com.sn.onepay.repository.BillsRepository;
+import com.sn.onepay.repository.PartnershipRepository;
+import com.sn.onepay.repository.PaymentRepository;
 import com.sn.onepay.services.BillsService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -20,6 +27,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,9 +41,17 @@ public class BillsServiceImpl implements BillsService {
 
     final BillsRepository billsRepository;
     final BillsMapper billsMapper;
+    final PartnershipRepository partnershipRepository;
+    final PaymentRepository paymentRepository;
 
     @Override
     public BillsDTO createBills(BillsDTO billsDTO) {
+
+        // Une seule facture active par partenariat et par mois (index unique en base)
+        if (billsDTO.partnership() != null && billsDTO.partnership().id() != null
+                && billsRepository.existsByPartnership_IdAndPeriodAndActiveTrue(billsDTO.partnership().id(), billsDTO.period())) {
+            throw new ResourceAlreadyExistException("Une facture existe déjà pour ce partenariat et cette période : " + billsDTO.period());
+        }
 
         Bills bills = billsMapper.asEntity(billsDTO);
         bills.setRef(UUID.randomUUID().toString());
@@ -128,5 +146,49 @@ public class BillsServiceImpl implements BillsService {
     @Override
     public BillsDTO getBillsById(Long id) {
         return billsMapper.asDTO(billsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Bills", "ID", id)));
+    }
+
+    @Override
+    public BillDetailsDTO getBillDetails(Long id) {
+        Bills bills = billsRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Bills", "ID", id));
+        Enterprise enterprise = bills.getPartnership().getEnterprise();
+        Sales sales = bills.getPartnership().getSales();
+        return new BillDetailsDTO(bills.getRef(), bills.getPeriod(), bills.getStartDate(), bills.getEndDate(),
+                bills.getBillStatus(), bills.getTotalAmount(),
+                new BillDetailsDTO.EnterpriseInfo(enterprise.getName(), enterprise.getAddress()),
+                new BillDetailsDTO.SalesInfo(sales.getName(), sales.getAddress(), sales.getType()));
+    }
+
+    @Override
+    public List<BillsDTO> generateMonthlyBills(YearMonth month) {
+        String period = month.toString();
+        LocalDateTime from = month.atDay(1).atStartOfDay();
+        LocalDateTime to = month.plusMonths(1).atDay(1).atStartOfDay();
+
+        List<BillsDTO> generated = new ArrayList<>();
+        for (Partnership partnership : partnershipRepository.findByActiveTrue()) {
+            if (billsRepository.existsByPartnership_IdAndPeriodAndActiveTrue(partnership.getId(), period)) {
+                continue;
+            }
+            Double total = paymentRepository.sumActivePaymentsByEnterpriseAndSales(
+                    partnership.getEnterprise().getId(), partnership.getSales().getId(), from, to);
+            if (total == null || total <= 0) {
+                continue;
+            }
+
+            Bills bills = new Bills();
+            bills.setRef(UUID.randomUUID().toString());
+            bills.setPartnership(partnership);
+            bills.setPeriod(period);
+            bills.setStartDate(from);
+            bills.setEndDate(month.atEndOfMonth().atTime(23, 59, 59));
+            bills.setTotalAmount(total);
+            bills.setBillStatus(BillStatus.UNPAYED);
+            bills.setActive(true);
+            generated.add(billsMapper.asDTO(billsRepository.save(bills)));
+        }
+
+        log.info("Generated {} bill(s) for period {}", generated.size(), period);
+        return generated;
     }
 }
