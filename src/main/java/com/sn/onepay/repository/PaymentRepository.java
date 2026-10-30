@@ -13,11 +13,16 @@ import java.util.List;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long>, QuerydslPredicateExecutor<Payment> {
 
-    @Query(value = "SELECT COALESCE(SUM(p.Amount), 0) FROM Payment p WHERE p.ClientId = :clientId AND p.Module = :module AND p.Active = true", nativeQuery = true)
-    Double findAllPaymentsByClientIdAndModule(@Param("clientId") Long clientId, @Param("module") String module);
+    /*Paiements actifs dont la date est dans [from, to[ (bornes du mois en cours pour les cumuls)*/
+    @Query(value = "SELECT COALESCE(SUM(p.Amount), 0) FROM Payment p WHERE p.ClientId = :clientId AND p.Module = :module AND p.Active = true " +
+            "AND p.PaymentDate >= :from AND p.PaymentDate < :to", nativeQuery = true)
+    Double findAllPaymentsByClientIdAndModule(@Param("clientId") Long clientId, @Param("module") String module,
+                                              @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
-    @Query(value = "SELECT COALESCE(SUM(p.Amount), 0) FROM Payment p WHERE p.ClientId = :clientId AND p.Active = true", nativeQuery = true)
-    Double findSumOfAllActivePaymentsByClientId(@Param("clientId") Long clientId);
+    @Query(value = "SELECT COALESCE(SUM(p.Amount), 0) FROM Payment p WHERE p.ClientId = :clientId AND p.Active = true " +
+            "AND p.PaymentDate >= :from AND p.PaymentDate < :to", nativeQuery = true)
+    Double findSumOfAllActivePaymentsByClientId(@Param("clientId") Long clientId,
+                                                @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
     List<Payment> getAllPaymentsByClientId(Long clientId);
 

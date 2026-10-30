@@ -28,13 +28,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -72,6 +76,13 @@ class PaymentServiceImplTest {
 
     @Mock
     SubventionRepository subventionRepository;
+
+    /*15 octobre 2026 : le mois en cours va du 1er octobre (inclus) au 1er novembre (exclu)*/
+    @Spy
+    Clock clock = Clock.fixed(Instant.parse("2026-10-15T10:00:00Z"), ZoneOffset.UTC);
+
+    static final LocalDateTime MONTH_START = LocalDateTime.of(2026, 10, 1, 0, 0);
+    static final LocalDateTime NEXT_MONTH_START = LocalDateTime.of(2026, 11, 1, 0, 0);
 
     @InjectMocks
     PaymentServiceImpl paymentService;
@@ -217,7 +228,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
@@ -245,7 +256,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -269,7 +280,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(20.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(20.0);
 
         assertThatThrownBy(() -> paymentService.createPayment(dto))
                 .isInstanceOf(ObjectValidationException.class)
@@ -289,7 +300,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "MARKET")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "MARKET", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
@@ -309,7 +320,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "MARKET")).thenReturn(30.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "MARKET", MONTH_START, NEXT_MONTH_START)).thenReturn(30.0);
 
         assertThatThrownBy(() -> paymentService.createPayment(dto))
                 .isInstanceOf(ObjectValidationException.class)
@@ -329,7 +340,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "GAS_STATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "GAS_STATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
@@ -349,7 +360,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "GAS_STATION")).thenReturn(30.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "GAS_STATION", MONTH_START, NEXT_MONTH_START)).thenReturn(30.0);
 
         assertThatThrownBy(() -> paymentService.createPayment(dto))
                 .isInstanceOf(ObjectValidationException.class)
@@ -369,7 +380,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "TELEPHONY")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "TELEPHONY", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
@@ -389,7 +400,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "TELEPHONY")).thenReturn(20.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "TELEPHONY", MONTH_START, NEXT_MONTH_START)).thenReturn(20.0);
 
         assertThatThrownBy(() -> paymentService.createPayment(dto))
                 .isInstanceOf(ObjectValidationException.class)
@@ -410,7 +421,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
@@ -436,7 +447,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         stubApplicableSubvention(70.0, 30.0);
         when(paymentMapper.asEntity(dto)).thenReturn(entity);
         when(paymentRepository.save(any(Payment.class))).thenReturn(saved);
@@ -457,7 +468,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         when(employeeGroupRepository.findByActiveTrueAndClients_Id(3L)).thenReturn(List.of());
 
         assertThatThrownBy(() -> paymentService.createPayment(dto))
@@ -478,7 +489,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         when(employeeGroupRepository.findByActiveTrueAndClients_Id(3L)).thenReturn(List.of(buildEmployeeGroup(5L)));
         when(subventionRepository.findByActiveTrueAndPartnership_IdAndEmployeeGroup_IdIn(10L, List.of(5L))).thenReturn(List.of());
 
@@ -502,7 +513,7 @@ class PaymentServiceImplTest {
         when(salesConfigurationsService.getSalesConfigurationsBySalesId(1L)).thenReturn(salesConfig);
         when(enterpriseConfigurationService.getEnterpriseConfigurationByEnterpriseId(2L)).thenReturn(enterpriseConfig);
         when(partnershipService.getPartnershipsBySalesIdAndEnterpriseId(1L, 2L)).thenReturn(activePartnership);
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION")).thenReturn(0.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(3L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(0.0);
         when(employeeGroupRepository.findByActiveTrueAndClients_Id(3L)).thenReturn(List.of(buildEmployeeGroup(5L), buildEmployeeGroup(6L)));
         when(subventionRepository.findByActiveTrueAndPartnership_IdAndEmployeeGroup_IdIn(10L, List.of(5L, 6L)))
                 .thenReturn(List.of(buildSubvention(40.0, 60.0), buildSubvention(90.0, 10.0)));
@@ -565,7 +576,7 @@ class PaymentServiceImplTest {
 
     @Test
     void getSumOfAllPaymentsByClientIdAndModule_returnsZeroWhenNull() {
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(1L, "RESTAURATION")).thenReturn(null);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(1L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(null);
 
         double result = paymentService.getSumOfAllPaymentsByClientIdAndModule(1L, Modules.RESTAURATION);
         assertThat(result).isEqualTo(0.0);
@@ -573,7 +584,7 @@ class PaymentServiceImplTest {
 
     @Test
     void getSumOfAllPaymentsByClientIdAndModule_returnsValueWhenNotNull() {
-        when(paymentRepository.findAllPaymentsByClientIdAndModule(1L, "RESTAURATION")).thenReturn(150.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(1L, "RESTAURATION", MONTH_START, NEXT_MONTH_START)).thenReturn(150.0);
 
         double result = paymentService.getSumOfAllPaymentsByClientIdAndModule(1L, Modules.RESTAURATION);
         assertThat(result).isEqualTo(150.0);
@@ -581,7 +592,7 @@ class PaymentServiceImplTest {
 
     @Test
     void getSumOfAllPaymentsByClientId_returnsZeroWhenNull() {
-        when(paymentRepository.findSumOfAllActivePaymentsByClientId(1L)).thenReturn(null);
+        when(paymentRepository.findSumOfAllActivePaymentsByClientId(1L, MONTH_START, NEXT_MONTH_START)).thenReturn(null);
 
         double result = paymentService.getSumOfAllPaymentsByClientId(1L);
         assertThat(result).isEqualTo(0.0);
@@ -589,10 +600,22 @@ class PaymentServiceImplTest {
 
     @Test
     void getSumOfAllPaymentsByClientId_returnsValueWhenNotNull() {
-        when(paymentRepository.findSumOfAllActivePaymentsByClientId(1L)).thenReturn(200.0);
+        when(paymentRepository.findSumOfAllActivePaymentsByClientId(1L, MONTH_START, NEXT_MONTH_START)).thenReturn(200.0);
 
         double result = paymentService.getSumOfAllPaymentsByClientId(1L);
         assertThat(result).isEqualTo(200.0);
+    }
+
+    @Test
+    void sums_countOnlyTheCurrentMonth_acrossTheYearBoundary() {
+        ReflectionTestUtils.setField(paymentService, "clock", Clock.fixed(Instant.parse("2026-12-31T23:59:59Z"), ZoneOffset.UTC));
+        LocalDateTime december = LocalDateTime.of(2026, 12, 1, 0, 0);
+        LocalDateTime january = LocalDateTime.of(2027, 1, 1, 0, 0);
+        when(paymentRepository.findSumOfAllActivePaymentsByClientId(1L, december, january)).thenReturn(300.0);
+        when(paymentRepository.findAllPaymentsByClientIdAndModule(1L, "MARKET", december, january)).thenReturn(120.0);
+
+        assertThat(paymentService.getSumOfAllPaymentsByClientId(1L)).isEqualTo(300.0);
+        assertThat(paymentService.getSumOfAllPaymentsByClientIdAndModule(1L, Modules.MARKET)).isEqualTo(120.0);
     }
 
     @Test
