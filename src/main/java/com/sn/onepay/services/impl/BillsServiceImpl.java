@@ -9,13 +9,16 @@ import com.sn.onepay.entity.Partnership;
 import com.sn.onepay.entity.QBills;
 import com.sn.onepay.entity.Sales;
 import com.sn.onepay.enumeration.BillStatus;
+import com.sn.onepay.enumeration.Roles;
 import com.sn.onepay.exceptions.ObjectValidationException;
 import com.sn.onepay.exceptions.ResourceAlreadyExistException;
 import com.sn.onepay.exceptions.ResourceNotFoundException;
 import com.sn.onepay.mapper.BillsMapper;
 import com.sn.onepay.repository.BillsRepository;
+import com.sn.onepay.repository.EnterpriseProfileRepository;
 import com.sn.onepay.repository.PartnershipRepository;
 import com.sn.onepay.repository.PaymentRepository;
+import com.sn.onepay.repository.SalesProfileRepository;
 import com.sn.onepay.services.BillsService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -24,11 +27,14 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +49,9 @@ public class BillsServiceImpl implements BillsService {
     final BillsMapper billsMapper;
     final PartnershipRepository partnershipRepository;
     final PaymentRepository paymentRepository;
+    final EnterpriseProfileRepository enterpriseProfileRepository;
+    final SalesProfileRepository salesProfileRepository;
+    final Clock clock;
 
     @Override
     public BillsDTO createBills(BillsDTO billsDTO) {
@@ -56,6 +65,12 @@ public class BillsServiceImpl implements BillsService {
         Bills bills = billsMapper.asEntity(billsDTO);
         bills.setRef(UUID.randomUUID().toString());
         bills.setActive(true);
+        // Le statut ne se choisit pas : une facture naît UNPAYED, seules les deux confirmations la font passer à PAYED
+        bills.setBillStatus(BillStatus.UNPAYED);
+        bills.setEnterprisePaymentConfirmedBy(null);
+        bills.setEnterprisePaymentConfirmedAt(null);
+        bills.setSalesPaymentConfirmedBy(null);
+        bills.setSalesPaymentConfirmedAt(null);
         var savedBills = billsRepository.save(bills);
 
         log.info("Created new Bills: {}", savedBills);
@@ -73,12 +88,7 @@ public class BillsServiceImpl implements BillsService {
         if (billsDTO.startDate() != null) existing.setStartDate(billsDTO.startDate());
         if (billsDTO.endDate() != null) existing.setEndDate(billsDTO.endDate());
         if (billsDTO.totalAmount() != null) existing.setTotalAmount(billsDTO.totalAmount());
-        if (billsDTO.billStatus() != null) {
-            if (billsDTO.billStatus() == BillStatus.VALIDATED && existing.getBillStatus() != BillStatus.PAYED) {
-                throw new ObjectValidationException("Une facture ne peut être validée que si elle est déjà payée");
-            }
-            existing.setBillStatus(billsDTO.billStatus());
-        }
+        // Statut et confirmations ignorés : ils ne changent que par /payment-confirmation
         if (billsDTO.period() != null) existing.setPeriod(billsDTO.period());
         if (billsDTO.active() != null) existing.setActive(billsDTO.active());
 
@@ -190,5 +200,80 @@ public class BillsServiceImpl implements BillsService {
 
         log.info("Generated {} bill(s) for period {}", generated.size(), period);
         return generated;
+    }
+
+    @Override
+    public BillsDTO confirmPayment(Long billsId, String username, Collection<String> roles) {
+        Bills bills = findActiveBill(billsId);
+        if (bills.getBillStatus() == BillStatus.PAYED) {
+            throw new ObjectValidationException("La facture est déjà payée");
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        if (resolveSide(bills, username, roles) == PaymentSide.ENTERPRISE) {
+            if (bills.getEnterprisePaymentConfirmedBy() == null) {
+                bills.setEnterprisePaymentConfirmedBy(username);
+                bills.setEnterprisePaymentConfirmedAt(now);
+            }
+        } else if (bills.getSalesPaymentConfirmedBy() == null) {
+            bills.setSalesPaymentConfirmedBy(username);
+            bills.setSalesPaymentConfirmedAt(now);
+        }
+        if (bills.getEnterprisePaymentConfirmedBy() != null && bills.getSalesPaymentConfirmedBy() != null) {
+            bills.setBillStatus(BillStatus.PAYED);
+        }
+        Bills saved = billsRepository.saveAndFlush(bills);
+        log.info("Payment of bill {} confirmed by {} (status {})", billsId, username, saved.getBillStatus());
+        return billsMapper.asDTO(saved);
+    }
+
+    @Override
+    public BillsDTO cancelPaymentConfirmation(Long billsId, String username, Collection<String> roles) {
+        Bills bills = findActiveBill(billsId);
+        // Une fois les deux confirmations reçues, la facture est PAYED : plus de retour arrière
+        if (bills.getBillStatus() == BillStatus.PAYED) {
+            throw new ObjectValidationException("Une facture payée ne peut plus être modifiée");
+        }
+        if (resolveSide(bills, username, roles) == PaymentSide.ENTERPRISE) {
+            bills.setEnterprisePaymentConfirmedBy(null);
+            bills.setEnterprisePaymentConfirmedAt(null);
+        } else {
+            bills.setSalesPaymentConfirmedBy(null);
+            bills.setSalesPaymentConfirmedAt(null);
+        }
+        Bills saved = billsRepository.saveAndFlush(bills);
+        log.info("Payment confirmation of bill {} cancelled by {}", billsId, username);
+        return billsMapper.asDTO(saved);
+    }
+
+    private enum PaymentSide { ENTERPRISE, SALES }
+
+    private Bills findActiveBill(Long billsId) {
+        return billsRepository.findById(billsId)
+                .filter(Bills::isActive)
+                .orElseThrow(() -> new ResourceNotFoundException("Bills", "ID", billsId));
+    }
+
+    /*Côté de l'appelant : finance de l'entreprise ou finance du commerce, et seulement celle du partenariat de la facture*/
+    private PaymentSide resolveSide(Bills bills, String username, Collection<String> roles) {
+        if (roles.contains(Roles.ENTERPRISE_FINANCE.name())) {
+            Long enterpriseId = bills.getPartnership().getEnterprise().getId();
+            boolean member = enterpriseProfileRepository.findByUsername(username)
+                    .filter(profile -> profile.isActive() && profile.getRole() == Roles.ENTERPRISE_FINANCE)
+                    .filter(profile -> profile.getEnterprise() != null && enterpriseId.equals(profile.getEnterprise().getId()))
+                    .isPresent();
+            if (member) {
+                return PaymentSide.ENTERPRISE;
+            }
+        } else if (roles.contains(Roles.SALES_FINANCE.name())) {
+            Long salesId = bills.getPartnership().getSales().getId();
+            boolean member = salesProfileRepository.findByUsername(username)
+                    .filter(profile -> profile.isActive() && profile.getRole() == Roles.SALES_FINANCE)
+                    .filter(profile -> profile.getSales() != null && salesId.equals(profile.getSales().getId()))
+                    .isPresent();
+            if (member) {
+                return PaymentSide.SALES;
+            }
+        }
+        throw new AccessDeniedException("Seule la finance de l'entreprise ou du commerce de ce partenariat peut confirmer le paiement de cette facture");
     }
 }

@@ -62,6 +62,20 @@ public class Bills {
     @Column(name = "Period", nullable = false)
     String period;
 
+    /*Confirmation du paiement par la finance de l'entreprise du partenariat (qui, quand)*/
+    @Column(name = "EnterprisePaymentConfirmedBy")
+    String enterprisePaymentConfirmedBy;
+
+    @Column(name = "EnterprisePaymentConfirmedAt")
+    LocalDateTime enterprisePaymentConfirmedAt;
+
+    /*Confirmation du paiement par la finance du commerce du partenariat (qui, quand)*/
+    @Column(name = "SalesPaymentConfirmedBy")
+    String salesPaymentConfirmedBy;
+
+    @Column(name = "SalesPaymentConfirmedAt")
+    LocalDateTime salesPaymentConfirmedAt;
+
     @Column(name = "Active", nullable = false)
     boolean active;
 

@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +31,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -109,6 +113,49 @@ public class BillsController {
     @ResponseStatus(HttpStatus.OK)
     public BillDetailsDTO getBillDetails(@Parameter(description = "Bills id", required = true) @PathVariable(name = "billsId") Long billsId) {
         return billsService.getBillDetails(billsId);
+    }
+
+    @Operation(summary = "Confirm the payment of a bill for the caller's side",
+            description = "ENTERPRISE_FINANCE of the partnership's enterprise confirms the enterprise side, SALES_FINANCE of the partnership's merchant confirms the merchant side. "
+                    + "The bill becomes PAYED once both sides confirmed. Confirming twice is harmless.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Updated bill"),
+            @ApiResponse(responseCode = "403", description = "Caller is not the finance of this partnership's enterprise or merchant"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "422", description = "Bill already paid")
+    })
+    @PutMapping("/{billsId}/payment-confirmation")
+    @ResponseStatus(HttpStatus.OK)
+    public BillsDTO confirmPayment(@Parameter(description = "Bills id", required = true) @PathVariable(name = "billsId") Long billsId,
+                                   Authentication authentication) {
+        return billsService.confirmPayment(billsId, username(authentication), roles(authentication));
+    }
+
+    @Operation(summary = "Withdraw the caller's payment confirmation", description = "Only while the bill is not PAYED (i.e. before the other side confirmed)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Updated bill"),
+            @ApiResponse(responseCode = "403", description = "Caller is not the finance of this partnership's enterprise or merchant"),
+            @ApiResponse(responseCode = "404", description = "Not found"),
+            @ApiResponse(responseCode = "422", description = "Bill already paid")
+    })
+    @DeleteMapping("/{billsId}/payment-confirmation")
+    @ResponseStatus(HttpStatus.OK)
+    public BillsDTO cancelPaymentConfirmation(@Parameter(description = "Bills id", required = true) @PathVariable(name = "billsId") Long billsId,
+                                              Authentication authentication) {
+        return billsService.cancelPaymentConfirmation(billsId, username(authentication), roles(authentication));
+    }
+
+    private static String username(Authentication authentication) {
+        return authentication != null && authentication.getPrincipal() instanceof Jwt jwt ? jwt.getClaimAsString("preferred_username") : null;
+    }
+
+    private static Set<String> roles(Authentication authentication) {
+        if (authentication == null) {
+            return Set.of();
+        }
+        return authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority().replaceFirst("^ROLE_", ""))
+                .collect(Collectors.toSet());
     }
 
     @Operation(summary = "Delete a bill by id", description = "This endpoint is for deleting a bill by id (logical deletion)")

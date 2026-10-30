@@ -876,4 +876,14 @@
             <column name="seq_value" valueNumeric="0"/>
         </insert>
     </changeSet>
+
+    <!-- Paiement d'une facture confirmé par les deux parties du partenariat : qui et quand, côté entreprise et côté commerce -->
+    <changeSet id="1.0.0-bills-payment-confirmations" author="mouhamed">
+        <addColumn tableName="bills">
+            <column name="enterprisepaymentconfirmedby" type="varchar(255)"/>
+            <column name="enterprisepaymentconfirmedat" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+            <column name="salespaymentconfirmedby" type="varchar(255)"/>
+            <column name="salespaymentconfirmedat" type="TIMESTAMP(6) WITHOUT TIMEZONE"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
